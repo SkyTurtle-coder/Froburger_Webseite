@@ -1,0 +1,37 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//AV Froburger//Anlasskalender//DE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:AV Froburger
+X-WR-CALDESC:Semesterprogramm der AV Froburger
+X-PUBLISHED-TTL:PT12H
+REFRESH-INTERVAL;VALUE=DURATION:PT12H
+BEGIN:VEVENT
+UID:wanderung-froburg-20260912@avfroburger.ch
+DTSTAMP:20260628T200000Z
+DTSTART:20260912T100000
+DTEND:20260912T180000
+SUMMARY:Wanderung zur Froburg
+LOCATION:Bahnhof Olten
+DESCRIPTION:Gemeinsame Wanderung der AV Froburger zur Froburg mit anschliessendem Nachtessen.
+END:VEVENT
+BEGIN:VEVENT
+UID:vortragsabend-20261008@avfroburger.ch
+DTSTAMP:20260628T200000Z
+DTSTART:20261008T183000
+DTEND:20261008T210000
+SUMMARY:Öffentlicher Vortragsabend
+LOCATION:Universität Basel
+DESCRIPTION:Vortragsabend der AV Froburger mit Diskussion und anschliessendem Apéro.
+END:VEVENT
+BEGIN:VEVENT
+UID:stiftungsfest-20261121@avfroburger.ch
+DTSTAMP:20260628T200000Z
+DTSTART:20261121T180000
+DTEND:20261122T010000
+SUMMARY:Stiftungsfest AV Froburger
+LOCATION:Basel
+DESCRIPTION:Festlicher Höhepunkt des Verbindungsjahres für Aktivitas und Alt-Froburger.
+END:VEVENT
+END:VCALENDAR

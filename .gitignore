@@ -1,0 +1,22 @@
+# Local tooling
+.agents/
+.codex/
+
+# Generated artifacts
+output/
+reports/
+Screenshots/
+
+# Unused source assets
+Bilder/DSC01173.jpg
+Bilder/DSC01282.jpg
+Bilder/DSC01621.jpg
+Bilder/DSC02521.jpg
+Bilder/Froburger_wappen_transparent.png
+
+# Internal project documents
+avfroburger-ch_Angebot_UMB-COM.pdf
+
+# Windows metadata
+Thumbs.db
+Desktop.ini

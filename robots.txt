@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /intern.html
+Disallow: /output/
+Disallow: /reports/
+Disallow: /Screenshots/
+Disallow: /.agents/
+Disallow: /.codex/
+
+Sitemap: https://avfroburger.ch/sitemap.xml
