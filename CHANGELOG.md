@@ -15,6 +15,14 @@
 - App-Namespace `apps/` sowie erste Core-URL fuer `health/` angelegt.
 - Baseline-Checks mit Django, pytest und Ruff erfolgreich ausgefuehrt.
 
+### Authentication
+- Eigenes User-Modell `accounts.User` mit eindeutiger E-Mail-Adresse als Login-Kennung eingefuehrt.
+- Login, Logout, Passwort-Reset, Passwortaenderung und geschuetzte Konto-Startseite ueber Django-Auth-Views angebunden.
+- Einladungsbasierte Kontoerstellung mit ablaufenden Einmal-Tokens und Aktivierung nach Passwortvergabe umgesetzt.
+- Audit-Basis fuer Einladungserstellung und Einladungsannahme angelegt.
+- Django-Admin fuer Custom-User und schreibgeschuetzte Audit-Eintraege konfiguriert.
+- Regressionstests fuer Login, Logout, Passwort-Reset, deaktivierte Benutzer, Passwortaenderung und Einladungsfluss ergaenzt.
+
 ## 2026-07-16
 
 ### Security

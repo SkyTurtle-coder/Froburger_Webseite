@@ -4,18 +4,18 @@ Last updated: 2026-07-17
 
 ## Overall status
 
-The repository is still in the static-site baseline. Phase 0 analysis and architecture artifacts are being established on the feature branch.
+The repository now contains the Django foundation and authentication baseline on the feature branch. The public website itself is still served from legacy static source files until Phase 3 migrates those pages into Django templates.
 
 ## Current repository baseline
 
 - branch: `feature/django-cms-members-area`
 - public static site present
-- no Django project yet
-- no database layer yet
-- no protected members area yet
+- Django project bootstrap present
+- custom user model and account onboarding present
+- protected account entry point present
+- audit trail baseline present for invitations
 - no CMS yet
-- no audit trail yet
-- Phase-0 review consensus: first centralize templates, then normalize structured content, then add CMS and private area
+- Phase-0 review consensus still applies: centralize templates first, then normalize structured content, then expand CMS and private area
 
 ## Current public pages
 
@@ -35,8 +35,8 @@ The repository is still in the static-site baseline. Phase 0 analysis and archit
 | --- | --- | --- |
 | 0 - Analysis and architecture | completed | branch created, repo analyzed, architecture/security docs committed |
 | 1 - Django foundation | completed | `.venv`, Django project, split settings, requirements, compose, and smoke tests are in place |
-| 2 - Accounts/auth | not started | depends on custom user model in initial Django setup |
-| 3 - Public-site migration | not started | existing static HTML is ready for incremental template extraction |
+| 2 - Accounts/auth | completed | custom user model, email auth, invite-only onboarding, auth templates, admin wiring, migrations, and tests are in place |
+| 3 - Public-site migration | not started | legacy static HTML remains the public source until template extraction and URL redirects are implemented |
 | 4 - Members and roles | not started | requires account foundation |
 | 5 - Documents | not started | requires private storage design |
 | 6 - Media library | not started | requires public/private separation |
@@ -72,3 +72,4 @@ The repository is still in the static-site baseline. Phase 0 analysis and archit
 - `python manage.py makemigrations --check` under `config.settings.test`
 - `pytest`
 - `ruff check .`
+- `git diff --check`

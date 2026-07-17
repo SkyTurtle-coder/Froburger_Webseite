@@ -9,6 +9,7 @@ target-version = "py312"
 line-length = 100
 exclude = [
   ".venv",
+  "**/migrations",
   "output",
   "reports",
   "Screenshots",

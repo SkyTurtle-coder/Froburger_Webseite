@@ -19,9 +19,11 @@ Migrate the static AV Froburger website into a secure Django application with:
 
 ## Current status summary
 
-- Phase 0: in progress
-- Phases 1-14: not started
-- Current repository baseline: static HTML, CSS, JS prototype with improved documentation, but no application runtime
+- Phase 0: completed
+- Phase 1: completed
+- Phase 2: completed
+- Phases 3-14: not started
+- Current repository baseline: Django foundation, authentication flow, and invite-only onboarding are in place alongside the legacy static public-site source files that still need Phase-3 template migration
 
 ## Consolidated Phase-0 findings
 
@@ -102,16 +104,16 @@ Validation:
 
 ## Phase 2 - Accounts and authentication
 
-Status: ready to start
+Status: completed
 
 Tasks:
 
-- implement custom user model
-- use email-based authentication
-- implement login, logout, password reset, password change
-- implement invite-only onboarding
-- configure Django admin for technical admins
-- add auth tests
+- [x] implement custom user model
+- [x] use email-based authentication
+- [x] implement login, logout, password reset, password change
+- [x] implement invite-only onboarding
+- [x] configure Django admin for technical admins
+- [x] add auth tests
 
 Dependencies:
 
@@ -120,6 +122,31 @@ Dependencies:
 Risks:
 
 - choosing wrong user model timing would force painful migration later
+
+Completed notes:
+
+- custom `accounts.User` model introduced before further business-data migrations
+- authentication now uses email addresses instead of usernames
+- login, logout, password reset, password change, and protected account landing page are wired through Django auth views
+- invite-only onboarding implemented with hashed one-time tokens, expiry handling, activation on acceptance, and audit logging
+- Django admin now supports the custom user model and exposes read-only audit entries
+- auth regression tests cover login, logout, inactive users, password reset, password change, and invitation acceptance
+
+Acceptance criteria:
+
+- users can securely sign in and sign out
+- password reset works with the development email backend
+- no public self-registration exists
+- custom user model is in place before later domain migrations
+- tests for login, logout, password reset, inactive users, and invitations are passing
+
+Validation:
+
+- `uv run python manage.py check`
+- `uv run python manage.py makemigrations --check`
+- `uv run pytest`
+- `uv run ruff check .`
+- `git diff --check`
 
 ## Phase 3 - Public site migration to Django templates
 

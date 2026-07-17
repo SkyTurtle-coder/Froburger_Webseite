@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Mitgliederbereich | AV Froburger{% endblock %}
+{% block heading %}Mitgliederbereich{% endblock %}
+
+{% block content %}
+  <p>Die technische Basis ist aktiviert. Der fachliche Mitgliederbereich folgt in den naechsten Phasen.</p>
+  <p><a href="{% url 'accounts:password_change' %}">Passwort aendern</a></p>
+  <form method="post" action="{% url 'accounts:logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="button">Abmelden</button>
+  </form>
+{% endblock %}

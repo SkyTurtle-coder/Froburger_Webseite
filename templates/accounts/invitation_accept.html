@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Einladung annehmen | AV Froburger{% endblock %}
+{% block heading %}Einladung annehmen{% endblock %}
+
+{% block content %}
+  {% if invalid_invitation %}
+    <p>Diese Einladung ist ungueltig oder abgelaufen.</p>
+  {% else %}
+    <form method="post" class="stack">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <div class="form-row">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button type="submit" class="button">Konto aktivieren</button>
+    </form>
+  {% endif %}
+{% endblock %}
