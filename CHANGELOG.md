@@ -6,6 +6,7 @@
 - `README.md` fuer GitHub deutlich ausgebaut und auf den aktuellen Repo-Betrieb ausgerichtet.
 - Dokumentationsbereich `docs/` mit Projektueberblick, Inhaltspflege und Deployment angelegt.
 - `DEPLOYMENT.md` auf die versionierte GitHub-Realitaet umgestellt: Root als Source of truth, kein veralteter `output/`-Pfad mehr als verbindlicher Repo-Stand.
+- Phase-0-Dokumentation fuer die Django-Migration angelegt: `AGENTS.md`, Ausfuehrungsplan, Architektur-, Security-, Rollen-, Datenklassifikations- und Migrationsdokumente sowie ADRs.
 
 ## 2026-07-16
 
