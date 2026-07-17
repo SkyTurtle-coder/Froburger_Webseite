@@ -1,0 +1,20 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Mitgliederverwaltung | AV Froburger{% endblock %}
+{% block heading %}Mitgliederverwaltung{% endblock %}
+
+{% block content %}
+  <ul class="admin-list">
+    {% for profile in profiles %}
+      <li>
+        <strong>{{ profile.display_name }}</strong><br>
+        {{ profile.user.email }}<br>
+        Status: {{ profile.get_membership_status_display }}<br>
+        <a href="{% url 'members:admin_edit' profile.pk %}">Bearbeiten</a>
+      </li>
+    {% empty %}
+      <li>Es sind noch keine Mitgliederprofile vorhanden.</li>
+    {% endfor %}
+  </ul>
+  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum Mitgliederbereich</a></p>
+{% endblock %}

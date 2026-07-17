@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from apps.accounts.models import AccountInvitation, User
 from apps.audit.models import AuditLogEntry
+from apps.members.models import MemberProfile
 
 
 @pytest.mark.django_db
@@ -79,10 +80,9 @@ def test_password_change_updates_credentials(client):
 
 @pytest.mark.django_db
 def test_invitation_creation_and_acceptance_activate_account(client):
-    inviter = User.objects.create_user(
+    inviter = User.objects.create_superuser(
         email="admin@example.invalid",
         password="Secret1234!",
-        is_staff=True,
     )
     client.force_login(inviter)
 
@@ -124,5 +124,6 @@ def test_invitation_creation_and_acceptance_activate_account(client):
     assert accept_response.url == reverse("accounts:login")
     assert invited_user.is_active is True
     assert invited_user.check_password("InviteSecret1234!")
+    assert invited_user.member_profile.membership_status == MemberProfile.MembershipStatus.ACTIVE
     assert invitation.used_at is not None
     assert AuditLogEntry.objects.filter(action="accounts.invitation.accepted").exists()

@@ -10,6 +10,8 @@ from django.views.generic import FormView, TemplateView
 
 from apps.audit.models import AuditLogEntry
 from apps.audit.services import record_audit_event
+from apps.members.models import MemberProfile
+from apps.members.views import get_or_create_member_profile
 
 from .forms import InvitationAcceptForm, InvitationCreateForm
 from .models import AccountInvitation
@@ -20,6 +22,13 @@ User = get_user_model()
 class AccountHomeView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["profile"] = get_or_create_member_profile(self.request.user)
+        context["can_invite"] = self.request.user.has_perm("accounts.add_accountinvitation")
+        context["can_manage_members"] = self.request.user.has_perm("members.view_memberprofile")
+        return context
+
 
 class InvitationCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = InvitationCreateForm
@@ -27,7 +36,7 @@ class InvitationCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     success_url = reverse_lazy("accounts:invitation_create")
 
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.has_perm("accounts.add_accountinvitation")
 
     def form_valid(self, form):
         invitation, token = form.save(actor=self.request.user)
@@ -90,6 +99,9 @@ class InvitationAcceptView(FormView):
         user = form.save(commit=False)
         user.is_active = True
         user.save()
+        profile = get_or_create_member_profile(user)
+        profile.membership_status = MemberProfile.MembershipStatus.ACTIVE
+        profile.save(update_fields=["membership_status", "updated_at"])
         self.invitation.mark_used()
 
         record_audit_event(

@@ -1,0 +1,39 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Mein Profil | AV Froburger{% endblock %}
+{% block heading %}Mein Profil{% endblock %}
+
+{% block content %}
+  <dl class="data-list">
+    <div>
+      <dt>Name</dt>
+      <dd>{{ profile.full_name|default:request.user.email }}</dd>
+    </div>
+    <div>
+      <dt>E-Mail</dt>
+      <dd>{{ request.user.email }}</dd>
+    </div>
+    <div>
+      <dt>Vulgo</dt>
+      <dd>{{ profile.vulgar_name|default:"-" }}</dd>
+    </div>
+    <div>
+      <dt>Status</dt>
+      <dd>{{ profile.get_membership_status_display }}</dd>
+    </div>
+    <div>
+      <dt>Sichtbarkeit</dt>
+      <dd>{{ profile.get_directory_visibility_display }}</dd>
+    </div>
+    <div>
+      <dt>Aktuelle Charge</dt>
+      <dd>{{ profile.current_charge|default:"-" }}</dd>
+    </div>
+    <div>
+      <dt>Kurzbeschreibung</dt>
+      <dd>{{ profile.short_bio|default:"-" }}</dd>
+    </div>
+  </dl>
+  <p class="meta-row"><a href="{% url 'members:me_edit' %}">Profil bearbeiten</a></p>
+  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum Mitgliederbereich</a></p>
+{% endblock %}

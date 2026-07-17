@@ -32,6 +32,15 @@
 - Externe Google-Fonts-Einbindung entfernt und auf lokale Fallback-Fonts umgestellt.
 - Oeffentliche Smoke-Tests fuer Seitenzugriff, Redirects, Sitemap, Robots und ICS-Endpunkt ergaenzt.
 
+### Member Profiles and Roles
+- Separates `members.MemberProfile` als fachliches Profilmodell neben dem Auth-Account eingefuehrt.
+- Mitgliedsstatus, Sichtbarkeit, Charge, Mitgliedsnummer sowie Ein- und Austrittsdaten modelliert.
+- Automatische Profilerzeugung fuer neue Benutzer und Status-Aktivierung nach Einladungsannahme umgesetzt.
+- Interne Routen fuer eigenes Profil sowie permission-geschuetzte Mitgliederverwaltung hinzugefuegt.
+- `bootstrap_roles`-Management-Command fuer `member`, `web_aktuar`, `member_admin`, `president` und `system_admin` angelegt.
+- Einladungserstellung auf explizite Berechtigung `accounts.add_accountinvitation` umgestellt.
+- Tests fuer Profilanlage, Self-Service, Berechtigungsdurchsetzung, Profilverwaltung und Rollen-Bootstrap ergaenzt.
+
 ## 2026-07-16
 
 ### Security

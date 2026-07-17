@@ -54,6 +54,15 @@ body {
   padding: 10px 12px;
 }
 
+.form-row select,
+.form-row textarea {
+  border: 1px solid #dfe3df;
+  border-radius: 6px;
+  min-height: 44px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
 .button {
   background: #c75c0b;
   border: 0;
@@ -86,4 +95,53 @@ body {
 
 .meta-row {
   margin-top: 16px;
+}
+
+.meta-panel {
+  border: 1px solid #dfe3df;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.meta-panel h2 {
+  color: #1a4a1a;
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+}
+
+.meta-panel p {
+  margin: 0 0 8px;
+}
+
+.meta-panel p:last-child {
+  margin-bottom: 0;
+}
+
+.data-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.data-list dt {
+  color: #1a4a1a;
+  font-weight: 700;
+}
+
+.data-list dd {
+  margin: 0;
+}
+
+.admin-list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-list li {
+  border: 1px solid #dfe3df;
+  border-radius: 6px;
+  padding: 14px 16px;
 }

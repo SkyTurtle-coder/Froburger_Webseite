@@ -4,7 +4,7 @@ Last updated: 2026-07-17
 
 ## Overall status
 
-The repository now contains the Django foundation, authentication baseline, and Django-rendered public website on the feature branch. Legacy `.html` paths are redirected permanently to canonical slash URLs.
+The repository now contains the Django foundation, authentication baseline, Django-rendered public website, and the first member-profile and role-management foundation on the feature branch. Legacy `.html` paths are redirected permanently to canonical slash URLs.
 
 ## Current repository baseline
 
@@ -13,6 +13,8 @@ The repository now contains the Django foundation, authentication baseline, and 
 - Django project bootstrap present
 - custom user model and account onboarding present
 - protected account entry point present
+- member profiles and internal member routes present
+- role bootstrap command present
 - audit trail baseline present for invitations
 - static assets served from Django `static/`
 - legacy `.html` URLs redirected to canonical paths
@@ -27,7 +29,7 @@ The repository now contains the Django foundation, authentication baseline, and 
 | 1 - Django foundation | completed | `.venv`, Django project, split settings, requirements, compose, and smoke tests are in place |
 | 2 - Accounts/auth | completed | custom user model, email auth, invite-only onboarding, auth templates, admin wiring, migrations, and tests are in place |
 | 3 - Public-site migration | completed | public pages now render through Django templates, assets live under `static/`, and legacy `.html` URLs redirect permanently |
-| 4 - Members and roles | not started | requires account foundation |
+| 4 - Members and roles | completed | separate member profiles, self-service profile views, permission-gated member admin views, and role bootstrap are in place |
 | 5 - Documents | not started | requires private storage design |
 | 6 - Media library | not started | requires public/private separation |
 | 7 - CMS | not started | depends on content and roles |

@@ -23,8 +23,9 @@ Migrate the static AV Froburger website into a secure Django application with:
 - Phase 1: completed
 - Phase 2: completed
 - Phase 3: completed
-- Phases 4-14: not started
-- Current repository baseline: Django now serves the public pages and the authentication foundation; remaining work shifts to structured content, roles, protected data, CMS, and operations
+- Phase 4: completed
+- Phases 5-14: not started
+- Current repository baseline: Django serves the public pages, authentication foundation, member profiles, and role bootstrap; remaining work shifts to protected data handling, CMS, structured content, and operations
 
 ## Consolidated Phase-0 findings
 
@@ -192,14 +193,42 @@ Validation:
 
 ## Phase 4 - Member profiles and role model
 
-Status: pending
+Status: completed
 
 Tasks:
 
-- separate account and member profile
-- add statuses and visibility model
-- add role/group bootstrap
-- restrict access by server-side permissions
+- [x] separate account and member profile
+- [x] add statuses and visibility model
+- [x] add role/group bootstrap
+- [x] restrict access by server-side permissions
+
+Completed notes:
+
+- introduced `members.MemberProfile` as a separate one-to-one model tied to the authentication account
+- avoided duplicating first name and last name by keeping those fields on the user account and storing membership-specific data on the profile
+- added membership status, visibility, charge, number, join/leave dates, and short biography fields with validation
+- auto-create member profiles for new users and promote invited profiles to active on invitation acceptance
+- added protected member self-service routes for viewing and editing the own profile
+- added permission-gated member-admin routes for listing and editing member profiles
+- switched invitation creation from broad `is_staff` gating to explicit `accounts.add_accountinvitation` permission checks
+- added idempotent `bootstrap_roles` management command for `member`, `web_aktuar`, `member_admin`, `president`, and `system_admin`
+- added regression tests for profile creation, self-service editing, permission enforcement, admin profile updates, and role bootstrap
+
+Acceptance criteria:
+
+- account and member profile are separated
+- member-specific lifecycle fields are modeled without duplicating account identity fields unnecessarily
+- role bootstrap exists and can be rerun safely
+- privileged member management is protected by server-side permission checks
+- tests cover self-access, admin access, and role bootstrap
+
+Validation:
+
+- `uv run python manage.py check`
+- `uv run python manage.py makemigrations --check`
+- `uv run pytest`
+- `uv run ruff check .`
+- `git diff --check`
 
 ## Phase 5 - Protected documents
 

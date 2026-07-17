@@ -4,8 +4,31 @@
 {% block heading %}Mitgliederbereich{% endblock %}
 
 {% block content %}
-  <p>Die technische Basis ist aktiviert. Der fachliche Mitgliederbereich folgt in den naechsten Phasen.</p>
-  <p><a href="{% url 'accounts:password_change' %}">Passwort aendern</a></p>
+  <p>Sie sind als {{ request.user.email }} angemeldet.</p>
+  <div class="stack">
+    <div class="meta-panel">
+      <h2>Mein Profil</h2>
+      <p>{{ profile.display_name }}</p>
+      <p>Status: {{ profile.get_membership_status_display }}</p>
+      <p><a href="{% url 'members:me' %}">Profil anzeigen</a></p>
+      <p><a href="{% url 'members:me_edit' %}">Profil bearbeiten</a></p>
+    </div>
+    <div class="meta-panel">
+      <h2>Sicherheit</h2>
+      <p><a href="{% url 'accounts:password_change' %}">Passwort aendern</a></p>
+    </div>
+    {% if can_invite or can_manage_members %}
+    <div class="meta-panel">
+      <h2>Verwaltung</h2>
+      {% if can_invite %}
+      <p><a href="{% url 'accounts:invitation_create' %}">Mitglied einladen</a></p>
+      {% endif %}
+      {% if can_manage_members %}
+      <p><a href="{% url 'members:admin_list' %}">Mitgliederprofile verwalten</a></p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
   <form method="post" action="{% url 'accounts:logout' %}">
     {% csrf_token %}
     <button type="submit" class="button">Abmelden</button>
