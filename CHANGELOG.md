@@ -23,6 +23,15 @@
 - Django-Admin fuer Custom-User und schreibgeschuetzte Audit-Eintraege konfiguriert.
 - Regressionstests fuer Login, Logout, Passwort-Reset, deaktivierte Benutzer, Passwortaenderung und Einladungsfluss ergaenzt.
 
+### Public Site Migration
+- Oeffentliche Seiten auf Django-Templates umgestellt und in `templates/public/pages/` ueberfuehrt.
+- Gemeinsame Layout-Bausteine fuer Head, Navigation, Footer und Meldungen eingefuehrt.
+- `styles.css`, `script.js`, `Zirkel.svg` und die produktiv genutzten Bilder nach `static/` verschoben.
+- Kanonische Slash-URLs eingefuehrt und permanente Redirects von den bisherigen `.html`-Pfaden angelegt.
+- `robots.txt`, `sitemap.xml` und der vorlaeufige Kalenderfeed `/kalender.ics` werden jetzt ueber Django ausgeliefert.
+- Externe Google-Fonts-Einbindung entfernt und auf lokale Fallback-Fonts umgestellt.
+- Oeffentliche Smoke-Tests fuer Seitenzugriff, Redirects, Sitemap, Robots und ICS-Endpunkt ergaenzt.
+
 ## 2026-07-16
 
 ### Security

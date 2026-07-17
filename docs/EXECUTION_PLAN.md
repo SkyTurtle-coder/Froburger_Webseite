@@ -22,8 +22,9 @@ Migrate the static AV Froburger website into a secure Django application with:
 - Phase 0: completed
 - Phase 1: completed
 - Phase 2: completed
-- Phases 3-14: not started
-- Current repository baseline: Django foundation, authentication flow, and invite-only onboarding are in place alongside the legacy static public-site source files that still need Phase-3 template migration
+- Phase 3: completed
+- Phases 4-14: not started
+- Current repository baseline: Django now serves the public pages and the authentication foundation; remaining work shifts to structured content, roles, protected data, CMS, and operations
 
 ## Consolidated Phase-0 findings
 
@@ -150,26 +151,44 @@ Validation:
 
 ## Phase 3 - Public site migration to Django templates
 
-Status: pending
+Status: completed
 
 Tasks:
 
-- migrate current static pages into templates
-- extract reusable head, navigation, messages, and footer components
-- move assets to Django staticfiles
-- define canonical slash URLs
-- redirect old `.html` URLs
-- replace external fonts if legally safe
+- [x] migrate current static pages into templates
+- [x] extract reusable head, navigation, messages, and footer components
+- [x] move assets to Django staticfiles
+- [x] define canonical slash URLs
+- [x] redirect old `.html` URLs
+- [x] replace external fonts if legally safe
 
 Dependencies:
 
 - Phase 1 complete
+
+Completed notes:
+
+- created a public `templates/base.html` plus shared navigation, footer, and messages components
+- moved public HTML pages into Django templates under `templates/public/pages/`
+- moved legacy assets into Django `static/` and removed the old root-level public HTML source files
+- public routes now use canonical slash URLs with permanent redirects from legacy `.html` paths
+- added Django-served `robots.txt`, `sitemap.xml`, and the temporary legacy `kalender.ics` endpoint
+- removed external Google Fonts from the public base template and switched to local fallback font stacks
+- added public-route smoke tests for anonymous access, redirects, sitemap, robots, and ICS delivery
 
 Acceptance criteria:
 
 - current look and navigation preserved
 - no second public source of truth
 - slash URLs canonical
+
+Validation:
+
+- `uv run python manage.py check`
+- `uv run python manage.py makemigrations --check`
+- `uv run pytest`
+- `uv run ruff check .`
+- `git diff --check`
 
 ## Phase 4 - Member profiles and role model
 
@@ -300,10 +319,9 @@ Tasks:
 ## Main risks
 
 - legal content is intentionally incomplete and must stay marked as `TODO`
-- current site uses external Google Fonts, which is a privacy risk and must be removed or justified
 - no live production/server parameters are available yet
 - private documents and member data must never be modeled as public static assets
-- the current repository has no Django runtime yet; migration requires careful preservation of design and URL behavior
+- public content is still hard-coded and duplicated structurally, so later CMS and data migrations must avoid reintroducing multiple sources of truth
 
 ## Open blockers
 

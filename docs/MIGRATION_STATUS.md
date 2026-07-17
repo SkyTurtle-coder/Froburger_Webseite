@@ -4,30 +4,20 @@ Last updated: 2026-07-17
 
 ## Overall status
 
-The repository now contains the Django foundation and authentication baseline on the feature branch. The public website itself is still served from legacy static source files until Phase 3 migrates those pages into Django templates.
+The repository now contains the Django foundation, authentication baseline, and Django-rendered public website on the feature branch. Legacy `.html` paths are redirected permanently to canonical slash URLs.
 
 ## Current repository baseline
 
 - branch: `feature/django-cms-members-area`
-- public static site present
+- public site served through Django templates
 - Django project bootstrap present
 - custom user model and account onboarding present
 - protected account entry point present
 - audit trail baseline present for invitations
+- static assets served from Django `static/`
+- legacy `.html` URLs redirected to canonical paths
 - no CMS yet
 - Phase-0 review consensus still applies: centralize templates first, then normalize structured content, then expand CMS and private area
-
-## Current public pages
-
-- `index.html`
-- `aktuelles.html`
-- `anlaesse.html`
-- `mitglieder.html`
-- `mitglied-werden.html`
-- `ueber-uns.html`
-- `intern.html`
-- `impressum.html`
-- `datenschutz.html`
 
 ## Phase tracking
 
@@ -36,7 +26,7 @@ The repository now contains the Django foundation and authentication baseline on
 | 0 - Analysis and architecture | completed | branch created, repo analyzed, architecture/security docs committed |
 | 1 - Django foundation | completed | `.venv`, Django project, split settings, requirements, compose, and smoke tests are in place |
 | 2 - Accounts/auth | completed | custom user model, email auth, invite-only onboarding, auth templates, admin wiring, migrations, and tests are in place |
-| 3 - Public-site migration | not started | legacy static HTML remains the public source until template extraction and URL redirects are implemented |
+| 3 - Public-site migration | completed | public pages now render through Django templates, assets live under `static/`, and legacy `.html` URLs redirect permanently |
 | 4 - Members and roles | not started | requires account foundation |
 | 5 - Documents | not started | requires private storage design |
 | 6 - Media library | not started | requires public/private separation |
@@ -62,9 +52,9 @@ The repository now contains the Django foundation and authentication baseline on
 1. preserve current design and URL intent
 2. bootstrap Django and infrastructure
 3. migrate shared layout to templates first
-4. keep public content hard-coded during initial template migration
+4. keep public content hard-coded during the first Django template cutover
 5. move news/events/pages incrementally to database-backed CMS models
-6. introduce private area only after robust auth and permission foundations exist
+6. introduce deeper private-area features only after robust auth and permission foundations exist
 
 ## Latest completed checks
 

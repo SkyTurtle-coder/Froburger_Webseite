@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<main id="main-content">
+<section class="login-page">
+      <div class="login-card">
+        <img class="login-logo" src="{% static 'Zirkel.svg' %}" alt="Zirkel der AV Froburger" width="58" height="83">
+        <h1>Interner Bereich</h1>
+        <p>Der gesch&uuml;tzte Mitgliederbereich ist nur f&uuml;r berechtigte Mitglieder zug&auml;nglich.</p>
+        <div class="demo-note">
+          <strong>Hinweis:</strong> Konten werden ausschliesslich per Einladung erstellt. Wenn du bereits eingeladen wurdest, kannst du dich direkt anmelden. Ohne Einladung bleibt die Registrierung geschlossen.
+        </div>
+        <div class="button-row" style="margin-top:24px">
+          <a class="btn btn-primary" href="{% url 'accounts:login' %}">Zur Anmeldung</a>
+          <a class="btn btn-outline-dark" href="mailto:info@avfroburger.ch?subject=Interner%20Bereich">Zugang anfragen</a>
+        </div>
+      </div>
+    </section>
+</main>
+{% endblock %}

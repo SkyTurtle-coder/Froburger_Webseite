@@ -1,0 +1,41 @@
+{% load static %}
+<header class="site-header">
+  <div class="navbar">
+    <a class="brand" href="{% url 'core:home' %}" aria-label="AV Froburger - Startseite">
+      <img src="{% static 'Zirkel.svg' %}" alt="" width="27" height="35">
+      <span>AV Froburger</span>
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Navigation öffnen">
+      <span></span>
+    </button>
+    <div class="nav-wrap" id="main-menu">
+      <nav class="main-nav" aria-label="Hauptnavigation">
+        <a href="{% url 'core:home' %}"{% if page_slug == 'home' %} aria-current="page"{% endif %}>Home</a>
+        <a href="{% url 'core:news' %}"{% if page_slug == 'news' %} aria-current="page"{% endif %}>Aktuelles</a>
+        <a href="{% url 'core:events' %}"{% if page_slug == 'events' %} aria-current="page"{% endif %}>Anlässe</a>
+        <a href="{% url 'core:members' %}"{% if page_slug == 'members' %} aria-current="page"{% endif %}>Mitglieder</a>
+        <div class="nav-item">
+          <button class="nav-dropdown-button{% if page_slug == 'about' %} is-current{% endif %}" type="button" aria-expanded="false" aria-controls="about-menu">Über uns</button>
+          <div class="dropdown" id="about-menu">
+            <a href="{% url 'core:about' %}">Überblick</a>
+            <a href="{% url 'core:about' %}#allgemein">Allgemein FB!</a>
+            <a href="{% url 'core:about' %}#geschichte">Geschichte Schw. StV</a>
+            <a href="{% url 'core:about' %}#verbindungen">Verbindungen</a>
+            <a href="{% url 'core:about' %}#universitaet">Universität Basel</a>
+            <a href="{% url 'core:about' %}#fhnw">FHNW</a>
+          </div>
+        </div>
+      </nav>
+      <div class="nav-actions">
+        {% if show_lock_link %}
+        <a class="lock-link" href="{% url 'core:intern' %}"{% if page_slug == 'intern' %} aria-current="page"{% endif %}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <span>Interner Bereich</span>
+        </a>
+        {% endif %}
+        <a class="nav-cta" href="{% url 'core:join' %}"{% if page_slug == 'join' %} aria-current="page"{% endif %}>Beitreten &rarr;</a>
+      </div>
+    </div>
+  </div>
+  <div class="couleur-line"></div>
+</header>

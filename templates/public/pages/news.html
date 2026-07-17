@@ -1,68 +1,11 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Berichte, R&uuml;ckblicke und Neuigkeiten aus dem Verbindungsleben der AV Froburger.">
-  <meta name="theme-color" content="#1A4A1A">
-  <meta property="og:locale" content="de_CH">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Aktuelles - AV Froburger">
-  <meta property="og:description" content="Berichte, R&uuml;ckblicke und Neuigkeiten aus dem Verbindungsleben der AV Froburger.">
-  <meta property="og:url" content="https://avfroburger.ch/aktuelles.html">
-  <meta property="og:site_name" content="AV Froburger">
-  <meta property="og:image" content="https://avfroburger.ch/Bilder/DSC01621-web.jpg">
-  <meta property="og:image:alt" content="Wanderwochenende der AV Froburger im Wallis">
-  <meta name="twitter:card" content="summary_large_image">
-  <title>Aktuelles - AV Froburger</title>
-  <link rel="canonical" href="https://avfroburger.ch/aktuelles.html">
-  <link rel="icon" href="Zirkel.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital@0;1&family=Inter:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="styles.css">
-  <script src="script.js" defer></script>
-</head>
-<body>
-  <a class="skip-link" href="#main-content">Direkt zum Inhalt</a>
+{% extends "base.html" %}
+{% load static %}
 
-  <header class="site-header">
-    <div class="navbar">
-      <a class="brand" href="index.html" aria-label="AV Froburger - Startseite">
-        <img src="Zirkel.svg" alt="" width="27" height="35">
-        <span>AV Froburger</span>
-      </a>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Navigation &ouml;ffnen"><span></span></button>
-      <div class="nav-wrap" id="main-menu">
-        <nav class="main-nav" aria-label="Hauptnavigation">
-          <a href="index.html">Home</a>
-          <a href="aktuelles.html" aria-current="page">Aktuelles</a>
-          <a href="anlaesse.html">Anl&auml;sse</a>
-          <a href="mitglieder.html">Mitglieder</a>
-          <div class="nav-item">
-            <button class="nav-dropdown-button" type="button" aria-expanded="false" aria-controls="about-menu">&Uuml;ber uns</button>
-            <div class="dropdown" id="about-menu">
-              <a href="ueber-uns.html">&Uuml;berblick</a>
-              <a href="ueber-uns.html#allgemein">Allgemein FB!</a>
-              <a href="ueber-uns.html#geschichte">Geschichte Schw. StV</a>
-              <a href="ueber-uns.html#verbindungen">Verbindungen</a>
-              <a href="ueber-uns.html#universitaet">Universit&auml;t Basel</a>
-              <a href="ueber-uns.html#fhnw">FHNW</a>
-            </div>
-          </div>
-        </nav>
-        <div class="nav-actions">
-          <a class="nav-cta" href="mitglied-werden.html">Beitreten &rarr;</a>
-        </div>
-      </div>
-    </div>
-    <div class="couleur-line"></div>
-  </header>
-
-  <main id="main-content">
-    <section class="page-hero">
+{% block content %}
+<main id="main-content">
+<section class="page-hero">
       <div class="container">
-        <p class="breadcrumbs"><a href="index.html">Home</a> / Aktuelles</p>
+        <p class="breadcrumbs"><a href="{% url 'core:home' %}">Home</a> / Aktuelles</p>
         <h1>Aktuelles</h1>
         <p>Berichte, R&uuml;ckblicke und Neuigkeiten aus dem Verbindungsleben der AV Froburger.</p>
       </div>
@@ -79,7 +22,7 @@
         </div>
         <div class="blog-grid">
           <article class="blog-card content-card">
-            <img class="blog-card-image" src="Bilder/DSC01621-web.jpg" alt="Wandergruppe der AV Froburger in den Walliser Bergen" width="1200" height="800" loading="lazy" decoding="async">
+            <img class="blog-card-image" src="{% static 'Bilder/DSC01621-web.jpg' %}" alt="Wandergruppe der AV Froburger in den Walliser Bergen" width="1200" height="800" loading="lazy" decoding="async">
             <div class="blog-body">
               <div class="blog-meta"><time datetime="2026-05-01">1.-3. Mai 2026</time></div>
               <h3>Wanderwochenende in T&ouml;rbel</h3>
@@ -88,7 +31,7 @@
             </div>
           </article>
           <article class="blog-card content-card">
-            <img class="blog-card-image" src="Bilder/DSC01173-web.jpg" alt="Froburger in Couleur an der Spargelfahrt 2026" width="1200" height="800" loading="lazy" decoding="async">
+            <img class="blog-card-image" src="{% static 'Bilder/DSC01173-web.jpg' %}" alt="Froburger in Couleur an der Spargelfahrt 2026" width="1200" height="800" loading="lazy" decoding="async">
             <div class="blog-body">
               <div class="blog-meta"><time datetime="2026-04-25">25. April 2026</time></div>
               <h3>Spargelfahrt am Froburgerwochenende</h3>
@@ -109,7 +52,7 @@
         </header>
 
         <figure class="article-image">
-          <img src="Bilder/DSC01621-web.jpg" alt="Froburger Wandergruppe bei einer Rast in den Bergen bei T&ouml;rbel" width="1200" height="800" loading="lazy" decoding="async">
+          <img src="{% static 'Bilder/DSC01621-web.jpg' %}" alt="Froburger Wandergruppe bei einer Rast in den Bergen bei T&ouml;rbel" width="1200" height="800" loading="lazy" decoding="async">
           <figcaption>Wanderwochenende 2026 · Gemeinsame Rast in den Walliser Bergen</figcaption>
         </figure>
 
@@ -144,7 +87,7 @@
         </header>
 
         <figure class="article-image">
-          <img src="Bilder/DSC01173-web.jpg" alt="Teilnehmer des Froburgerwochenendes mit orange-weiss-gr&uuml;ner Couleur" width="1200" height="800" loading="lazy" decoding="async">
+          <img src="{% static 'Bilder/DSC01173-web.jpg' %}" alt="Teilnehmer des Froburgerwochenendes mit orange-weiss-gr&uuml;ner Couleur" width="1200" height="800" loading="lazy" decoding="async">
           <figcaption>Froburgerwochenende 2026 · Couleur und Begegnungen unter freiem Himmel</figcaption>
         </figure>
 
@@ -172,41 +115,5 @@
         </div>
       </div>
     </article>
-  </main>
-
-  <footer class="site-footer">
-    <div class="footer-couleur"></div>
-    <div class="container footer-main">
-      <div class="footer-brand">
-        <img src="Zirkel.svg" alt="Zirkel der AV Froburger" width="45" height="64" loading="lazy">
-        <div>
-          <h2>AV Froburger</h2>
-          <p>Akademische Verbindung<br>Universit&auml;t Basel<br>Schweizerischer Studentenverein</p>
-          <a class="footer-address" href="https://www.google.com/maps/search/?api=1&amp;query=Ueli+Brau+Bar+Basel" target="_blank" rel="noopener">Stamm: Ueli Brau Bar, Basel &#8599;</a>
-          <a class="footer-address" href="mailto:info@avfroburger.ch">info@avfroburger.ch</a>
-          <div class="social-links">
-            <a href="https://www.instagram.com/av_froburger/" aria-label="AV Froburger auf Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".7" fill="currentColor"/></svg></a>
-          </div>
-        </div>
-      </div>
-      <div class="footer-column">
-        <h2>Verbindung</h2>
-        <a href="ueber-uns.html">&Uuml;ber uns</a>
-        <a href="mitglieder.html">Aktivitas</a>
-        <a href="mitglieder.html#altherren">Alt-Froburger</a>
-        <a href="anlaesse.html">Anl&auml;sse</a>
-      </div>
-      <div class="footer-column">
-        <h2>Rechtliches</h2>
-        <a href="impressum.html">Impressum</a>
-        <a href="datenschutz.html">Datenschutz</a>
-        <a href="mailto:info@avfroburger.ch">Kontakt</a>
-      </div>
-    </div>
-    <div class="container footer-bottom">
-      <p>&copy; 2026 AV Froburger</p>
-      <p><em>Voluntate forti viam rectam!</em></p>
-    </div>
-  </footer>
-</body>
-</html>
+</main>
+{% endblock %}

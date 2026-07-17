@@ -1,0 +1,9 @@
+{% if messages %}
+<section class="container site-messages" aria-label="Hinweise">
+  <ul class="site-message-list">
+    {% for message in messages %}
+    <li class="site-message {{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}

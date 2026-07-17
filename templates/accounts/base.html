@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AV Froburger{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-card">
+      <header class="auth-header">
+        <p class="auth-kicker">AV Froburger</p>
+        <h1>{% block heading %}Mitgliederbereich{% endblock %}</h1>
+      </header>
+      {% if messages %}
+        <ul class="messages">
+          {% for message in messages %}
+            <li class="message {{ message.tags }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</body>
+</html>
