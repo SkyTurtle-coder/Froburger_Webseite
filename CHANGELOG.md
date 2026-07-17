@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-17
+
+### Documentation
+- `README.md` fuer GitHub deutlich ausgebaut und auf den aktuellen Repo-Betrieb ausgerichtet.
+- Dokumentationsbereich `docs/` mit Projektueberblick, Inhaltspflege und Deployment angelegt.
+- `DEPLOYMENT.md` auf die versionierte GitHub-Realitaet umgestellt: Root als Source of truth, kein veralteter `output/`-Pfad mehr als verbindlicher Repo-Stand.
+
 ## 2026-07-16
 
 ### Security
