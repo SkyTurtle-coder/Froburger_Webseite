@@ -33,8 +33,8 @@ The repository is still in the static-site baseline. Phase 0 analysis and archit
 
 | Phase | Status | Notes |
 | --- | --- | --- |
-| 0 - Analysis and architecture | in progress | branch created, repo analyzed, architecture/security docs added |
-| 1 - Django foundation | not started | `uv` available; no system Python currently on PATH |
+| 0 - Analysis and architecture | completed | branch created, repo analyzed, architecture/security docs committed |
+| 1 - Django foundation | completed | `.venv`, Django project, split settings, requirements, compose, and smoke tests are in place |
 | 2 - Accounts/auth | not started | depends on custom user model in initial Django setup |
 | 3 - Public-site migration | not started | existing static HTML is ready for incremental template extraction |
 | 4 - Members and roles | not started | requires account foundation |
@@ -65,3 +65,10 @@ The repository is still in the static-site baseline. Phase 0 analysis and archit
 4. keep public content hard-coded during initial template migration
 5. move news/events/pages incrementally to database-backed CMS models
 6. introduce private area only after robust auth and permission foundations exist
+
+## Latest completed checks
+
+- `python manage.py check`
+- `python manage.py makemigrations --check` under `config.settings.test`
+- `pytest`
+- `ruff check .`

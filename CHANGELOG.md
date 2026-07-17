@@ -8,6 +8,13 @@
 - `DEPLOYMENT.md` auf die versionierte GitHub-Realitaet umgestellt: Root als Source of truth, kein veralteter `output/`-Pfad mehr als verbindlicher Repo-Stand.
 - Phase-0-Dokumentation fuer die Django-Migration angelegt: `AGENTS.md`, Ausfuehrungsplan, Architektur-, Security-, Rollen-, Datenklassifikations- und Migrationsdokumente sowie ADRs.
 
+### Backend Foundation
+- Django-Projektgeruest mit `config/settings/{base,development,test,production}.py` angelegt.
+- Python- und Paketbasis ueber `uv`, `requirements/` und `pyproject.toml` vorbereitet.
+- `.env.example` und `compose.yaml` fuer lokale PostgreSQL-Entwicklung ergaenzt.
+- App-Namespace `apps/` sowie erste Core-URL fuer `health/` angelegt.
+- Baseline-Checks mit Django, pytest und Ruff erfolgreich ausgefuehrt.
+
 ## 2026-07-16
 
 ### Security

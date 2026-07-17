@@ -1,11 +1,30 @@
 # Local tooling
 .agents/
 .codex/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+test.sqlite3
 
 # Generated artifacts
 output/
 reports/
 Screenshots/
+staticfiles/
+media/
+private_media/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python build artifacts
+*.pyc
+*.pyo
 
 # Unused source assets
 Bilder/DSC01173.jpg

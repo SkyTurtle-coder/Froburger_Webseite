@@ -34,7 +34,7 @@ Migrate the static AV Froburger website into a secure Django application with:
 
 ## Phase 0 - Analysis and architecture
 
-Status: in progress
+Status: completed
 
 Tasks:
 
@@ -45,7 +45,7 @@ Tasks:
 - [x] Run specialized review agents for frontend, architecture, security, and CMS UX
 - [x] Create architecture, security, role, data-classification, migration, and ADR documents
 - [x] Consolidate subagent findings into final Phase 0 updates
-- [ ] Commit Phase 0
+- [x] Commit Phase 0
 
 Acceptance criteria:
 
@@ -61,7 +61,7 @@ Validation:
 
 ## Phase 1 - Django foundation
 
-Status: blocked until Phase 0 is committed
+Status: completed
 
 Tasks:
 
@@ -72,6 +72,15 @@ Tasks:
 - add PostgreSQL development setup via `compose.yaml`
 - configure Ruff and pytest
 - verify `uv run python manage.py check`
+
+Completed notes:
+
+- local `.venv` bootstrapped with Python 3.12 via `uv`
+- Django 5.2 foundation initialized
+- settings split into `base`, `development`, `test`, and `production`
+- app namespace and core health endpoint created
+- requirements, `pyproject.toml`, `.env.example`, and `compose.yaml` added
+- baseline checks passing
 
 Dependencies:
 
@@ -93,7 +102,7 @@ Validation:
 
 ## Phase 2 - Accounts and authentication
 
-Status: pending
+Status: ready to start
 
 Tasks:
 
