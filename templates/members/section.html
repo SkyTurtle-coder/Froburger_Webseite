@@ -1,0 +1,14 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block heading %}{{ heading }}{% endblock %}
+{% block card_class %} auth-card-wide{% endblock %}
+
+{% block content %}
+  <article class="section-panel">
+    <p class="tile-eyebrow">{{ section_tag }}</p>
+    <p class="dashboard-intro">{{ intro }}</p>
+    <p>{{ body_copy }}</p>
+  </article>
+  <p class="meta-row"><a href="{{ cta_url }}">{{ cta_label }}</a></p>
+{% endblock %}

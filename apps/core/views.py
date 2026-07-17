@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.templatetags.static import static
 from django.urls import reverse
@@ -19,7 +19,7 @@ class PublicPageDefinition:
     noindex: bool = False
     body_id: str = ""
     preload_image_path: str | None = None
-    show_lock_link: bool = False
+    show_lock_link: bool = True
 
 
 PUBLIC_PAGES = {
@@ -90,14 +90,6 @@ PUBLIC_PAGES = {
         og_image_path="Bilder/Schild.svg",
         og_image_alt="Wappen der AV Froburger",
         body_id="top",
-    ),
-    "intern": PublicPageDefinition(
-        slug="intern",
-        template_name="public/pages/intern.html",
-        title="Interner Bereich - AV Froburger",
-        description="Hinweis zum internen Bereich der AV Froburger.",
-        noindex=True,
-        show_lock_link=True,
     ),
     "imprint": PublicPageDefinition(
         slug="imprint",
@@ -174,10 +166,6 @@ class AboutPageView(PublicPageView):
     page = PUBLIC_PAGES["about"]
 
 
-class InternPageView(PublicPageView):
-    page = PUBLIC_PAGES["intern"]
-
-
 class ImprintPageView(PublicPageView):
     page = PUBLIC_PAGES["imprint"]
 
@@ -217,7 +205,6 @@ def sitemap_xml(request):
         "core:members",
         "core:join",
         "core:about",
-        "core:intern",
         "core:imprint",
         "core:privacy",
     ]
@@ -228,3 +215,11 @@ def sitemap_xml(request):
         {"urls": urls},
         content_type="application/xml; charset=utf-8",
     )
+
+
+def intern_entry(request):
+    if request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("accounts:home"))
+
+    login_url = reverse("accounts:login")
+    return HttpResponseRedirect(f"{login_url}?next={reverse('accounts:home')}")

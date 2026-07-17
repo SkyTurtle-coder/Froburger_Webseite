@@ -27,6 +27,9 @@ class AccountHomeView(LoginRequiredMixin, TemplateView):
         context["profile"] = get_or_create_member_profile(self.request.user)
         context["can_invite"] = self.request.user.has_perm("accounts.add_accountinvitation")
         context["can_manage_members"] = self.request.user.has_perm("members.view_memberprofile")
+        context["can_view_sensitive_documents"] = self.request.user.has_perm(
+            "members.view_sensitive_documents"
+        )
         return context
 
 

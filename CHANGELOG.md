@@ -41,6 +41,14 @@
 - Einladungserstellung auf explizite Berechtigung `accounts.add_accountinvitation` umgestellt.
 - Tests fuer Profilanlage, Self-Service, Berechtigungsdurchsetzung, Profilverwaltung und Rollen-Bootstrap ergaenzt.
 
+### Internal Area
+- `/intern/` als Login-Gateway auf den geschuetzten Django-Mitgliederbereich umgestellt.
+- Dashboard mit Kacheln fuer Profil, Mitgliederverzeichnis, Medien, allgemeine Dokumente und sensible Dokumente eingefuehrt.
+- Mitgliederverzeichnis fuer angemeldete Benutzer mit Sichtbarkeitsfilterung und eigener Profil-Sicht umgesetzt.
+- Sensible Dokumente ueber eigene Berechtigung `members.view_sensitive_documents` abgesichert und in den Rollen-Bootstrap aufgenommen.
+- Platzhalter-Hubs fuer Medien sowie allgemeine und sensible Dokumente angelegt.
+- Regressionstests fuer Dashboard-Kacheln, Verzeichniszugriff und Berechtigungspruefung ergaenzt.
+
 ## 2026-07-16
 
 ### Security

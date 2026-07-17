@@ -1,18 +1,63 @@
 {% extends "accounts/base.html" %}
 
 {% block title %}Mitgliederbereich | AV Froburger{% endblock %}
-{% block heading %}Mitgliederbereich{% endblock %}
+{% block heading %}Interner Bereich{% endblock %}
+{% block card_class %} auth-card-wide{% endblock %}
 
 {% block content %}
-  <p>Sie sind als {{ request.user.email }} angemeldet.</p>
+  <p class="dashboard-intro">
+    Sie sind als {{ request.user.email }} angemeldet. Waehl den Bereich, den Sie im
+    Mitgliederportal oeffnen moechten.
+  </p>
+
+  <section class="tile-grid" aria-label="Interne Bereiche">
+    <article class="tile-card">
+      <p class="tile-eyebrow">Mein Zugang</p>
+      <h2>Profil</h2>
+      <p>{{ profile.display_name }}<br>Status: {{ profile.get_membership_status_display }}</p>
+      <a class="button tile-link" href="{% url 'members:me' %}">Profil oeffnen</a>
+    </article>
+
+    <article class="tile-card">
+      <p class="tile-eyebrow">Mitglieder</p>
+      <h2>Mitgliederverzeichnis</h2>
+      <p>Aktive Mitglieder, Alt-Froburger und interne Sichtbarkeiten im geschuetzten Verzeichnis.</p>
+      <a class="button tile-link" href="{% url 'members:directory' %}">Verzeichnis oeffnen</a>
+    </article>
+
+    <article class="tile-card">
+      <p class="tile-eyebrow">Archiv</p>
+      <h2>Medien</h2>
+      <p>Interne Bilder und spaetere Medienablaeufe fuer die Verbindung.</p>
+      <a class="button tile-link" href="{% url 'members:media' %}">Medienbereich oeffnen</a>
+    </article>
+
+    <article class="tile-card">
+      <p class="tile-eyebrow">Unterlagen</p>
+      <h2>Allgemeine Dokumente</h2>
+      <p>Interne Unterlagen fuer Mitglieder, die nicht als besonders sensibel eingestuft sind.</p>
+      <a class="button tile-link" href="{% url 'members:documents' %}">Dokumente oeffnen</a>
+    </article>
+
+    <article class="tile-card{% if not can_view_sensitive_documents %} tile-card-locked{% endif %}">
+      <p class="tile-eyebrow">Vertraulich</p>
+      <h2>Sensible Dokumente</h2>
+      <p>
+        {% if can_view_sensitive_documents %}
+        Geschuetzter Bereich fuer vertrauliche Unterlagen mit erweiterten Berechtigungen.
+        {% else %}
+        Dieser Bereich ist nur fuer besonders berechtigte Rollen freigeschaltet.
+        {% endif %}
+      </p>
+      {% if can_view_sensitive_documents %}
+      <a class="button tile-link" href="{% url 'members:documents_sensitive' %}">Bereich oeffnen</a>
+      {% else %}
+      <span class="tile-lock-note">Zugriff derzeit nicht freigeschaltet</span>
+      {% endif %}
+    </article>
+  </section>
+
   <div class="stack">
-    <div class="meta-panel">
-      <h2>Mein Profil</h2>
-      <p>{{ profile.display_name }}</p>
-      <p>Status: {{ profile.get_membership_status_display }}</p>
-      <p><a href="{% url 'members:me' %}">Profil anzeigen</a></p>
-      <p><a href="{% url 'members:me_edit' %}">Profil bearbeiten</a></p>
-    </div>
     <div class="meta-panel">
       <h2>Sicherheit</h2>
       <p><a href="{% url 'accounts:password_change' %}">Passwort aendern</a></p>

@@ -1,0 +1,25 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Mitgliederverzeichnis | AV Froburger{% endblock %}
+{% block heading %}Mitgliederverzeichnis{% endblock %}
+{% block card_class %} auth-card-wide{% endblock %}
+
+{% block content %}
+  <p class="dashboard-intro">
+    Das interne Verzeichnis zeigt Mitgliederprofile gemaess ihrer hinterlegten Sichtbarkeit.
+  </p>
+  <ul class="admin-list">
+    {% for profile in profiles %}
+      <li>
+        <strong>{{ profile.display_name }}</strong><br>
+        {{ profile.user.email }}<br>
+        Status: {{ profile.get_membership_status_display }}<br>
+        {% if profile.current_charge %}Charge: {{ profile.current_charge }}<br>{% endif %}
+        Sichtbarkeit: {{ profile.get_directory_visibility_display }}
+      </li>
+    {% empty %}
+      <li>Es sind noch keine sichtbaren Mitgliederprofile vorhanden.</li>
+    {% endfor %}
+  </ul>
+  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum internen Bereich</a></p>
+{% endblock %}

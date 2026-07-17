@@ -8,6 +8,7 @@ __pycache__/
 .coverage
 htmlcov/
 test.sqlite3
+db.sqlite3
 
 # Generated artifacts
 output/

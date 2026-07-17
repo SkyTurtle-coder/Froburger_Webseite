@@ -1,15 +1,27 @@
 from django.urls import path
 
 from .views import (
+    GeneralDocumentsView,
+    MediaHubView,
+    MemberDirectoryView,
     MemberProfileAdminListView,
     MemberProfileAdminUpdateView,
     OwnMemberProfileUpdateView,
     OwnMemberProfileView,
+    SensitiveDocumentsView,
 )
 
 app_name = "members"
 
 urlpatterns = [
+    path("directory/", MemberDirectoryView.as_view(), name="directory"),
+    path("media/", MediaHubView.as_view(), name="media"),
+    path("documents/", GeneralDocumentsView.as_view(), name="documents"),
+    path(
+        "documents/sensitive/",
+        SensitiveDocumentsView.as_view(),
+        name="documents_sensitive",
+    ),
     path("me/", OwnMemberProfileView.as_view(), name="me"),
     path("me/edit/", OwnMemberProfileUpdateView.as_view(), name="me_edit"),
     path("admin/", MemberProfileAdminListView.as_view(), name="admin_list"),

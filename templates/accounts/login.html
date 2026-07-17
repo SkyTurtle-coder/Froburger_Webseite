@@ -4,6 +4,7 @@
 {% block heading %}Anmeldung{% endblock %}
 
 {% block content %}
+  <p class="meta-row">Der interne Bereich ist nur fuer berechtigte Mitglieder verfuegbar.</p>
   <form method="post" class="stack">
     {% csrf_token %}
     {{ form.non_field_errors }}
@@ -17,4 +18,5 @@
     <button type="submit" class="button">Anmelden</button>
   </form>
   <p class="meta-row"><a href="{% url 'accounts:password_reset' %}">Passwort vergessen?</a></p>
+  <p class="meta-row"><a href="mailto:info@avfroburger.ch?subject=Zugang%20Mitgliederbereich">Zugang anfragen</a></p>
 {% endblock %}

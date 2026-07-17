@@ -10,6 +10,7 @@ ROLE_PERMISSION_MAP = {
         "members.view_memberprofile",
         "members.change_memberprofile",
         "members.manage_member_profiles",
+        "members.view_sensitive_documents",
     ],
     "president": [
         "accounts.add_accountinvitation",
@@ -17,6 +18,7 @@ ROLE_PERMISSION_MAP = {
         "members.view_memberprofile",
         "members.change_memberprofile",
         "members.manage_member_profiles",
+        "members.view_sensitive_documents",
         "audit.view_auditlogentry",
     ],
     "system_admin": [
@@ -25,6 +27,7 @@ ROLE_PERMISSION_MAP = {
         "members.view_memberprofile",
         "members.change_memberprofile",
         "members.manage_member_profiles",
+        "members.view_sensitive_documents",
         "audit.view_auditlogentry",
     ],
 }

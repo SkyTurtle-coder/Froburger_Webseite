@@ -1,5 +1,9 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+)
+from django.db.models import Q
 from django.urls import reverse_lazy
 from django.views.generic import ListView, TemplateView, UpdateView
 
@@ -66,3 +70,96 @@ class MemberProfileAdminUpdateView(LoginRequiredMixin, PermissionRequiredMixin, 
         response = super().form_valid(form)
         messages.success(self.request, "Mitgliederprofil wurde gespeichert.")
         return response
+
+
+class MemberDirectoryView(LoginRequiredMixin, ListView):
+    template_name = "members/directory.html"
+    context_object_name = "profiles"
+
+    def get_queryset(self):
+        queryset = MemberProfile.objects.select_related("user").exclude(
+            membership_status__in=[
+                MemberProfile.MembershipStatus.INVITED,
+                MemberProfile.MembershipStatus.INACTIVE,
+            ]
+        )
+        if self.request.user.has_perm("members.manage_member_profiles"):
+            return queryset
+
+        return queryset.filter(
+            Q(
+                directory_visibility__in=[
+                    MemberProfile.DirectoryVisibility.MEMBERS,
+                    MemberProfile.DirectoryVisibility.PUBLIC,
+                ]
+            )
+            | Q(user=self.request.user)
+        )
+
+
+class InternalSectionView(LoginRequiredMixin, TemplateView):
+    template_name = "members/section.html"
+    page_title = ""
+    heading = ""
+    intro = ""
+    body_copy = ""
+    section_tag = ""
+    cta_label = ""
+    cta_url = ""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            page_title=self.page_title,
+            heading=self.heading,
+            intro=self.intro,
+            body_copy=self.body_copy,
+            section_tag=self.section_tag,
+            cta_label=self.cta_label,
+            cta_url=self.cta_url,
+        )
+        return context
+
+
+class MediaHubView(InternalSectionView):
+    page_title = "Medien | AV Froburger"
+    heading = "Medien"
+    intro = "Interne Bilder, Alben und spaetere Medienablaeufe fuer den Mitgliederbereich."
+    body_copy = (
+        "Die geschuetzte Medienbibliothek folgt in Phase 6. Dieser Bereich ist bereits "
+        "reserviert, damit die Navigation und die Zugriffslogik jetzt konsistent aufgebaut sind."
+    )
+    section_tag = "Interner Bereich"
+    cta_label = "Zurueck zum Dashboard"
+    cta_url = reverse_lazy("accounts:home")
+
+
+class GeneralDocumentsView(InternalSectionView):
+    page_title = "Allgemeine Dokumente | AV Froburger"
+    heading = "Allgemeine Dokumente"
+    intro = "Interne Unterlagen fuer Mitglieder, die nicht als besonders sensibel eingestuft sind."
+    body_copy = (
+        "Die eigentliche Dokumentenverwaltung folgt in Phase 5. Hier entsteht der Einstieg "
+        "fuer allgemeine Protokolle, Semesterunterlagen und interne Informationen."
+    )
+    section_tag = "Dokumente"
+    cta_label = "Zurueck zum Dashboard"
+    cta_url = reverse_lazy("accounts:home")
+
+
+class SensitiveDocumentsView(PermissionRequiredMixin, InternalSectionView):
+    permission_required = "members.view_sensitive_documents"
+    raise_exception = True
+    page_title = "Sensible Dokumente | AV Froburger"
+    heading = "Sensible Dokumente"
+    intro = "Besonders geschuetzte Unterlagen mit erweitertem Zugriffsbedarf."
+    body_copy = (
+        "Dieser Bereich ist fuer sensible Dokumente reserviert und serverseitig geschuetzt. "
+        "Die eigentliche Dateiablage und Download-Logik folgen in Phase 5."
+    )
+    section_tag = "Vertraulich"
+    cta_label = "Zurueck zum Dashboard"
+    cta_url = reverse_lazy("accounts:home")
+
+    def has_permission(self):
+        return super().has_permission()

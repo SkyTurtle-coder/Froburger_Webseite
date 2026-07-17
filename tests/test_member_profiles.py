@@ -54,6 +54,63 @@ def test_member_can_view_and_edit_own_profile(client):
 
 
 @pytest.mark.django_db
+def test_dashboard_shows_requested_internal_tiles(client):
+    user = User.objects.create_user(
+        email="member@example.invalid",
+        password="Secret1234!",
+        first_name="Philipp",
+        last_name="Thuerlemann",
+    )
+    client.force_login(user)
+
+    response = client.get(reverse("accounts:home"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Profil" in content
+    assert "Mitgliederverzeichnis" in content
+    assert "Medien" in content
+    assert "Allgemeine Dokumente" in content
+    assert "Sensible Dokumente" in content
+
+
+@pytest.mark.django_db
+def test_member_directory_is_available_to_authenticated_users(client):
+    user = User.objects.create_user(
+        email="member@example.invalid",
+        password="Secret1234!",
+        first_name="Philipp",
+        last_name="Thuerlemann",
+    )
+    visible = User.objects.create_user(
+        email="visible@example.invalid",
+        password="Secret1234!",
+        first_name="Reto",
+        last_name="Fluetsch",
+    )
+    visible.member_profile.vulgar_name = "Parzival"
+    visible.member_profile.directory_visibility = MemberProfile.DirectoryVisibility.MEMBERS
+    visible.member_profile.save()
+    hidden = User.objects.create_user(
+        email="hidden@example.invalid",
+        password="Secret1234!",
+        first_name="Verdeckt",
+        last_name="Mitglied",
+    )
+    hidden.member_profile.directory_visibility = MemberProfile.DirectoryVisibility.PRIVATE
+    hidden.member_profile.save()
+    client.force_login(user)
+
+    response = client.get(reverse("members:directory"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Parzival" in content
+    assert "visible@example.invalid" in content
+    assert "hidden@example.invalid" not in content
+
+
+@pytest.mark.django_db
 def test_member_admin_views_require_permission(client):
     user = User.objects.create_user(
         email="member@example.invalid",
@@ -64,6 +121,39 @@ def test_member_admin_views_require_permission(client):
     response = client.get(reverse("members:admin_list"))
 
     assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_sensitive_documents_require_permission(client):
+    user = User.objects.create_user(
+        email="member@example.invalid",
+        password="Secret1234!",
+    )
+    client.force_login(user)
+
+    response = client.get(reverse("members:documents_sensitive"))
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_sensitive_documents_are_available_with_permission(client):
+    privileged_user = User.objects.create_user(
+        email="member-admin@example.invalid",
+        password="Secret1234!",
+    )
+    privileged_user.user_permissions.add(
+        Permission.objects.get(
+            content_type__app_label="members",
+            codename="view_sensitive_documents",
+        )
+    )
+    client.force_login(privileged_user)
+
+    response = client.get(reverse("members:documents_sensitive"))
+
+    assert response.status_code == 200
+    assert "Besonders geschuetzte Unterlagen" in response.content.decode()
 
 
 @pytest.mark.django_db
@@ -128,6 +218,10 @@ def test_bootstrap_roles_creates_expected_groups():
     assert president.permissions.filter(
         content_type__app_label="audit",
         codename="view_auditlogentry",
+    ).exists()
+    assert member_admin.permissions.filter(
+        content_type__app_label="members",
+        codename="view_sensitive_documents",
     ).exists()
     assert system_admin.permissions.filter(
         content_type__app_label="members",

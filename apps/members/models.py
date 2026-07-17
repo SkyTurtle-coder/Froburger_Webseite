@@ -44,6 +44,7 @@ class MemberProfile(models.Model):
         ordering = ["user__last_name", "user__first_name", "user__email"]
         permissions = [
             ("manage_member_profiles", "Can manage member profiles"),
+            ("view_sensitive_documents", "Can view sensitive internal documents"),
         ]
 
     def clean(self):

@@ -8,8 +8,8 @@
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
 <body>
-  <main class="auth-shell">
-    <section class="auth-card">
+  <main class="auth-shell{% block shell_class %}{% endblock %}">
+    <section class="auth-card{% block card_class %}{% endblock %}">
       <header class="auth-header">
         <p class="auth-kicker">AV Froburger</p>
         <h1>{% block heading %}Mitgliederbereich{% endblock %}</h1>

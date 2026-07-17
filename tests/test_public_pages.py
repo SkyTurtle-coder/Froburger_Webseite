@@ -11,7 +11,6 @@ from django.urls import reverse
         ("core:members", "Komitee der Aktivitas"),
         ("core:join", "So kannst du uns erreichen"),
         ("core:about", "Eine Verbindung mit Geschichte und Zukunft"),
-        ("core:intern", "Zur Anmeldung"),
         ("core:imprint", "Kontaktangaben und rechtlicher Hinweis"),
         ("core:privacy", "Hinweise zu externen Diensten"),
     ],
@@ -22,6 +21,14 @@ def test_public_pages_are_accessible_without_login(client, url_name, marker):
 
     assert response.status_code == 200
     assert marker in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_intern_entry_redirects_to_login_for_anonymous_users(client):
+    response = client.get(reverse("core:intern"))
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/accounts/login/?next=/accounts/"
 
 
 @pytest.mark.parametrize(
