@@ -176,8 +176,8 @@ Teilweise umgesetzt. Startseitenbereiche werden beim ersten CMS-Zugriff initiali
 
 ## 22. Push-Status
 
-Zum Zeitpunkt dieses Reports noch nicht gepusht.
+Nach `origin/feature/web-x-block-cms` gepusht.
 
 ## 23. Pull-Request-Status
 
-Kein Pull Request erstellt. Lokale GitHub-CLI fehlt; GitHub-Plugin waere fuer direkte PR-Erstellung hilfreich.
+Kein Pull Request automatisch erstellt. Ein lokaler Draft liegt in `docs/PR_WEB_X_CMS_DRAFT.md`; fuer eine direkte PR-Erstellung fehlen lokale `gh`-CLI oder ein installiertes GitHub-Plugin.
