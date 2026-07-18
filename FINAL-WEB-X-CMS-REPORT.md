@@ -27,6 +27,10 @@ Das Repository war bereits auf Django migriert, aber die CMS-nahen Apps `content
 - Revisionslisten und Restore-Views fuer Beitraege, Startseite und Karussells
 - Audit-Events fuer Content-Saves, Pinning, Restore und Medien-Uploads
 - oeffentliche Integration fuer Startseite, News-Liste, News-Detail und Sitemap
+- private Profilbild-Auslieferung ueber geschuetzte Members-Route statt direkter Rohdatei-URL
+- Management-Command zur Migration bestehender Profilbilder ins private Storage
+- generischer CMS-Seiteneditor fuer `Page` und `PageSection` mit Preview, Publish, Withdraw und Revisionen
+- Import-Command fuer `about` und `join`
 - CMS-View- und Public-Integrationstests zusaetzlich zu den Modelltests
 
 ## 4. Verwendete Datenmodelle
@@ -89,7 +93,9 @@ Das Repository war bereits auf Django migriert, aber die CMS-nahen Apps `content
 
 ## 9. Seitenbearbeitung
 
-Die Homepage besitzt jetzt eine eigene Web-X-Bearbeitungsmaske mit festen `PageSection`-Zeilen, Versionierung, Preview und Restore. Eine generische Bearbeitung weiterer redaktioneller Seiten ausserhalb der Startseite ist weiterhin nicht umgesetzt.
+- Homepage mit eigener Systemseiten-Bearbeitung
+- generischer Seiteneditor fuer weitere `Page`-Eintraege unter `/cms/seiten/`
+- `about` und `join` als erste zusaetzliche strukturierte CMS-Seiten vorbereitet
 
 ## 10. Rollen und Berechtigungen
 
@@ -104,6 +110,9 @@ Die Homepage besitzt jetzt eine eigene Web-X-Bearbeitungsmaske mit festen `PageS
 - Alt-Text-Pflicht fuer nicht dekorative CMS-Bilder
 - SVG-Uploads gesperrt
 - Sichtbarkeits- und Publikationslogik zentral im Modell
+- private Mitglieder-Profilbilder unter `PRIVATE_MEDIA_ROOT`
+- serverseitige Profilbild-Pruefung ueber `/members/profile-images/<profile_id>/`
+- optional vorbereitete `X-Accel-Redirect`-Konfiguration fuer Production
 
 ## 12. Versionierung
 
@@ -115,48 +124,51 @@ CMS-Aktionen fuer Beitragsspeicherung, Homepage-Speicherung, Pinning, Restore un
 
 ## 14. Testresultate
 
-- `python manage.py check`: erfolgreich
-- `python manage.py makemigrations --check`: erfolgreich
-- `ruff check .`: erfolgreich
-- `pytest`: `59 passed`
+- `uv run python manage.py check`: erfolgreich
+- `uv run python manage.py makemigrations --check`: erfolgreich
+- `uv run python manage.py migrate`: erfolgreich
+- `uv run ruff check .`: erfolgreich
+- `uv run pytest -q`: `69 passed`
 
 ## 15. Coverage
 
-- `coverage run -m pytest`
-- `coverage report`: `93%` Gesamtdeckung
+- `uv run coverage run -m pytest`
+- `uv run coverage report`: `81%` Gesamtdeckung
 
 ## 16. Ergebnisse der Multiagent-Reviews
 
-- Architektur: Strukturierte Modelle und klares `/cms/`-Routing wurden umgesetzt; weitere generische Seiteneditoren bleiben bewusst ausserhalb dieses ersten Schnitts.
-- Frontend: Die Redaktionsoberflaeche nutzt eine eigene CMS-Schale, waehrend Home und News minimal-invasiv an die neuen Datenmodelle gebunden wurden.
-- Security: Profilfotos im Mitgliederbereich sind weiterhin public media; private Dateifluessse und der Mitgliederbereich selbst wurden bewusst nicht als Vorlage fuer CMS-Medien uebernommen.
-- QA: Die Suite deckt jetzt CMS-Zugriffsmatrix, Preview-Schutz, Media-Upload, Restore, Startseiten-Fallback und Sitemap fuer News-Details mit ab.
+- Architektur: strukturierte Modelle, CMS-Oberflaeche und generischer Seiteneditor sind jetzt verbunden.
+- Frontend: CMS nutzt eine eigene Redaktion-Schale; `about` und `join` koennen aus strukturierten `PageSection`-Bloecken gerendert werden.
+- Security: private Profilbild-Auslieferung ist umgesetzt; Reverse-Proxy-Hardening fuer Production bleibt bewusst konfigurationsgetrieben.
+- QA: Die Suite deckt jetzt CMS-Zugriffsmatrix, Preview-Schutz, Media-Upload, Restore, Page-Workflow, Public-News und Public-Page-Import mit ab.
 
 ## 17. Offene mittlere und niedrige Punkte
 
-- Generische Editor-Views fuer weitere redaktionelle Seiten ausserhalb der Homepage fehlen noch
-- Die oeffentlichen Seiten `anlaesse`, `mitglieder`, `mitglied-werden` und `ueber-uns` rendern weiterhin statisch
-- Private Medienauslieferung und geschuetzte Dateifluesse sind noch nicht umgesetzt
+- Die oeffentlichen Seiten `anlaesse` und `mitglieder` rendern weiterhin statisch
 - Event- und Dokumentenmodule bleiben offen
-- Accessibility- und Lighthouse-Toollaeufe fehlen weiterhin
+- Browser-Automation fuer Console-, Keyboard- und Viewport-Regressionen fehlt weiterhin
 
 ## 18. Notwendige manuelle Konfiguration
 
 - bei lokaler SQLite-Nutzung `DATABASE_URL=sqlite:///db.sqlite3`
 - fuer PostgreSQL lokales `docker compose up -d db`
 - rechtlich verifizierte Inhalte fuer `impressum` und `datenschutz`
+- produktive Reverse-Proxy-Regeln fuer private Medien und HTTPS
 
 ## 19. Migration bestehender Inhalte
 
-Teilweise umgesetzt. Startseitenbereiche werden beim ersten CMS-Zugriff initialisiert, und News-Inhalte koennen jetzt direkt aus `Post` oeffentlich ausgespielt werden. Die restlichen statischen Inhaltsseiten muessen in einem naechsten Schritt kontrolliert in `Page`, `Post` und spaeter `Event` migriert werden.
+Teilweise umgesetzt. Startseitenbereiche werden beim ersten CMS-Zugriff initialisiert, News-Inhalte kommen aus `Post`, und `about` sowie `join` koennen ueber `import_existing_public_pages` in `Page` und `PageSection` uebernommen werden. `anlaesse` und `mitglieder` bleiben als naechste Migrationskandidaten offen.
 
 ## 20. Liste der Commits
 
-In diesem Rollout wurde der bereits vorhandene CMS-Grundstand separat gesichert:
-
 - `7dd8fe3` `feat: add Web-X CMS domain models and permissions`
-
-Die in diesem Durchlauf implementierte Web-X-CMS-Oberflaeche liegt aktuell noch uncommittet im Arbeitsverzeichnis.
+- `1d797c8` `feat: implement Web-X CMS interface and public content integration`
+- `7deef15` `security: protect member profile images behind authorization`
+- `f84c206` `feat: add reusable CMS editor for public pages`
+- `e691b7f` `feat: connect about and join pages to structured CMS content`
+- `01877f5` `chore: prepare hardened production settings`
+- `2940679` `test: document and verify Web-X CMS acceptance workflow`
+- `2bf96ed` `docs: update CMS security deployment and migration guides`
 
 ## 21. Verwendeter Branch
 
@@ -164,8 +176,8 @@ Die in diesem Durchlauf implementierte Web-X-CMS-Oberflaeche liegt aktuell noch 
 
 ## 22. Push-Status
 
-Nicht gepusht.
+Zum Zeitpunkt dieses Reports noch nicht gepusht.
 
 ## 23. Pull-Request-Status
 
-Kein Pull Request erstellt.
+Kein Pull Request erstellt. Lokale GitHub-CLI fehlt; GitHub-Plugin waere fuer direkte PR-Erstellung hilfreich.

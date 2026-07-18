@@ -9,15 +9,13 @@ Stand: Samstag, 18. Juli 2026
 
 ## Sicherheitsrelevant offen
 
-- Profilfotos aus dem Mitgliederbereich liegen weiterhin im oeffentlichen Media-Root und nicht in einem privaten Auslieferungsfluss.
-- Private Medienauslieferung ausserhalb des oeffentlichen `/media/`-Flows ist noch nicht umgesetzt.
 - `documents` und `events` sind fuer private oder redaktionelle Workflows noch nicht umgesetzt.
+- Reverse-Proxy-Auslieferung fuer private Medien ist fuer Production nur vorbereitet, aber nicht an eine echte Infrastruktur gebunden.
 
 ## Funktional offen
 
-- Die CMS-Oberflaeche deckt aktuell Dashboard, Beitraege, Medien, Karussells und die Homepage ab; generische Redaktionsseiten ausserhalb der Homepage fehlen noch.
-- Die oeffentlichen Seiten `anlaesse`, `mitglieder`, `mitglied-werden` und `ueber-uns` rendern noch nicht aus den neuen CMS-Modellen.
-- Es gibt noch keinen Import-Command fuer bestehende Seiteninhalte.
+- Die oeffentlichen Seiten `anlaesse` und `mitglieder` rendern noch nicht aus den neuen CMS-Modellen.
+- Browser-Automation fuer Keyboard-, Konsole- und Viewport-Regressionen fehlt weiterhin.
 
 ## Nicht blockierend, aber offen
 

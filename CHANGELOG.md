@@ -20,6 +20,14 @@
 - Startseitenkarussell, angepinnte Beitraege und Homepage-Fallbacks in die oeffentlichen Templates integriert.
 - Zugriffstests fuer CMS-Routen, Preview-Schutz, Media-Upload-Regeln, Restore-Flow und Public-News-Integration hinzugefuegt.
 
+### Members Security and Reusable Pages
+- Mitglieder-Profilbilder auf privates Storage unter `PRIVATE_MEDIA_ROOT` umgestellt und ueber geschuetzte Members-URLs ausgeliefert.
+- `migrate_profile_photos_to_private_storage` als idempotenten Migrations-Command mit `--dry-run` und optionalem Quellbehalt hinzugefuegt.
+- generischen CMS-Seiteneditor unter `/cms/seiten/` mit Preview, Publish, Withdraw und Revisionen eingefuehrt.
+- `about` und `join` ueber `import_existing_public_pages` an strukturierte `Page`-/`PageSection`-Inhalte angebunden.
+- `config.settings.production` auf explizite Security-Env-Variablen und schrittweise HSTS-Aktivierung vorbereitet.
+- Akzeptanzdokumentation, Private-Media-Doku und aktualisierte Deployment-/Security-Guides ergaenzt.
+
 ### Documentation
 - `README.md` auf den Django- und CMS-Stand umgestellt.
 - Neue Web-X-CMS-Dokumente fuer Ist-Stand, Architektur, Workflows, Security, Guide und Testing hinzugefuegt.
