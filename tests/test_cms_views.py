@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 import pytest
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
@@ -148,6 +148,37 @@ def test_cms_routes_require_expected_permissions(
     system_admin = role_user_factory("system_admin")
     client.force_login(system_admin)
     assert client.get(url).status_code == 200
+
+
+def test_cms_base_access_uses_central_view_post_permission(client, role_user_factory):
+    url = reverse("cms:page_list")
+    user = role_user_factory()
+    user.user_permissions.add(
+        Permission.objects.get(content_type__app_label="content", codename="view_page")
+    )
+    client.force_login(user)
+
+    assert client.get(url).status_code == 403
+
+    user.user_permissions.add(
+        Permission.objects.get(content_type__app_label="content", codename="view_post")
+    )
+    refreshed_user = type(user).objects.get(pk=user.pk)
+    client.force_login(refreshed_user)
+
+    assert client.get(url).status_code == 200
+
+
+def test_cms_navigation_links_back_to_internal_area(client, role_user_factory):
+    user = role_user_factory("web_aktuar")
+    client.force_login(user)
+
+    response = client.get(reverse("cms:dashboard"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Zurueck zum internen Bereich" in content
+    assert f'href="{reverse("accounts:home")}"' in content
 
 
 def test_post_preview_requires_preview_permission(client, role_user_factory, cms_post):

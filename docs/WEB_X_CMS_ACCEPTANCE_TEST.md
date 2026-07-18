@@ -23,7 +23,7 @@ Stand: 2026-07-18
   - `uv run ruff check .`: erfolgreich
   - `uv run python manage.py check`: erfolgreich
   - `uv run python manage.py makemigrations --check`: erfolgreich
-  - `uv run pytest -q`: `69 passed`
+  - `uv run pytest -q`: `72 passed`
 
 ## Abnahmeszenario
 
@@ -116,6 +116,15 @@ Stand: 2026-07-18
     Ergebnis: erfolgreich.
 30. Als anonymer Benutzer eine Entwurfs- oder Preview-URL aufrufen.
     Erwartet: kein Zugriff.
+    Ergebnis: erfolgreich.
+31. Als `web_aktuar` den internen Bereich oeffnen.
+    Erwartet: die Kachel `Web-X CMS` ist sichtbar und fuehrt zum CMS-Dashboard.
+    Ergebnis: erfolgreich.
+32. Als normales Mitglied den internen Bereich oeffnen.
+    Erwartet: keine CMS-Kachel sichtbar.
+    Ergebnis: erfolgreich.
+33. Im CMS den Ruecklink pruefen.
+    Erwartet: `Zurueck zum internen Bereich` fuehrt zur Konto-Startseite.
     Ergebnis: erfolgreich.
 
 ## UX- und Frontend-Pruefung

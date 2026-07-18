@@ -84,6 +84,20 @@
       </div>
     </article>
 
+    {% if can_access_cms %}
+    <article class="tile-card">
+      <div class="tile-card-header">
+        <p class="tile-eyebrow">Redaktion</p>
+        <h2>Web-X CMS</h2>
+      </div>
+      <p>Beitraege, Seiten, Medien und Karussells fuer die Website serverseitig verwalten.</p>
+      <div class="tile-card-footer">
+        <span class="status-pill status-pill-muted">Interne Webseitenverwaltung</span>
+        <a class="button tile-link" href="{% url 'cms:dashboard' %}">CMS oeffnen</a>
+      </div>
+    </article>
+    {% endif %}
+
     <article class="tile-card">
       <div class="tile-card-header">
         <p class="tile-eyebrow">Unterlagen</p>

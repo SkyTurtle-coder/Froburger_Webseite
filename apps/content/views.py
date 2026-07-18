@@ -36,6 +36,7 @@ from .models import (
     PublishableStatus,
     Visibility,
 )
+from .permissions import can_access_cms
 from .services import (
     build_carousel_preview,
     build_page_preview,
@@ -143,6 +144,9 @@ class CmsAccessMixin(LoginRequiredMixin, PermissionRequiredMixin):
     raise_exception = True
     cms_section = "dashboard"
     page_title = "Web-X CMS"
+
+    def has_permission(self):
+        return can_access_cms(self.request.user) and super().has_permission()
 
     def handle_no_permission(self):
         if not self.request.user.is_authenticated:

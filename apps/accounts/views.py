@@ -10,6 +10,7 @@ from django.views.generic import FormView, TemplateView
 
 from apps.audit.models import AuditLogEntry
 from apps.audit.services import record_audit_event
+from apps.content.permissions import can_access_cms
 from apps.members.models import MemberProfile
 from apps.members.views import get_or_create_member_profile
 
@@ -28,6 +29,7 @@ class AccountHomeView(LoginRequiredMixin, TemplateView):
         context["profile"] = profile
         context["can_invite"] = self.request.user.has_perm("accounts.add_accountinvitation")
         context["can_manage_members"] = self.request.user.has_perm("members.view_memberprofile")
+        context["can_access_cms"] = can_access_cms(self.request.user)
         context["can_view_sensitive_documents"] = profile.has_member_role(
             MemberProfile.MemberRole.BURSCH
         )

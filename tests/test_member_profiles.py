@@ -224,7 +224,29 @@ def test_dashboard_shows_requested_internal_tiles(client):
     assert "Medien" in content
     assert "Allgemeine Dokumente" in content
     assert "Sensible Dokumente" in content
+    assert "Web-X CMS" not in content
     assert "Rolle Bursch" in content
+
+
+@pytest.mark.django_db
+def test_dashboard_shows_cms_tile_for_users_with_cms_access(client):
+    call_command("bootstrap_roles")
+    user = User.objects.create_user(
+        email="webaktuar@example.invalid",
+        password="Secret1234!",
+        first_name="Web",
+        last_name="Aktuar",
+    )
+    user.groups.add(Group.objects.get(name="web_aktuar"))
+    client.force_login(user)
+
+    response = client.get(reverse("accounts:home"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Web-X CMS" in content
+    assert "CMS oeffnen" in content
+    assert f'href="{reverse("cms:dashboard")}"' in content
 
 
 @pytest.mark.django_db
