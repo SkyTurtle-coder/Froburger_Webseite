@@ -2,54 +2,78 @@
 
 Stand: 2026-07-18
 
-## Wichtiger Hinweis
+## Uebersicht
 
-Die benutzerfreundliche Web-X-Oberflaeche ist in diesem Stand noch nicht fertig. Dieses Dokument beschreibt deshalb:
+Das Web-X CMS deckt aktuell folgende Bereiche ab:
 
-- was bereits vorbereitet ist
-- wie die kuenftige Bedienung gedacht ist
-- welche technischen Grundlagen schon vorhanden sind
+- Dashboard
+- Beitraege
+- generische Seiten
+- Startseite
+- Medien
+- Karussells
 
-## Bereits vorbereitet
+## Rollen
 
-- eigene CMS-Modelle fuer Seiten, Beitraege, Medien und Karussells
-- freigegebene Layout-Presets
-- Status fuer Entwurf, Pruefung, geplant, veroeffentlicht und archiviert
-- Startseiten-Pinning
-- Revisions-Snapshots fuer spaetere Wiederherstellungen
-- Web-X-Berechtigungen im Rollen-Bootstrap
+- `web_aktuar`: operative CMS-Bearbeitung
+- `president` und `system_admin`: enthalten die CMS-Rechte ebenfalls
+- normale Mitglieder: kein CMS-Zugriff
 
-## Geplanter kuenftiger Ablauf fuer Web-X
+## Beitraege
 
-### Beitrag erstellen
+Workflow:
 
-1. anmelden
-2. Redaktion oeffnen
-3. Layout waehlen
-4. Titel, Teaser und Titelbild pflegen
-5. Inhaltsbloecke erfassen
-6. Entwurf speichern
-7. Vorschau pruefen
-8. publizieren oder planen
+1. `/cms/beitraege/` oeffnen
+2. Beitrag anlegen oder bearbeiten
+3. Layout, Titel, Teaser und Bloecke pflegen
+4. speichern
+5. Vorschau pruefen
+6. veroeffentlichen, planen oder zurueckziehen
+7. Revisionen bei Bedarf wiederherstellen
 
-### Seite bearbeiten
+## Seiten
 
-1. Seite auswaehlen
-2. nur freigegebene Inhaltsbereiche sehen
-3. Texte, Bilder und CTA pflegen
-4. Vorschau pruefen
-5. neue Version speichern
-6. publizieren
+Workflow:
 
-### Medien pflegen
+1. `/cms/seiten/` oeffnen
+2. bestehende CMS-Seite waehlen
+3. Seitentitel, Meta-Angaben und Inhaltsbloecke bearbeiten
+4. speichern
+5. Vorschau pruefen
+6. veroeffentlichen oder zurueckziehen
+7. Revisionen bei Bedarf wiederherstellen
 
-1. Bild hochladen
-2. Alt-Text und Legende pflegen
-3. Sichtbarkeit setzen
-4. Bild in Beitrag, Seite oder Karussell verwenden
+Aktuell sind besonders vorbereitet:
 
-## Aktueller technischer Zwischenstand
+- `about`
+- `join`
+- `homepage`
 
-- Die fachliche Grundlage ist implementiert.
-- Die eigentliche Redaktionsoberflaeche folgt in einem naechsten Arbeitsschritt.
-- Bis dahin ist das CMS noch kein fertiges Endanwenderwerkzeug fuer nicht technische Redaktoren.
+## Startseite
+
+Die Startseite bleibt eine eigene Systemseite mit festem Mapping fuer:
+
+- Copy-Bereich
+- Rueckblicksbereich
+- optionales Karussell
+- angepinnte publizierte Beitraege
+
+## Medien
+
+- nur freigegebene Bildtypen
+- Alt-Text fuer nicht dekorative Bilder erforderlich
+- private Medienverwaltung nur fuer entsprechend berechtigte Benutzer
+
+## Import bestehender Seiten
+
+Command:
+
+```text
+uv run python manage.py import_existing_public_pages
+```
+
+Option:
+
+- `--dry-run`
+
+Der Command legt `about` und `join` nur an, wenn sie noch nicht mit CMS-Inhalten gepflegt wurden.

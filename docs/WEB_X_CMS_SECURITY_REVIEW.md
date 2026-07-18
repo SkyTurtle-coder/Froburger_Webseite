@@ -4,59 +4,44 @@ Stand: 2026-07-18
 
 ## Zusammenfassung
 
-Die neue CMS-Grundlage verbessert die fachliche Trennung deutlich, loest aber noch nicht alle sicherheitsrelevanten Punkte. Besonders wichtig bleibt die saubere Trennung zwischen oeffentlichen CMS-Medien und privaten Mitgliederdaten.
+Der sicherheitskritischste offene Punkt aus dem vorherigen Stand wurde geschlossen: Mitglieder-Profilbilder laufen nicht mehr ueber eine direkte oeffentliche Rohdatei-URL, sondern ueber einen geschuetzten Members-Endpunkt mit serverseitiger Berechtigungspruefung.
 
-## Kritische Findings
+## Geschlossene Findings
 
-### Profilfotos sind weiterhin public media
+### Private Profilbilder
 
-- `MemberProfile.profile_photo` wird noch ueber das oeffentliche Media-Root ausgeliefert.
-- Das ist fuer den Mitgliederbereich nicht akzeptabel.
-- Folgearbeit: auf privaten Medienfluss oder bewusst oeffentliche Freigabe mit eigener Policy umstellen.
+- `MemberProfile.profile_photo` verwendet jetzt privates Storage unter `PRIVATE_MEDIA_ROOT`.
+- Templates im Members-/Accounts-Bereich verwenden keine direkte `.url` mehr.
+- Auslieferung erfolgt ueber `/members/profile-images/<profile_id>/`.
+- Tests decken erlaubten und verweigerten Zugriff sowie die Migrationslogik ab.
 
-## Hohe Findings
+### CMS-Zugriffsmatrix
 
-### CMS-Oberflaeche fehlt noch
+- CMS-Views fuer Dashboard, Beitraege, Medien, Karussells, Homepage und generische Seiten pruefen Login und Permissions serverseitig.
+- Preview-Routen bleiben intern und fuer anonyme Benutzer gesperrt.
 
-- Es gibt noch keine Preview-, Publish- oder Restore-Views.
-- Die neuen Permissions koennen darum noch nicht auf echte CMS-Endpunkte angewendet werden.
+### Layout- und Eingabegrenzen
 
-### Audit ist fuer CMS-Aktionen noch nicht verdrahtet
+- `LayoutPreset` bleibt serverseitige Whitelist.
+- kein freies HTML, CSS oder JavaScript im CMS
+- Medienvalidierung fuer Bildtypen und Alt-Texte bleibt aktiv
 
-- Modell- und Rollenbasis ist vorhanden.
-- `publish`, `unpublish`, `restore`, `pin`, `upload` und `replace` muessen spaeter protokolliert werden.
+## Reduzierte Risiken
 
-### Private Dokumenten- und Event-Fluesse fehlen noch
+### Oeffentliche Seiten aus CMS
 
-- `documents` und `events` sind weiterhin Platzhalter.
-- Private Dateizugriffe duerfen spaeter nie ueber direkte URLs geloest werden.
+- `about` und `join` koennen jetzt strukturiert aus `Page`/`PageSection` kommen.
+- der Import ist idempotent und ueberschreibt bestehende CMS-Inhalte nicht stillschweigend.
 
-## Bereits behoben oder reduziert
+### Production-Vorbereitung
 
-### Unkontrollierte Layoutwahl
+- `config.settings.production` nutzt jetzt explizite Security-Env-Variablen.
+- `check --deploy` ist ohne Scheinwerte fuer Cookies, Redirect und HSTS-Basis vorbereitet.
+- HSTS `includeSubDomains` und `preload` bleiben bewusst separat dokumentierte Spaetschritte.
 
-- `LayoutPreset` validiert nur serverseitig freigegebene Schluessel.
-- Templatepfade kommen aus einer Whitelist im Code.
+## Verbleibende offene Punkte
 
-### Freie Bildformate
-
-- `MediaAsset` akzeptiert aktuell nur JPEG, PNG und WebP.
-- SVG bleibt gesperrt.
-
-### Fehlende Alt-Texte
-
-- nicht dekorative CMS-Bilder brauchen einen Alt-Text
-- dekorative Bilder muessen bewusst als dekorativ markiert werden
-
-### Rollentrennung fuer Web-X
-
-- `web_aktuar` traegt jetzt eigene CMS- und Medienrechte
-- `member_admin` erhaelt diese CMS-Rechte nicht automatisch
-
-## Offene Folgearbeiten
-
-1. private Profilmedien absichern
-2. CMS-Views mit Login-, Permission- und Objektpruefungen bauen
-3. Preview-Zugriffe signieren oder serverseitig strikt an Sessions binden
-4. Audit-Events fuer CMS-Aktionen implementieren
-5. spaetere Upload-Validierung um Bildergroessen, Metadatenstrategie und Derivate erweitern
+1. `documents` und `events` haben noch keine private Datei- oder Download-Logik.
+2. `anlaesse` und `mitglieder` sind noch nicht ans strukturierte CMS angebunden.
+3. Fuer echte Production-Auslieferung muss ein kontrollierter interner Private-Media-Endpunkt am Reverse Proxy bereitgestellt werden.
+4. Es gibt noch kein Browser-Automationssetup fuer visuelle oder Console-Regressionen.

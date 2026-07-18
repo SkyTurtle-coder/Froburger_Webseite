@@ -4,68 +4,51 @@ Last updated: 2026-07-18
 
 ## Overall status
 
-The repository now contains the Django foundation, authentication baseline, Django-rendered public website, member-profile and role-management basics, plus the first structured CMS and media model foundation on the feature branch. Legacy `.html` paths are redirected permanently to canonical slash URLs.
+The branch `feature/web-x-block-cms` now contains the Django foundation, the internal members area, the Web-X CMS interface, protected member profile photos, and the first reusable structured page editor for public CMS pages.
 
-## Current repository baseline
+## Current baseline
 
-- branch: `feature/web-x-block-cms`
-- public site served through Django templates
-- Django project bootstrap present
-- custom user model and account onboarding present
-- protected account entry point present
-- member profiles and internal member routes present
-- role bootstrap command present
-- audit trail baseline present for invitations
-- static assets served from Django `static/`
-- legacy `.html` URLs redirected to canonical paths
-- structured CMS model foundation present
-- media library foundation present
-- no Web-X editor UI yet
-- public pages still mostly template-static
-- Phase-0 review consensus still applies: centralize templates first, then normalize structured content, then expand CMS and private area
+- Django project, split settings, auth, and role bootstrap are in place
+- public pages render through Django templates
+- structured CMS exists for posts, homepage, carousels, media, and reusable pages
+- `home`, `news`, `about`, and `join` can use CMS-backed content paths
+- member profile photos use private storage plus authorized delivery
+- production settings are prepared with explicit security env vars
 
 ## Phase tracking
 
 | Phase | Status | Notes |
 | --- | --- | --- |
-| 0 - Analysis and architecture | completed | branch created, repo analyzed, architecture/security docs committed |
-| 1 - Django foundation | completed | `.venv`, Django project, split settings, requirements, compose, and smoke tests are in place |
-| 2 - Accounts/auth | completed | custom user model, email auth, invite-only onboarding, auth templates, admin wiring, migrations, and tests are in place |
-| 3 - Public-site migration | completed | public pages now render through Django templates, assets live under `static/`, and legacy `.html` URLs redirect permanently |
-| 4 - Members and roles | completed | separate member profiles, self-service profile views, permission-gated member admin views, and role bootstrap are in place |
-| 5 - Documents | not started | requires private storage design |
-| 6 - Media library | in progress | `MediaAsset` with upload validation, metadata fields, and permissions added; private delivery and editor UI still open |
-| 7 - CMS | in progress | content models, layout presets, revisions, and role permissions added; preview, publish, restore, and public rendering still open |
-| 8 - News/events | not started | existing static content available as migration source |
-| 9 - Security/privacy hardening | not started | threat model drafted, implementation pending |
-| 10 - Tests/QA | in progress | pytest, ruff, Django checks, and CMS model tests are present; editor, preview, and file-delivery coverage still open |
-| 11 - CI | not started | depends on project bootstrap |
-| 12 - Production prep | not started | blocked on real server details |
-| 13 - Documentation finalization | not started | current docs are planning-level |
-| 14 - Final review loop | not started | depends on completed implementation |
+| 0 - Analysis and architecture | completed | architecture, ADRs, security model and repo rules established |
+| 1 - Django foundation | completed | project bootstrap, split settings, `uv`, tests and linting are in place |
+| 2 - Accounts/auth | completed | custom user model, invite onboarding, auth templates and audit baseline are active |
+| 3 - Public-site migration | completed | public routes run through Django templates with canonical slash URLs |
+| 4 - Members and roles | completed | internal portal, directory, admin views and role bootstrap are present |
+| 5 - Documents | not started | private document storage and workflows remain open |
+| 6 - Media library | in progress | public CMS media are managed; private member media are now protected; wider private media flows remain open |
+| 7 - CMS | in progress | dashboard, post editor, media, carousels, homepage, reusable pages and revisions are active |
+| 8 - News/events | in progress | news is CMS-backed; events remain static |
+| 9 - Security/privacy hardening | in progress | private profile-photo delivery and production settings are prepared; legal and hosting details remain open |
+| 10 - Tests/QA | in progress | 69 tests pass; browser automation is still absent |
+| 11 - CI | not started | local quality gates are documented, CI pipeline still missing |
+| 12 - Production prep | in progress | `production.py`, deploy docs and `check --deploy` guidance updated |
+| 13 - Documentation finalization | in progress | CMS, deployment, security and private-media docs updated |
+| 14 - Final review loop | in progress | branch still needs final push/PR and review cycle |
 
-## Known open external-information TODOs
+## Known external TODOs
 
 - responsible legal representative
 - full postal address
 - final hosting details
+- production server paths, service users and certificate paths
 - final privacy statement details
-- production server paths, service users, and certificate paths
 
-## Migration strategy summary
+## Latest verified checks
 
-1. preserve current design and URL intent
-2. bootstrap Django and infrastructure
-3. migrate shared layout to templates first
-4. keep public content hard-coded during the first Django template cutover
-5. move news/events/pages incrementally to database-backed CMS models
-6. introduce deeper private-area features only after robust auth and permission foundations exist
-7. move homepage, news, and selected public pages onto the new structured CMS models
-
-## Latest completed checks
-
-- `python manage.py check`
-- `python manage.py makemigrations --check` under `config.settings.test`
-- `pytest`
-- `ruff check .`
-- `git diff --check`
+- `uv run ruff check .`
+- `uv run python manage.py check`
+- `uv run python manage.py makemigrations --check`
+- `uv run python manage.py migrate`
+- `uv run pytest -q`
+- `uv run coverage run -m pytest`
+- `uv run coverage report`
