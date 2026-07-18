@@ -184,6 +184,11 @@ class PostBlockForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields["is_active"].initial = False
+            self.fields["position"].initial = None
+            self.fields["options"].initial = None
+            self.initial["options"] = None
         self.fields["layout_preset"].queryset = LayoutPreset.objects.filter(
             scope=LayoutPreset.Scope.BLOCK,
             is_active=True,
@@ -204,6 +209,8 @@ class PostBlockForm(forms.ModelForm):
     def clean_options(self):
         raw_value = self.cleaned_data.get("options")
         if not raw_value:
+            return {}
+        if raw_value == "":
             return {}
         if isinstance(raw_value, dict):
             return raw_value
@@ -360,6 +367,9 @@ class CarouselItemForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields["is_active"].initial = False
+            self.fields["position"].initial = None
         self.fields["image"].queryset = editable_media_queryset_for_user(self.user)
         self.fields["position"].widget.attrs.setdefault("min", 0)
         self.fields["link_label"].required = False
@@ -468,6 +478,11 @@ class PageSectionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields["is_active"].initial = False
+            self.fields["position"].initial = None
+            self.fields["options"].initial = None
+            self.initial["options"] = None
         self.fields["layout_preset"].queryset = LayoutPreset.objects.filter(
             scope=LayoutPreset.Scope.BLOCK,
             is_active=True,
@@ -488,6 +503,8 @@ class PageSectionForm(forms.ModelForm):
     def clean_options(self):
         raw_value = self.cleaned_data.get("options")
         if not raw_value:
+            return {}
+        if raw_value == "":
             return {}
         if isinstance(raw_value, dict):
             return raw_value

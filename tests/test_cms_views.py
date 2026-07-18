@@ -361,6 +361,86 @@ def test_page_preview_requires_preview_permission(client, role_user_factory, cms
     assert "Ein Seitenabschnitt aus dem CMS." in response.content.decode()
 
 
+def test_page_editor_save_accepts_blank_extra_section_forms(
+    client,
+    role_user_factory,
+    cms_page,
+):
+    editor = role_user_factory("web_aktuar")
+    client.force_login(editor)
+    section = cms_page.sections.get()
+
+    response = client.post(
+        reverse("cms:page_edit", args=[cms_page.pk]),
+        {
+            "title": "CMS Testseite Aktualisiert",
+            "slug": cms_page.slug,
+            "layout_preset": str(cms_page.layout_preset_id),
+            "meta_title": cms_page.meta_title,
+            "meta_description": cms_page.meta_description,
+            "og_image": "",
+            "status": cms_page.status,
+            "visibility": cms_page.visibility,
+            "published_at": "",
+            "scheduled_for": "",
+            "version_number": str(cms_page.version_number),
+            "change_reason": "Titel angepasst",
+            "sections-TOTAL_FORMS": "3",
+            "sections-INITIAL_FORMS": "1",
+            "sections-MIN_NUM_FORMS": "0",
+            "sections-MAX_NUM_FORMS": "1000",
+            "sections-0-id": str(section.pk),
+            "sections-0-block_type": section.block_type,
+            "sections-0-layout_preset": str(section.layout_preset_id),
+            "sections-0-position": str(section.position),
+            "sections-0-is_active": "on",
+            "sections-0-anchor_id": section.anchor_id,
+            "sections-0-eyebrow": section.eyebrow,
+            "sections-0-heading": section.heading,
+            "sections-0-body": section.body,
+            "sections-0-image": "",
+            "sections-0-carousel": "",
+            "sections-0-link_label": section.link_label,
+            "sections-0-link_url": section.link_url,
+            "sections-0-options": "{}",
+            "sections-1-id": "",
+            "sections-1-block_type": "",
+            "sections-1-layout_preset": "",
+            "sections-1-position": "",
+            "sections-1-anchor_id": "",
+            "sections-1-eyebrow": "",
+            "sections-1-heading": "",
+            "sections-1-body": "",
+            "sections-1-image": "",
+            "sections-1-carousel": "",
+            "sections-1-link_label": "",
+            "sections-1-link_url": "",
+            "sections-1-options": "",
+            "sections-2-id": "",
+            "sections-2-block_type": "",
+            "sections-2-layout_preset": "",
+            "sections-2-position": "",
+            "sections-2-anchor_id": "",
+            "sections-2-eyebrow": "",
+            "sections-2-heading": "",
+            "sections-2-body": "",
+            "sections-2-image": "",
+            "sections-2-carousel": "",
+            "sections-2-link_label": "",
+            "sections-2-link_url": "",
+            "sections-2-options": "",
+            "workflow_action": "save",
+        },
+    )
+
+    cms_page.refresh_from_db()
+
+    assert response.status_code == 302
+    assert response.url == reverse("cms:page_edit", args=[cms_page.pk])
+    assert cms_page.title == "CMS Testseite Aktualisiert"
+    assert cms_page.revisions.count() == 2
+
+
 def test_page_workflow_views_publish_and_withdraw_page(
     client,
     role_user_factory,
