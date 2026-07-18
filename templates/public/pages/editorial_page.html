@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<main id="main-content">
+  {% if preview_mode %}
+  <section class="cms-preview-banner" aria-label="Vorschaumodus">
+    <div class="container">
+      <strong>{{ preview_title|default:"Vorschau" }}</strong>
+      <span>Diese Vorschau ist nur intern sichtbar.</span>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="breadcrumbs"><a href="{% url 'core:home' %}">Home</a> / {{ cms_page.title }}</p>
+      <h1>{{ cms_page.title }}</h1>
+      {% if meta_description %}
+        <p>{{ meta_description }}</p>
+      {% endif %}
+    </div>
+  </section>
+
+  {% for section in page_sections %}
+    <section class="section{% if section.block_type == 'notice' or section.block_type == 'quote' %} section-light{% endif %}">
+      <div class="container">
+        {% if section.block_type == "image_text" %}
+          <div class="recap-grid">
+            <div>
+              {% if section.eyebrow %}<p class="eyebrow">{{ section.eyebrow }}</p>{% endif %}
+              {% if section.heading %}<h2 class="section-title">{{ section.heading }}</h2>{% endif %}
+              {% if section.body %}{{ section.body|linebreaks }}{% endif %}
+              {% if section.link_label and section.link_url %}
+                <div class="button-row">
+                  <a class="btn btn-primary" href="{{ section.link_url }}">{{ section.link_label }}</a>
+                </div>
+              {% endif %}
+            </div>
+            {% if section.image %}
+              <aside class="join-note-card">
+                <img src="{{ section.image.file.url }}" alt="{{ section.image.alt_text|default:section.heading|default:cms_page.title }}" loading="lazy" decoding="async">
+              </aside>
+            {% endif %}
+          </div>
+        {% elif section.block_type == "cta" %}
+          <article class="join-note-card">
+            {% if section.eyebrow %}<p class="eyebrow">{{ section.eyebrow }}</p>{% endif %}
+            {% if section.heading %}<h2 class="section-title">{{ section.heading }}</h2>{% endif %}
+            {% if section.body %}{{ section.body|linebreaks }}{% endif %}
+            {% if section.link_label and section.link_url %}
+              <a class="btn btn-primary" href="{{ section.link_url }}">{{ section.link_label }}</a>
+            {% endif %}
+          </article>
+        {% elif section.block_type == "notice" %}
+          <article class="meta-panel">
+            {% if section.eyebrow %}<p class="eyebrow">{{ section.eyebrow }}</p>{% endif %}
+            {% if section.heading %}<h2>{{ section.heading }}</h2>{% endif %}
+            {% if section.body %}{{ section.body|linebreaks }}{% endif %}
+            {% if section.link_label and section.link_url %}
+              <p><a class="text-link" href="{{ section.link_url }}">{{ section.link_label }} &rarr;</a></p>
+            {% endif %}
+          </article>
+        {% elif section.block_type == "image" or section.block_type == "hero_image" %}
+          {% if section.eyebrow or section.heading %}
+          <div class="section-heading">
+            <div>
+              {% if section.eyebrow %}<p class="eyebrow">{{ section.eyebrow }}</p>{% endif %}
+              {% if section.heading %}<h2 class="section-title">{{ section.heading }}</h2>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% if section.image %}
+            <figure class="blog-card">
+              <img class="blog-card-image" src="{{ section.image.file.url }}" alt="{{ section.image.alt_text|default:section.heading|default:cms_page.title }}" loading="lazy" decoding="async">
+              {% if section.body %}<figcaption>{{ section.body }}</figcaption>{% endif %}
+            </figure>
+          {% endif %}
+        {% elif section.block_type == "carousel" and section.carousel %}
+          <div class="section-heading">
+            <div>
+              {% if section.eyebrow %}<p class="eyebrow">{{ section.eyebrow }}</p>{% endif %}
+              {% if section.heading %}<h2 class="section-title">{{ section.heading }}</h2>{% endif %}
+            </div>
+            {% if section.body %}<p class="section-intro">{{ section.body }}</p>{% endif %}
+          </div>
+          <div class="blog-grid">
+            {% for item in section.carousel.items.all %}
+              {% if item.is_active %}
+                <article class="blog-card">
+                  <img class="blog-card-image" src="{{ item.image.file.url }}" alt="{{ item.image.alt_text|default:item.heading|default:cms_page.title }}" loading="lazy" decoding="async">
+                  <div class="blog-card-body">
+                    {% if item.heading %}<h3>{{ item.heading }}</h3>{% endif %}
+                    {% if item.body %}<p>{{ item.body }}</p>{% endif %}
+                    {% if item.link_label and item.link_url %}
+                      <a class="text-link" href="{{ item.link_url }}">{{ item.link_label }} &rarr;</a>
+                    {% endif %}
+                  </div>
+                </article>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          {% if section.eyebrow or section.heading or section.body %}
+            <div class="section-heading">
+              <div>
+                {% if section.eyebrow %}<p class="eyebrow">{{ section.eyebrow }}</p>{% endif %}
+                {% if section.heading %}<h2 class="section-title">{{ section.heading }}</h2>{% endif %}
+              </div>
+              {% if section.body %}<div class="section-intro">{{ section.body|linebreaks }}</div>{% endif %}
+            </div>
+          {% endif %}
+          {% if section.link_label and section.link_url %}
+            <div class="button-row">
+              <a class="btn btn-outline-dark" href="{{ section.link_url }}">{{ section.link_label }}</a>
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+    </section>
+  {% empty %}
+    <section class="section">
+      <div class="container">
+        <div class="empty-state">Fuer diese Seite sind noch keine CMS-Inhalte hinterlegt.</div>
+      </div>
+    </section>
+  {% endfor %}
+</main>
+{% endblock %}

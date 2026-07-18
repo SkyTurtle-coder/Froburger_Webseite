@@ -1,8 +1,9 @@
 import pytest
+from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.content.models import LayoutPreset, Post, PublishableStatus, Visibility
+from apps.content.models import LayoutPreset, Page, Post, PublishableStatus, Visibility
 from apps.media_library.models import MediaAsset
 
 
@@ -140,3 +141,30 @@ def test_sitemap_includes_public_post_detail_urls(client, published_post):
 
     assert response.status_code == 200
     assert f"<loc>http://testserver/aktuelles/{published_post.slug}/</loc>" in content
+
+
+@pytest.mark.django_db
+def test_import_existing_public_pages_is_idempotent():
+    call_command("import_existing_public_pages")
+    call_command("import_existing_public_pages")
+
+    about = Page.objects.get(page_key="about")
+    join = Page.objects.get(page_key="join")
+
+    assert Page.objects.filter(page_key="about").count() == 1
+    assert Page.objects.filter(page_key="join").count() == 1
+    assert about.sections.count() > 0
+    assert join.sections.count() > 0
+
+
+@pytest.mark.django_db
+def test_about_and_join_pages_render_cms_content_after_import(client):
+    call_command("import_existing_public_pages")
+
+    about_response = client.get(reverse("core:about"))
+    join_response = client.get(reverse("core:join"))
+
+    assert about_response.status_code == 200
+    assert "Eine Verbindung mit Geschichte und Zukunft" in about_response.content.decode()
+    assert join_response.status_code == 200
+    assert "Per Mail" in join_response.content.decode()

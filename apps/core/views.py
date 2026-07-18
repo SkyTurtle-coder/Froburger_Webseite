@@ -164,6 +164,18 @@ def _homepage_page_for_request(user):
     return queryset.filter(visibility=Visibility.PUBLIC).first()
 
 
+def _editorial_page_for_request(user, page_key: str):
+    queryset = (
+        Page.objects.published()
+        .filter(page_key=page_key)
+        .select_related("og_image", "layout_preset")
+        .prefetch_related("sections__image", "sections__carousel__items__image")
+    )
+    if user and getattr(user, "is_authenticated", False):
+        return queryset.filter(visibility__in=[Visibility.PUBLIC, Visibility.MEMBERS]).first()
+    return queryset.filter(visibility=Visibility.PUBLIC).first()
+
+
 def _page_sections(page):
     if not page:
         return []
@@ -333,6 +345,61 @@ def build_news_detail_render_context(
     }
 
 
+def build_editorial_page_render_context(
+    *,
+    request,
+    page_key="",
+    preview_page=None,
+    preview_mode=False,
+    preview_title="",
+):
+    page = preview_page or _editorial_page_for_request(request.user, page_key)
+    resolved_key = page_key or getattr(page, "page_key", "")
+    page_definition = PUBLIC_PAGES.get(
+        resolved_key,
+        PublicPageDefinition(
+            slug=resolved_key or getattr(page, "slug", "seite"),
+            template_name="public/pages/editorial_page.html",
+            title=(
+                (page.meta_title if page and page.meta_title else page.title)
+                if page
+                else "Seite"
+            ),
+            description=(
+                (page.meta_description if page and page.meta_description else "")
+                if page
+                else ""
+            ),
+        ),
+    )
+    sections = _page_sections(page)
+    og_image_url = _media_absolute_url(
+        request,
+        getattr(page, "og_image", None),
+        fallback_static_path=page_definition.og_image_path or "",
+    )
+    return {
+        "canonical_url": request.build_absolute_uri(request.path),
+        "cms_page": page,
+        "cms_page_definition": page_definition,
+        "meta_description": (
+            page.meta_description if page and page.meta_description else page_definition.description
+        ),
+        "meta_title": page.meta_title if page and page.meta_title else page_definition.title,
+        "noindex": preview_mode,
+        "og_image_alt": page_definition.og_image_alt,
+        "og_image_url": og_image_url,
+        "page_sections": sections,
+        "page_sections_by_anchor": {
+            section.anchor_id: section for section in sections if getattr(section, "anchor_id", "")
+        },
+        "page_slug": page_definition.slug,
+        "preview_mode": preview_mode,
+        "preview_title": preview_title,
+        "show_lock_link": False if preview_mode else page_definition.show_lock_link,
+    }
+
+
 class HomePageView(PublicPageView):
     page = PUBLIC_PAGES["home"]
 
@@ -378,9 +445,43 @@ class MembersPageView(PublicPageView):
 class JoinPageView(PublicPageView):
     page = PUBLIC_PAGES["join"]
 
+    def get_template_names(self):
+        if _editorial_page_for_request(self.request.user, "join"):
+            return ["public/pages/editorial_page.html"]
+        return super().get_template_names()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cms_page = _editorial_page_for_request(self.request.user, "join")
+        if cms_page:
+            context.update(
+                build_editorial_page_render_context(
+                    request=self.request,
+                    page_key="join",
+                )
+            )
+        return context
+
 
 class AboutPageView(PublicPageView):
     page = PUBLIC_PAGES["about"]
+
+    def get_template_names(self):
+        if _editorial_page_for_request(self.request.user, "about"):
+            return ["public/pages/editorial_page.html"]
+        return super().get_template_names()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cms_page = _editorial_page_for_request(self.request.user, "about")
+        if cms_page:
+            context.update(
+                build_editorial_page_render_context(
+                    request=self.request,
+                    page_key="about",
+                )
+            )
+        return context
 
 
 class ImprintPageView(PublicPageView):
