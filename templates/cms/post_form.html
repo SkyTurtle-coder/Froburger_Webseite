@@ -1,75 +1,125 @@
 {% extends "cms/base.html" %}
+{% load static %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'vendor/trix/trix.css' %}">
+{% endblock %}
 
 {% block content %}
 <section class="cms-panel cms-hero">
   <div>
-    <p class="cms-kicker">Beitragseditor</p>
-    <h1>{% if post %}{{ post.title }}{% else %}Neuer Beitrag{% endif %}</h1>
-    <p>Speichern, planen, veroeffentlichen und Revisionen spaeter gezielt wiederherstellen.</p>
+    <p class="cms-kicker">Beitrag</p>
+    <h1>{% if post %}{{ post.title }}{% else %}Inhalt erfassen{% endif %}</h1>
+    <p>Beginne mit Datum, Titel, Kurzbeschreibung und dem eigentlichen Beitrag. Technische Einstellungen bleiben im Hintergrund.</p>
   </div>
   <div class="cms-actions">
     {% if post %}
-      <a class="cms-button cms-button-secondary" href="{% url 'cms:post_preview' post.pk %}">Gespeicherte Vorschau</a>
-      <a class="cms-button cms-button-secondary" href="{% url 'cms:post_revisions' post.pk %}">Revisionen</a>
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:post_change_layout' post.pk %}">Layout aendern</a>
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:post_revisions' post.pk %}">Fruehere Versionen</a>
     {% endif %}
-    <a class="cms-button cms-button-secondary" href="{% url 'cms:post_list' %}">Zur Liste</a>
+    <a class="cms-button cms-button-secondary" href="{% url 'cms:post_list' %}">Zur Beitragsuebersicht</a>
   </div>
 </section>
 
-<form method="post" enctype="multipart/form-data" class="cms-editor">
+<form
+  method="post"
+  class="cms-editor"
+  action="{% if post %}{% url 'cms:post_edit' post.pk %}{% else %}{% url 'cms:post_create' %}?layout={{ layout_preset.key }}{% endif %}"
+>
   {% csrf_token %}
-  {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+  {% for hidden in form.hidden_fields %}
+    {% if hidden.name != "body_html" %}{{ hidden }}{% endif %}
+  {% endfor %}
   {% if form.non_field_errors %}
     <div class="cms-form-errors">{{ form.non_field_errors }}</div>
   {% endif %}
 
   <section class="cms-panel">
-    <div class="cms-toolbar">
-      <button class="cms-button" type="submit" name="workflow_action" value="save">Speichern</button>
-      {% if perms.content.publish_post %}
-        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="review">Zur Pruefung</button>
-        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="schedule">Planen</button>
-        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="publish">Veroeffentlichen</button>
-        {% if post %}
-          <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="withdraw">Zurueckziehen</button>
-          <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="archive">Archivieren</button>
-        {% endif %}
+    <div class="cms-panel-head">
+      <div>
+        <p class="cms-kicker">Schritt 2</p>
+        <h2>Inhalt erfassen</h2>
+      </div>
+      {% if layout_preset %}
+        <p class="cms-muted">Gewaehltes Layout: <strong>{{ layout_preset.name }}</strong></p>
       {% endif %}
     </div>
-    <div class="cms-form-grid">
-      {% for field in form.visible_fields %}
-        {% include "cms/_field.html" with field=field %}
-      {% endfor %}
+    <div class="cms-form-grid cms-post-form-grid">
+      {% include "cms/_field.html" with field=form.event_date %}
+      {% include "cms/_field.html" with field=form.title %}
+      <div class="cms-field{% if form.teaser.errors %} has-error{% endif %} cms-field-wide">
+        {{ form.teaser.label_tag }}
+        {{ form.teaser }}
+        <p class="cms-help">{{ form.teaser.help_text }}</p>
+        <p class="cms-help"><span data-teaser-count>0</span> Zeichen. Empfehlung: 120 bis 240 Zeichen.</p>
+        {% for error in form.teaser.errors %}
+          <p class="cms-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+      <div class="cms-field{% if form.body_html.errors %} has-error{% endif %} cms-field-wide">
+        <label for="post-body-editor">Beitrag</label>
+        {{ form.body_html }}
+        <trix-toolbar id="post-body-toolbar"></trix-toolbar>
+        <trix-editor id="post-body-editor" class="cms-trix-editor" input="{{ form.body_html.id_for_label }}" toolbar="post-body-toolbar"></trix-editor>
+        <p class="cms-help">Erlaubt sind Absatz, Zwischenueberschrift, fett, kursiv, Listen, Links und Zitat.</p>
+        {% for error in form.body_html.errors %}
+          <p class="cms-error">{{ error }}</p>
+        {% endfor %}
+      </div>
     </div>
   </section>
 
   <section class="cms-panel">
     <div class="cms-panel-head">
       <div>
-        <p class="cms-kicker">Inhaltsbloecke</p>
-        <h2>Beitragsaufbau</h2>
+        <p class="cms-kicker">Veroeffentlichung</p>
+        <h2>Naechster Schritt</h2>
       </div>
-      <p class="cms-muted">Neue Zeilen am Ende ausfuellen. Nicht benoetigte Zeilen leer lassen oder loeschen.</p>
+      <p class="cms-muted">Speichere zuerst den Entwurf. Veroeffentliche erst, wenn die Vorschau stimmt.</p>
     </div>
-    {{ formset.management_form }}
-    {% if formset.non_form_errors %}
-      <div class="cms-form-errors">{{ formset.non_form_errors }}</div>
+    <div class="cms-toolbar cms-toolbar-wrap">
+      <button class="cms-button" type="submit" name="workflow_action" value="save">Entwurf speichern</button>
+      {% if perms.content.preview_post %}
+        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="preview">Vorschau</button>
+      {% endif %}
+      {% if perms.content.publish_post %}
+        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="publish">Jetzt veroeffentlichen</button>
+      {% endif %}
+      {% if post %}
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:post_preview' post.pk %}">Gespeicherte Vorschau</a>
+      {% endif %}
+    </div>
+
+    {% if perms.content.publish_post %}
+      <details class="cms-disclosure"{% if current_workflow_action == "schedule" or form.schedule_date.errors or form.schedule_time.errors or post.status == "scheduled" %} open{% endif %}>
+        <summary>Veroeffentlichung planen</summary>
+        <div class="cms-form-grid">
+          {% include "cms/_field.html" with field=form.schedule_date %}
+          {% include "cms/_field.html" with field=form.schedule_time %}
+        </div>
+        <div class="cms-toolbar">
+          <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="schedule">Veroeffentlichung planen</button>
+        </div>
+      </details>
+      {% if post %}
+        <div class="cms-toolbar cms-toolbar-wrap">
+          <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="withdraw">Zurueckziehen</button>
+          <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="archive">Archivieren</button>
+        </div>
+      {% endif %}
     {% endif %}
-    <div class="cms-stack">
-      {% for block_form in formset.forms %}
-        <article class="cms-subpanel">
-          {% for hidden in block_form.hidden_fields %}{{ hidden }}{% endfor %}
-          {% if block_form.non_field_errors %}
-            <div class="cms-form-errors">{{ block_form.non_field_errors }}</div>
-          {% endif %}
-          <div class="cms-form-grid">
-            {% for field in block_form.visible_fields %}
-              {% include "cms/_field.html" with field=field %}
-            {% endfor %}
-          </div>
-        </article>
-      {% endfor %}
-    </div>
   </section>
+
+  {% if is_legacy_layout %}
+    <section class="cms-panel">
+      <p class="cms-kicker">Hinweis</p>
+      <p class="cms-muted">Dieser Beitrag stammt aus dem frueheren Block-Editor. Beim naechsten Speichern wird sein Inhalt in den vereinfachten Editor uebernommen.</p>
+    </section>
+  {% endif %}
 </form>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static 'vendor/trix/trix.umd.min.js' %}"></script>
+  <script src="{% static 'js/cms-post-editor.js' %}"></script>
 {% endblock %}

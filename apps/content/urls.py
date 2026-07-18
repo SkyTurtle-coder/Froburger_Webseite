@@ -49,6 +49,8 @@ from .views import (
     PageWithdrawView,
     PostArchiveView,
     PostCreateView,
+    PostFeatureView,
+    PostLayoutChangeView,
     PostListView,
     PostPreviewView,
     PostPublishView,
@@ -123,7 +125,17 @@ urlpatterns = [
     path("beitraege/", PostListView.as_view(), name="post_list"),
     path("beitraege/neu/", PostCreateView.as_view(), name="post_create"),
     path("beitraege/<int:pk>/bearbeiten/", PostUpdateView.as_view(), name="post_edit"),
+    path(
+        "beitraege/<int:pk>/layout-aendern/",
+        PostLayoutChangeView.as_view(),
+        name="post_change_layout",
+    ),
     path("beitraege/<int:pk>/vorschau/", PostPreviewView.as_view(), name="post_preview"),
+    path(
+        "beitraege/<int:pk>/startseite/",
+        PostFeatureView.as_view(),
+        name="post_feature",
+    ),
     path(
         "beitraege/<int:pk>/veroeffentlichen/",
         PostPublishView.as_view(),

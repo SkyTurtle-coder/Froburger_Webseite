@@ -4,65 +4,109 @@
 <section class="cms-panel cms-hero">
   <div>
     <p class="cms-kicker">Beitraege</p>
-    <h1>Redaktionelle Inhalte verwalten</h1>
-    <p>Entwuerfe, geplante Inhalte und publizierte Rueckblicke bleiben mit Revisionen nachvollziehbar.</p>
+    <h1>Beitraege verwalten</h1>
+    <p>Alle Beitraege in einer ruhigen Uebersicht. Bearbeiten, Vorschau oeffnen und direkt fuer die Startseite hervorheben.</p>
   </div>
   <div class="cms-actions">
-    <a class="cms-button" href="{% url 'cms:post_create' %}">Neuer Beitrag</a>
+    <a class="cms-button" href="{% url 'cms:post_create' %}">Neuen Beitrag erstellen</a>
   </div>
 </section>
 
-<section class="cms-filter-row">
+<section class="cms-filter-row" aria-label="Status filtern">
   <a href="{% url 'cms:post_list' %}"{% if not status_filter %} aria-current="page"{% endif %}>Alle</a>
   {% for value, label in status_choices %}
     <a href="{% url 'cms:post_list' %}?status={{ value }}"{% if status_filter == value %} aria-current="page"{% endif %}>{{ label }}</a>
   {% endfor %}
 </section>
 
-<section class="cms-card-grid">
+<section class="cms-post-list">
   {% for post in posts %}
-    <article class="cms-card">
-      <div class="cms-card-top">
-        <div>
-          <p class="cms-status">{{ post.get_status_display }} · {{ post.get_visibility_display }}</p>
-          <h2>{{ post.title }}</h2>
-        </div>
-        {% if post.hero_image %}
-          <img class="cms-thumb" src="{{ post.hero_image.file.url }}" alt="{{ post.hero_image.alt_text|default:post.title }}">
+    <article class="cms-post-row">
+      <div class="cms-post-feature">
+        {% if perms.content.pin_post_homepage %}
+          <form method="post" action="{% url 'cms:post_feature' post.pk %}">
+            {% csrf_token %}
+            <button
+              class="cms-feature-button{% if current_featured_post_id == post.pk %} is-active{% elif upcoming_featured_post_id == post.pk %} is-upcoming{% endif %}"
+              type="submit"
+              aria-label="Diesen Beitrag auf der Startseite hervorheben"
+            >
+              {% if current_featured_post_id == post.pk %}
+                <span aria-hidden="true">★</span>
+                <span>Startseite</span>
+              {% elif upcoming_featured_post_id == post.pk %}
+                <span aria-hidden="true">☆</span>
+                <span>Ab {{ post.scheduled_for|date:"d.m." }}</span>
+              {% else %}
+                <span aria-hidden="true">☆</span>
+                <span>Nicht hervorgehoben</span>
+              {% endif %}
+            </button>
+          </form>
         {% endif %}
       </div>
-      <p>{{ post.teaser }}</p>
-      <dl class="cms-meta-list">
-        <div><dt>Layout</dt><dd>{{ post.layout_preset.name }}</dd></div>
-        <div><dt>Version</dt><dd>{{ post.version_number }}</dd></div>
-        <div><dt>Aktualisiert</dt><dd>{{ post.updated_at|date:"d.m.Y H:i" }}</dd></div>
-        <div><dt>Pin</dt><dd>{% if post.is_homepage_pinned %}Ja{% else %}Nein{% endif %}</dd></div>
-      </dl>
-      <div class="cms-inline-actions">
+
+      <div class="cms-post-copy">
+        <div class="cms-post-copy-top">
+          <h2>{{ post.title }}</h2>
+          <span class="cms-layout-chip">{{ post.layout_preset.name }}</span>
+          <span class="cms-status-pill cms-status-pill-{{ post.status }}">
+            {% if post.status == "scheduled" and post.scheduled_for %}
+              Geplant
+            {% else %}
+              {{ post.get_status_display }}
+            {% endif %}
+          </span>
+        </div>
+        <p class="cms-post-summary">{{ post.teaser }}</p>
+        <p class="cms-post-meta">
+          {% if post.event_date %}
+            {{ post.event_date|date:"d. F Y" }}
+          {% elif post.published_at %}
+            {{ post.published_at|date:"d. F Y" }}
+          {% else %}
+            Ohne Datum
+          {% endif %}
+          /
+          {% if post.status == "scheduled" and post.scheduled_for %}
+            Geplant fuer {{ post.scheduled_for|date:"d. F Y, H:i" }}
+          {% else %}
+            {{ post.get_status_display }}
+          {% endif %}
+          /
+          Zuletzt bearbeitet am {{ post.updated_at|date:"d.m.Y H:i" }}
+        </p>
+      </div>
+
+      <div class="cms-post-actions">
         <a class="cms-button cms-button-secondary" href="{% url 'cms:post_edit' post.pk %}">Bearbeiten</a>
         <a class="cms-button cms-button-secondary" href="{% url 'cms:post_preview' post.pk %}">Vorschau</a>
-        <a class="cms-button cms-button-secondary" href="{% url 'cms:post_revisions' post.pk %}">Revisionen</a>
+        <details class="cms-action-menu">
+          <summary>Mehr</summary>
+          <div class="cms-action-menu-panel">
+            {% if perms.content.publish_post %}
+              <form method="post" action="{% url 'cms:post_publish' post.pk %}">
+                {% csrf_token %}
+                <button class="cms-text-link" type="submit">Jetzt veroeffentlichen</button>
+              </form>
+              <form method="post" action="{% url 'cms:post_withdraw' post.pk %}">
+                {% csrf_token %}
+                <button class="cms-text-link" type="submit">Zurueckziehen</button>
+              </form>
+              <form method="post" action="{% url 'cms:post_archive' post.pk %}">
+                {% csrf_token %}
+                <button class="cms-text-link" type="submit">Archivieren</button>
+              </form>
+            {% endif %}
+            <a class="cms-text-link" href="{% url 'cms:post_change_layout' post.pk %}">Layout aendern</a>
+            <a class="cms-text-link" href="{% url 'cms:post_revisions' post.pk %}">Fruehere Versionen</a>
+          </div>
+        </details>
       </div>
-      {% if perms.content.publish_post %}
-        <div class="cms-inline-actions">
-          <form method="post" action="{% url 'cms:post_publish' post.pk %}">
-            {% csrf_token %}
-            <button class="cms-button" type="submit">Veroeffentlichen</button>
-          </form>
-          <form method="post" action="{% url 'cms:post_withdraw' post.pk %}">
-            {% csrf_token %}
-            <button class="cms-button cms-button-secondary" type="submit">Zurueckziehen</button>
-          </form>
-          <form method="post" action="{% url 'cms:post_archive' post.pk %}">
-            {% csrf_token %}
-            <button class="cms-button cms-button-secondary" type="submit">Archivieren</button>
-          </form>
-        </div>
-      {% endif %}
     </article>
   {% empty %}
     <article class="cms-panel">
-      <p class="cms-empty">Noch keine Beitraege vorhanden.</p>
+      <p class="cms-empty">Es gibt noch keine Beitraege. Erstelle einen ersten Beitrag fuer Aktuelles, Rueckblicke oder Ankuendigungen.</p>
     </article>
   {% endfor %}
 </section>

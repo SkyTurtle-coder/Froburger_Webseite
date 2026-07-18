@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -22,6 +23,11 @@ from .models import (
     PostBlock,
     PublishableStatus,
     Visibility,
+)
+from .rich_text import (
+    build_legacy_post_body_html,
+    generate_unique_post_slug,
+    sanitize_post_body_html,
 )
 
 
@@ -52,6 +58,102 @@ def _parse_snapshot_date(value: str):
     if not value:
         return None
     return parse_date(value)
+
+
+def _normalise_post_status(status: str) -> str:
+    if status == PublishableStatus.REVIEW:
+        return PublishableStatus.DRAFT
+    return status
+
+
+def initial_post_body_html(post: Post) -> str:
+    if post.has_body_html:
+        return post.body_html
+    return build_legacy_post_body_html(post.blocks.order_by("position", "pk"))
+
+
+def _unpin_post(*, post: Post, actor, reason: str):
+    if not post.is_homepage_pinned:
+        return
+    post.is_homepage_pinned = False
+    post.pin_priority = 0
+    post.last_edited_by = actor
+    post.version_number += 1
+    post.full_clean()
+    post.save()
+    post.create_revision(actor=actor, reason=reason)
+
+
+@transaction.atomic
+def feature_post_on_homepage(*, post: Post, actor):
+    now = timezone.now()
+    if post.visibility != Visibility.PUBLIC or post.status not in {
+        PublishableStatus.PUBLISHED,
+        PublishableStatus.SCHEDULED,
+    }:
+        raise ValidationError(
+            "Nur veroeffentlichte oder geplante oeffentliche Beitraege "
+            "koennen hervorgehoben werden."
+        )
+
+    is_future_scheduled = (
+        post.status == PublishableStatus.SCHEDULED
+        and post.scheduled_for is not None
+        and post.scheduled_for > now
+    )
+    other_pins = list(Post.objects.filter(is_homepage_pinned=True).exclude(pk=post.pk))
+    current_featured_post = None
+
+    if is_future_scheduled:
+        featured_candidates = (
+            Post.objects.public(at=now)
+            .filter(is_homepage_pinned=True)
+            .exclude(pk=post.pk)
+            .order_by("-pin_priority", "-published_at", "-created_at")
+        )
+        current_featured_post = featured_candidates.first()
+        for pinned_post in other_pins:
+            is_current = current_featured_post and pinned_post.pk == current_featured_post.pk
+            is_future_candidate = (
+                pinned_post.status == PublishableStatus.SCHEDULED
+                and pinned_post.scheduled_for is not None
+                and pinned_post.scheduled_for > now
+            )
+            if not is_current or is_future_candidate:
+                _unpin_post(
+                    post=pinned_post,
+                    actor=actor,
+                    reason="Startseitenbeitrag wurde ersetzt",
+                )
+        post.pin_priority = (
+            current_featured_post.pin_priority + 1
+            if current_featured_post
+            else 100
+        )
+    else:
+        for pinned_post in other_pins:
+            _unpin_post(
+                post=pinned_post,
+                actor=actor,
+                reason="Startseitenbeitrag wurde ersetzt",
+            )
+        post.pin_priority = 100
+
+    post.is_homepage_pinned = True
+    post.last_edited_by = actor
+    post.version_number += 1
+    post.full_clean()
+    post.save()
+    revision = post.create_revision(actor=actor, reason="Auf Startseite hervorgehoben")
+    record_audit_event(
+        action="content.post.featured",
+        actor=actor,
+        object_type="Post",
+        object_id=str(post.pk),
+        result=AuditLogEntry.Result.SUCCESS,
+        detail=f"scheduled={is_future_scheduled}"[:255],
+    )
+    return revision
 
 
 def import_static_image_to_media(
@@ -177,17 +279,33 @@ def sync_inline_children(formset, parent, actor=None):
 
 
 @transaction.atomic
-def save_post_editor(*, form, formset, actor):
+def save_post_editor(*, form, formset=None, actor):
     post = form.save(commit=False)
     is_new = post.pk is None
     post.last_edited_by = actor
     if is_new:
         post.created_by = actor
-        post.author = actor
+    post.author = post.author or actor
+    if not post.slug:
+        post.slug = generate_unique_post_slug(
+            title=post.title,
+            queryset=Post.objects.all(),
+            current_pk=post.pk,
+        )
+    if not post.meta_title:
+        post.meta_title = post.title
+    if not post.meta_description:
+        post.meta_description = post.teaser
+    post.body_html = sanitize_post_body_html(post.body_html)
+    if not post.is_homepage_pinned:
+        post.pin_priority = 0
     post.version_number = (post.version_number or 1) + (0 if is_new else 1)
     post.full_clean()
     post.save()
-    sync_inline_children(formset, post, actor=actor)
+    if formset is not None:
+        sync_inline_children(formset, post, actor=actor)
+    elif post.has_body_html:
+        post.blocks.all().delete()
     revision = post.create_revision(actor=actor, reason=form.cleaned_data.get("change_reason", ""))
     action = "content.post.created" if is_new else "content.post.updated"
     detail = f"status={post.status}"
@@ -429,7 +547,8 @@ def build_post_preview(post: Post | None = None, snapshot: dict | None = None) -
         title=snapshot["title"],
         slug=snapshot["slug"],
         teaser=snapshot["teaser"],
-        status=snapshot["status"],
+        body_html=snapshot.get("body_html", ""),
+        status=_normalise_post_status(snapshot["status"]),
         visibility=snapshot["visibility"],
         layout_preset=layout,
         published_at=_parse_snapshot_datetime(snapshot.get("published_at", "")),
@@ -564,7 +683,8 @@ def _apply_post_snapshot(post: Post, snapshot: dict, actor=None):
     post.title = snapshot["title"]
     post.slug = snapshot["slug"]
     post.teaser = snapshot["teaser"]
-    post.status = snapshot["status"]
+    post.body_html = snapshot.get("body_html", "")
+    post.status = _normalise_post_status(snapshot["status"])
     post.visibility = snapshot["visibility"]
     post.published_at = _parse_snapshot_datetime(snapshot.get("published_at", ""))
     post.scheduled_for = _parse_snapshot_datetime(snapshot.get("scheduled_for", ""))
@@ -583,6 +703,7 @@ def _apply_post_snapshot(post: Post, snapshot: dict, actor=None):
     post.pin_priority = snapshot["pin_priority"]
     post.last_edited_by = actor
     post.version_number += 1
+    post.body_html = sanitize_post_body_html(post.body_html)
     post.full_clean()
     post.save()
     post.blocks.all().delete()

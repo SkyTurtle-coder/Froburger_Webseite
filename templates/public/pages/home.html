@@ -78,20 +78,18 @@
     </div>
   </section>
 
-  {% if homepage_pinned_posts %}
+  {% if homepage_featured_post %}
     <section class="section section-light" aria-labelledby="pinned-posts-title">
       <div class="container">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Aktuelles</p>
-            <h2 class="section-title" id="pinned-posts-title">Angepinnte Beitraege</h2>
+            <h2 class="section-title" id="pinned-posts-title">Aktuell auf der Startseite</h2>
           </div>
-          <p class="section-intro">Diese Inhalte wurden direkt aus dem Web-X CMS fuer die Startseite hervorgehoben.</p>
+          <p class="section-intro">Dieser Beitrag wurde im Web-X CMS direkt fuer die Startseite hervorgehoben.</p>
         </div>
         <div class="blog-grid">
-          {% for post in homepage_pinned_posts %}
-            {% include "public/partials/post_card.html" with post=post %}
-          {% endfor %}
+          {% include "public/partials/post_card.html" with post=homepage_featured_post %}
         </div>
       </div>
     </section>

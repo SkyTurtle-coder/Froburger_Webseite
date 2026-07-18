@@ -417,6 +417,314 @@ img {
   margin: 0;
 }
 
+.cms-toolbar-wrap {
+  align-items: center;
+}
+
+.cms-field-wide {
+  grid-column: 1 / -1;
+}
+
+.cms-post-form-grid {
+  align-items: start;
+}
+
+.cms-layout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.cms-layout-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.1rem;
+  background: var(--cms-surface);
+  border: 1px solid var(--cms-line);
+  border-radius: 20px;
+  box-shadow: var(--cms-shadow);
+  cursor: pointer;
+}
+
+.cms-layout-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cms-layout-card.is-selected,
+.cms-layout-card:has(input:checked) {
+  border-color: var(--cms-green);
+  box-shadow: 0 0 0 3px rgba(33, 91, 47, 0.12), var(--cms-shadow);
+}
+
+.cms-layout-card:focus-within {
+  outline: 3px solid rgba(213, 106, 24, 0.35);
+  outline-offset: 3px;
+}
+
+.cms-layout-card strong {
+  color: var(--cms-green-dark);
+  font-size: 1.1rem;
+}
+
+.cms-layout-card span:last-child {
+  color: var(--cms-muted);
+  font-size: 0.92rem;
+}
+
+.cms-layout-preview {
+  display: grid;
+  gap: 0.55rem;
+  min-height: 180px;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid #d8ccb8;
+  background: linear-gradient(180deg, #fffaf1 0%, #f2eadb 100%);
+}
+
+.cms-layout-line {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(31, 43, 31, 0.18);
+}
+
+.cms-layout-line.short {
+  width: 32%;
+}
+
+.cms-layout-line.title {
+  width: 78%;
+  height: 18px;
+  background: rgba(23, 61, 33, 0.8);
+}
+
+.cms-layout-line.body {
+  width: 100%;
+}
+
+.cms-layout-preview-simple_focus .cms-layout-line.title {
+  width: 92%;
+  height: 28px;
+}
+
+.cms-layout-preview-simple_focus .cms-layout-line:nth-child(3) {
+  height: 48px;
+  border-radius: 20px;
+  background: rgba(213, 106, 24, 0.24);
+}
+
+.cms-layout-preview-simple_magazine {
+  grid-template-columns: 0.5fr 1fr;
+  align-items: start;
+}
+
+.cms-layout-preview-simple_magazine .cms-layout-line.short {
+  width: 80%;
+}
+
+.cms-layout-preview-simple_magazine .cms-layout-line.title {
+  grid-column: 2;
+}
+
+.cms-layout-preview-simple_magazine .cms-layout-line.body:nth-child(3),
+.cms-layout-preview-simple_magazine .cms-layout-line.body:nth-child(4) {
+  grid-column: 1 / -1;
+}
+
+.cms-trix-editor {
+  min-height: 320px;
+  background: #fffefb;
+  border: 1px solid #cfbfaa;
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
+}
+
+.cms-trix-editor:focus {
+  outline: 2px solid rgba(33, 91, 47, 0.2);
+  outline-offset: 2px;
+}
+
+trix-toolbar .trix-button-group {
+  margin-bottom: 0.75rem;
+}
+
+.cms-disclosure {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f2e7;
+  border: 1px solid var(--cms-line);
+  border-radius: 18px;
+}
+
+.cms-disclosure summary {
+  cursor: pointer;
+  color: var(--cms-green-dark);
+  font-weight: 700;
+}
+
+.cms-disclosure[open] summary {
+  margin-bottom: 1rem;
+}
+
+.cms-post-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.cms-post-row {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  padding: 1.25rem;
+  background: var(--cms-surface);
+  border: 1px solid var(--cms-line);
+  border-radius: 20px;
+  box-shadow: var(--cms-shadow);
+}
+
+.cms-post-copy-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.cms-post-copy h2 {
+  margin: 0;
+  color: var(--cms-green-dark);
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+
+.cms-post-summary,
+.cms-post-meta {
+  margin: 0.5rem 0 0;
+}
+
+.cms-layout-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: #efe5d5;
+  color: var(--cms-green-dark);
+  font-size: 0.85rem;
+}
+
+.cms-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.cms-status-pill-draft {
+  background: #ece8df;
+  color: #5d5d57;
+}
+
+.cms-status-pill-scheduled {
+  background: #fff1dd;
+  color: #9a5b00;
+}
+
+.cms-status-pill-published {
+  background: #edf5ef;
+  color: var(--cms-green);
+}
+
+.cms-status-pill-archived {
+  background: #f3eee7;
+  color: #7a6b5e;
+}
+
+.cms-feature-button {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 92px;
+  padding: 0.9rem;
+  border: 1px solid #d8ccb8;
+  border-radius: 18px;
+  background: #fffaf1;
+  color: var(--cms-green-dark);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cms-feature-button.is-active {
+  border-color: var(--cms-green);
+  background: #edf5ef;
+}
+
+.cms-feature-button.is-upcoming {
+  border-color: var(--cms-orange);
+  background: #fff3e8;
+}
+
+.cms-feature-button span:first-child {
+  font-size: 1.2rem;
+}
+
+.cms-post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.75rem;
+}
+
+.cms-action-menu {
+  position: relative;
+}
+
+.cms-action-menu summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  background: #efe5d5;
+  color: var(--cms-green-dark);
+}
+
+.cms-action-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.cms-action-menu-panel {
+  position: absolute;
+  right: 0;
+  z-index: 5;
+  display: grid;
+  gap: 0.55rem;
+  min-width: 220px;
+  margin-top: 0.5rem;
+  padding: 0.9rem;
+  background: var(--cms-surface);
+  border: 1px solid var(--cms-line);
+  border-radius: 16px;
+  box-shadow: var(--cms-shadow);
+}
+
+.cms-action-menu-panel form {
+  margin: 0;
+}
+
+.cms-action-menu-panel button {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
 .cms-carousel-preview {
   display: grid;
   gap: 1rem;
@@ -450,10 +758,12 @@ img {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .cms-layout-grid,
   .cms-card-grid,
   .cms-grid-two,
   .cms-form-grid,
-  .cms-carousel-slide {
+  .cms-carousel-slide,
+  .cms-post-row {
     grid-template-columns: 1fr;
   }
 }
@@ -479,5 +789,14 @@ img {
   .cms-nav a,
   .cms-meta a {
     min-height: 40px;
+  }
+
+  .cms-post-actions {
+    justify-content: start;
+  }
+
+  .cms-action-menu-panel {
+    position: static;
+    min-width: 0;
   }
 }

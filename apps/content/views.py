@@ -5,7 +5,7 @@ from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import redirect_to_login
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -19,6 +19,7 @@ from apps.documents.models import Document
 from apps.events.models import Event
 from apps.media_library.models import MediaAsset
 
+from .constants import SIMPLIFIED_POST_LAYOUT_KEYS
 from .forms import (
     CarouselForm,
     CarouselItemFormSet,
@@ -27,12 +28,13 @@ from .forms import (
     MediaAssetForm,
     PageForm,
     PageSectionFormSet,
-    PostBlockFormSet,
-    PostForm,
+    PostLayoutSelectionForm,
+    SimplifiedPostForm,
 )
 from .models import (
     Carousel,
     CarouselRevision,
+    LayoutPreset,
     Page,
     PageRevision,
     Post,
@@ -46,6 +48,7 @@ from .services import (
     build_page_preview,
     build_post_preview,
     ensure_homepage_page,
+    feature_post_on_homepage,
     restore_carousel_revision,
     restore_page_revision,
     restore_post_revision,
@@ -174,6 +177,12 @@ class CmsDashboardView(CmsAccessMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         editable_documents = Document.objects.editable_by(self.request.user)
         homepage = Page.objects.filter(page_key="homepage").first()
+        current_featured_post = (
+            Post.objects.public()
+            .filter(is_homepage_pinned=True)
+            .order_by("-pin_priority", "-published_at", "-created_at")
+            .first()
+        )
         context.update(
             self.get_cms_context(
                 post_access=self.request.user.has_perm("content.view_post"),
@@ -182,10 +191,9 @@ class CmsDashboardView(CmsAccessMixin, TemplateView):
                 page_access=self.request.user.has_perm("content.view_page"),
                 homepage_access=self.request.user.has_perm("content.change_page"),
                 draft_posts=Post.objects.filter(status=PublishableStatus.DRAFT).count(),
-                review_posts=Post.objects.filter(status=PublishableStatus.REVIEW).count(),
                 scheduled_posts=Post.objects.filter(status=PublishableStatus.SCHEDULED).count(),
                 published_posts=Post.objects.filter(status=PublishableStatus.PUBLISHED).count(),
-                pinned_posts=Post.objects.filter(is_homepage_pinned=True).count(),
+                current_featured_post=current_featured_post,
                 media_assets=MediaAsset.objects.count(),
                 carousels=Carousel.objects.count(),
                 recent_posts=Post.objects.select_related("last_edited_by")
@@ -245,16 +253,45 @@ class PostListView(CmsAccessMixin, ListView):
             "hero_image", "layout_preset", "last_edited_by", "author"
         ).order_by("-updated_at", "-created_at")
         status_filter = self.request.GET.get("status")
-        if status_filter in {choice[0] for choice in PublishableStatus.choices}:
+        if status_filter in {
+            PublishableStatus.DRAFT,
+            PublishableStatus.SCHEDULED,
+            PublishableStatus.PUBLISHED,
+            PublishableStatus.ARCHIVED,
+        }:
             queryset = queryset.filter(status=status_filter)
         return queryset
 
     def get_context_data(self, **kwargs):
+        now = timezone.now()
+        current_featured_post = (
+            Post.objects.public(at=now)
+            .filter(is_homepage_pinned=True)
+            .order_by("-pin_priority", "-published_at", "-created_at")
+            .first()
+        )
+        upcoming_featured_post = (
+            Post.objects.filter(
+                is_homepage_pinned=True,
+                status=PublishableStatus.SCHEDULED,
+                scheduled_for__gt=now,
+            )
+            .order_by("-pin_priority", "scheduled_for", "-updated_at")
+            .first()
+        )
         context = super().get_context_data(**kwargs)
         context.update(
             self.get_cms_context(
                 status_filter=self.request.GET.get("status", ""),
-                status_choices=PublishableStatus.choices,
+                status_choices=(
+                    (PublishableStatus.DRAFT, "Entwurf"),
+                    (PublishableStatus.SCHEDULED, "Geplant"),
+                    (PublishableStatus.PUBLISHED, "Veroeffentlicht"),
+                    (PublishableStatus.ARCHIVED, "Archiviert"),
+                ),
+                current_featured_post_id=getattr(current_featured_post, "pk", None),
+                upcoming_featured_post_id=getattr(upcoming_featured_post, "pk", None),
+                current_time=now,
             )
         )
         return context
@@ -270,89 +307,164 @@ class PostEditorBaseView(CmsAccessMixin, TemplateView):
     def get_object(self) -> Post | None:
         return None
 
-    def get_form(self, *, data=None, files=None):
-        return PostForm(data=data, files=files, instance=self.object, user=self.request.user)
+    def get_layout_key(self) -> str:
+        if self.object and self.object.layout_preset_id:
+            return self.object.layout_preset.key
+        return self.request.GET.get("layout", "").strip()
 
-    def get_formset(self, *, data=None, files=None):
-        return PostBlockFormSet(
-            data=data,
-            files=files,
-            instance=self.object,
-            prefix="blocks",
-            form_kwargs={"user": self.request.user},
+    def get_layout_preset(self) -> LayoutPreset:
+        layout_key = self.get_layout_key()
+        if self.object and layout_key == self.object.layout_preset.key:
+            return self.object.layout_preset
+        return get_object_or_404(
+            LayoutPreset.objects.filter(
+                scope=LayoutPreset.Scope.POST,
+                key__in=SIMPLIFIED_POST_LAYOUT_KEYS,
+                is_active=True,
+            ),
+            key=layout_key,
         )
 
     def get_workflow_action(self) -> str:
         return self.request.POST.get("workflow_action", "save")
 
-    def validate_editor_forms(self, form, formset):
-        _validate_unique_positions(formset, label="Ein Block")
-        visibility = form.instance.visibility
-        for field_name in ("hero_image", "og_image"):
-            asset = getattr(form.instance, field_name)
-            if not _media_matches_content_visibility(asset, visibility):
-                form.add_error(
-                    field_name,
-                    "Oeffentliche Inhalte duerfen nur publizierte Medien "
-                    "mit passender Sichtbarkeit nutzen.",
-                )
-        for block_form in formset.forms:
-            cleaned_data = getattr(block_form, "cleaned_data", None) or {}
-            if not cleaned_data or cleaned_data.get("DELETE"):
-                continue
-            asset = cleaned_data.get("image")
-            carousel = cleaned_data.get("carousel")
-            if not _media_matches_content_visibility(asset, visibility):
-                block_form.add_error(
-                    "image",
-                    "Der gewaehlte Block verweist auf ein Medium mit unpassender Sichtbarkeit.",
-                )
-            if not _carousel_matches_content_visibility(carousel, visibility):
-                block_form.add_error(
-                    "carousel",
-                    "Das verknuepfte Karussell passt nicht zur Sichtbarkeit dieses Beitrags.",
-                )
+    def get_form(self, *, data=None, files=None):
+        return SimplifiedPostForm(
+            data=data,
+            files=files,
+            instance=self.object,
+            user=self.request.user,
+            layout_key=self.get_layout_preset().key,
+        )
 
-    def render_editor(self, *, form, formset, status=200):
+    def get_layout_cards(self):
+        presets = LayoutPreset.objects.filter(
+            scope=LayoutPreset.Scope.POST,
+            key__in=SIMPLIFIED_POST_LAYOUT_KEYS,
+            is_active=True,
+        )
+        preset_map = {preset.key: preset for preset in presets}
+        return [preset_map[key] for key in SIMPLIFIED_POST_LAYOUT_KEYS if key in preset_map]
+
+    def render_layout_selector(self, *, status=200):
+        selection_form = PostLayoutSelectionForm(
+            initial={"layout_key": self.request.GET.get("layout", "").strip()}
+        )
+        original_template_name = self.template_name
+        self.template_name = "cms/post_layout_select.html"
+        response = self.render_to_response(
+            self.get_cms_context(
+                page_title="Layout auswaehlen",
+                selection_form=selection_form,
+                layout_cards=self.get_layout_cards(),
+                selected_layout_key=self.request.GET.get("layout", "").strip(),
+            ),
+            status=status,
+        )
+        self.template_name = original_template_name
+        return response
+
+    def render_editor(self, *, form, status=200):
+        layout_preset = self.get_layout_preset() if self.get_layout_key() else None
         return self.render_to_response(
             self.get_cms_context(
                 form=form,
-                formset=formset,
                 post=self.object,
-                workflow_action=(
-                    self.get_workflow_action()
-                    if self.request.method == "POST"
-                    else "save"
+                layout_preset=layout_preset,
+                can_preview=bool(
+                    self.object and self.request.user.has_perm("content.preview_post")
+                ),
+                current_workflow_action=(
+                    self.get_workflow_action() if self.request.method == "POST" else "save"
+                ),
+                is_legacy_layout=bool(
+                    self.object
+                    and self.object.layout_preset
+                    and self.object.layout_preset.key not in SIMPLIFIED_POST_LAYOUT_KEYS
                 ),
             ),
             status=status,
         )
 
+    def _apply_editor_workflow(self, form, workflow_action: str):
+        current_status = self.object.status if self.object else PublishableStatus.DRAFT
+        current_published_at = self.object.published_at if self.object else None
+        current_scheduled_for = self.object.scheduled_for if self.object else None
+
+        if workflow_action in {"save", "preview"}:
+            form.instance.status = current_status
+            form.instance.published_at = current_published_at
+            form.instance.scheduled_for = (
+                current_scheduled_for if current_status == PublishableStatus.SCHEDULED else None
+            )
+            if self.object is None and workflow_action == "save":
+                form.instance.status = PublishableStatus.DRAFT
+                form.instance.published_at = None
+        elif workflow_action == "publish":
+            form.instance.status = PublishableStatus.PUBLISHED
+            form.instance.published_at = current_published_at or timezone.now()
+            form.instance.scheduled_for = None
+        elif workflow_action == "schedule":
+            form.instance.status = PublishableStatus.SCHEDULED
+            form.instance.scheduled_for = form.cleaned_data.get("scheduled_for")
+        elif workflow_action == "withdraw":
+            form.instance.status = PublishableStatus.DRAFT
+            form.instance.scheduled_for = None
+            form.instance.is_homepage_pinned = False
+            form.instance.pin_priority = 0
+        elif workflow_action == "archive":
+            form.instance.status = PublishableStatus.ARCHIVED
+            form.instance.visibility = Visibility.PRIVATE
+            form.instance.scheduled_for = None
+            form.instance.is_homepage_pinned = False
+            form.instance.pin_priority = 0
+        else:
+            raise PermissionDenied
+
+    def _success_message(self, workflow_action: str, post: Post) -> str:
+        if workflow_action == "preview":
+            return "Beitrag gespeichert. Die Vorschau wurde geoeffnet."
+        if workflow_action == "publish":
+            return "Beitrag ist jetzt veroefentlicht."
+        if workflow_action == "schedule" and post.scheduled_for:
+            return (
+                "Beitrag ist geplant fuer "
+                f"{timezone.localtime(post.scheduled_for).strftime('%d.%m.%Y %H:%M')} Uhr."
+            )
+        if workflow_action == "withdraw":
+            return "Beitrag wurde in den Entwurf zurueckgesetzt."
+        if workflow_action == "archive":
+            return "Beitrag wurde archiviert."
+        if post.status == PublishableStatus.DRAFT:
+            return "Entwurf gespeichert."
+        return "Aenderungen gespeichert."
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
+        if self.object is None and not self.get_layout_key():
+            return self.render_layout_selector()
         form = self.get_form()
-        formset = self.get_formset()
-        return self.render_editor(form=form, formset=formset)
+        return self.render_editor(form=form)
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form(data=request.POST, files=request.FILES)
-        formset = self.get_formset(data=request.POST, files=request.FILES)
-        if form.is_valid() and formset.is_valid():
+        if form.is_valid():
             workflow_action = self.get_workflow_action()
-            if workflow_action in {"publish", "review", "schedule", "withdraw", "archive"}:
-                if not request.user.has_perm("content.publish_post"):
-                    raise PermissionDenied
-            _apply_publishable_workflow(form.instance, workflow_action)
-            self.validate_editor_forms(form, formset)
-            if not form.errors and all(not inline_form.errors for inline_form in formset.forms):
-                post, revision = save_post_editor(form=form, formset=formset, actor=request.user)
-                messages.success(
-                    request,
-                    f"Beitrag gespeichert. Revision {revision.revision_number} wurde erstellt.",
-                )
-                return redirect("cms:post_edit", pk=post.pk)
-        return self.render_editor(form=form, formset=formset, status=400)
+            if (
+                workflow_action in {"publish", "schedule", "withdraw", "archive"}
+                and not request.user.has_perm("content.publish_post")
+            ):
+                raise PermissionDenied
+            if workflow_action == "preview" and not request.user.has_perm("content.preview_post"):
+                raise PermissionDenied
+            self._apply_editor_workflow(form, workflow_action)
+            post, revision = save_post_editor(form=form, actor=request.user)
+            messages.success(request, self._success_message(workflow_action, post))
+            if workflow_action == "preview":
+                return redirect("cms:post_preview", pk=post.pk)
+            return redirect("cms:post_edit", pk=post.pk)
+        return self.render_editor(form=form, status=400)
 
 
 class PostCreateView(PostEditorBaseView):
@@ -368,6 +480,74 @@ class PostUpdateView(PostEditorBaseView):
             Post.objects.select_related("hero_image", "og_image", "layout_preset"),
             pk=self.kwargs["pk"],
         )
+
+
+class PostLayoutChangeView(CmsAccessMixin, TemplateView):
+    permission_required = "content.change_post"
+    template_name = "cms/post_layout_select.html"
+    cms_section = "posts"
+    page_title = "Layout aendern"
+
+    def get_post(self):
+        return get_object_or_404(Post.objects.select_related("layout_preset"), pk=self.kwargs["pk"])
+
+    def get_layout_cards(self):
+        presets = LayoutPreset.objects.filter(
+            scope=LayoutPreset.Scope.POST,
+            key__in=SIMPLIFIED_POST_LAYOUT_KEYS,
+            is_active=True,
+        )
+        preset_map = {preset.key: preset for preset in presets}
+        return [preset_map[key] for key in SIMPLIFIED_POST_LAYOUT_KEYS if key in preset_map]
+
+    def get(self, request, *args, **kwargs):
+        post = self.get_post()
+        return self.render_to_response(
+            self.get_cms_context(
+                post=post,
+                layout_cards=self.get_layout_cards(),
+                selected_layout_key=post.layout_preset.key,
+                page_title="Layout aendern",
+                is_layout_change=True,
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        post = self.get_post()
+        layout_key = request.POST.get("layout_key", "").strip()
+        layout_preset = get_object_or_404(
+            LayoutPreset.objects.filter(
+                scope=LayoutPreset.Scope.POST,
+                key__in=SIMPLIFIED_POST_LAYOUT_KEYS,
+                is_active=True,
+            ),
+            key=layout_key,
+        )
+        post.layout_preset = layout_preset
+        post.last_edited_by = request.user
+        post.version_number += 1
+        post.full_clean()
+        post.save()
+        post.create_revision(actor=request.user, reason="Layout geaendert")
+        messages.success(request, f"Layout auf {layout_preset.name} umgestellt.")
+        return redirect("cms:post_edit", pk=post.pk)
+
+
+class PostFeatureView(CmsAccessMixin, View):
+    permission_required = "content.pin_post_homepage"
+
+    def post(self, request, *args, **kwargs):
+        post = get_object_or_404(Post, pk=kwargs["pk"])
+        try:
+            feature_post_on_homepage(post=post, actor=request.user)
+        except ValidationError as exc:
+            messages.error(request, exc.messages[0])
+        else:
+            messages.success(
+                request,
+                f'"{post.title}" wird jetzt auf der Startseite hervorgehoben.',
+            )
+        return redirect("cms:post_list")
 
 
 class PostWorkflowView(CmsAccessMixin, View):

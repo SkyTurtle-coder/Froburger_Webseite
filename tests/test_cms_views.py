@@ -34,6 +34,41 @@ def create_media_asset(*, user, image_upload_factory, title="Bild", alt_text="Bi
     return asset
 
 
+def create_simplified_post(
+    *,
+    author,
+    title,
+    slug,
+    layout_key="simple_classic",
+    teaser="Kurzbeschreibung",
+    body_html="<p>Beitragsinhalt</p>",
+    status=PublishableStatus.DRAFT,
+    published_at=None,
+    scheduled_for=None,
+    is_homepage_pinned=False,
+    pin_priority=0,
+):
+    post_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.POST, key=layout_key)
+    return Post.objects.create(
+        title=title,
+        slug=slug,
+        teaser=teaser,
+        body_html=body_html,
+        layout_preset=post_layout,
+        status=status,
+        visibility=Visibility.PUBLIC,
+        published_at=published_at,
+        scheduled_for=scheduled_for,
+        author=author,
+        created_by=author,
+        last_edited_by=author,
+        meta_title=title,
+        meta_description=teaser,
+        is_homepage_pinned=is_homepage_pinned,
+        pin_priority=pin_priority,
+    )
+
+
 @pytest.fixture
 def role_user_factory(user_factory):
     call_command("bootstrap_roles")
@@ -181,6 +216,93 @@ def test_cms_navigation_links_back_to_internal_area(client, role_user_factory):
     assert f'href="{reverse("accounts:home")}"' in content
 
 
+def test_post_create_starts_with_three_visual_layouts(client, role_user_factory):
+    editor = role_user_factory("web_aktuar")
+    client.force_login(editor)
+
+    response = client.get(reverse("cms:post_create"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Welche Art von Beitrag moechtest du erstellen?" in content
+    assert content.count('name="layout"') == 3
+    assert "Klassisch" in content
+    assert "Fokus" in content
+    assert "Magazin" in content
+    assert "Standardartikel" not in content
+    assert "Grosser Hero-Beitrag" not in content
+
+
+def test_post_create_rejects_invalid_layout_key(client, role_user_factory):
+    editor = role_user_factory("web_aktuar")
+    client.force_login(editor)
+
+    response = client.get(reverse("cms:post_create") + "?layout=ungueltig")
+
+    assert response.status_code == 404
+
+
+def test_post_create_form_is_simplified_and_auto_generates_metadata(
+    client,
+    role_user_factory,
+):
+    editor = role_user_factory("web_aktuar")
+    existing = create_simplified_post(
+        author=editor,
+        title="Sommeranlass am Rhein",
+        slug="sommeranlass-am-rhein",
+    )
+    client.force_login(editor)
+
+    form_response = client.get(reverse("cms:post_create") + "?layout=simple_classic")
+    form_content = form_response.content.decode()
+
+    assert form_response.status_code == 200
+    assert 'name="event_date"' in form_content
+    assert 'name="title"' in form_content
+    assert 'name="teaser"' in form_content
+    assert 'name="body_html"' in form_content
+    assert 'name="slug"' not in form_content
+    assert 'name="author"' not in form_content
+    assert 'name="meta_title"' not in form_content
+    assert 'name="meta_description"' not in form_content
+    assert 'name="pin_priority"' not in form_content
+    assert 'name="status"' not in form_content
+    assert 'name="layout_preset"' not in form_content
+
+    response = client.post(
+        reverse("cms:post_create") + "?layout=simple_classic",
+        {
+            "event_date": "2026-07-18",
+            "title": existing.title,
+            "teaser": "Kurzbeschreibung fuer die Startseite.",
+            "body_html": (
+                "<p><strong>Fett</strong></p>"
+                "<p><a href=\"/mitglied-werden/\">Intern</a></p>"
+                "<p><a href=\"javascript:alert(1)\">Boese</a></p>"
+                "<script>alert(1)</script>"
+            ),
+            "version_number": "1",
+            "change_reason": "",
+            "workflow_action": "save",
+        },
+        follow=True,
+    )
+
+    created = Post.objects.exclude(pk=existing.pk).get(title=existing.title)
+
+    assert response.status_code == 200
+    assert "Entwurf gespeichert." in response.content.decode()
+    assert created.slug == "sommeranlass-am-rhein-2"
+    assert created.meta_title == created.title
+    assert created.meta_description == created.teaser
+    assert created.author == editor
+    assert created.layout_preset.key == "simple_classic"
+    assert "<script" not in created.body_html
+    assert "javascript:" not in created.body_html
+    assert 'href="/mitglied-werden/"' in created.body_html
+
+
 def test_post_preview_requires_preview_permission(client, role_user_factory, cms_post):
     url = reverse("cms:post_preview", args=[cms_post.pk])
 
@@ -196,6 +318,97 @@ def test_post_preview_requires_preview_permission(client, role_user_factory, cms
 
     assert response.status_code == 200
     assert "Diese Vorschau ist nur intern sichtbar." in response.content.decode()
+
+
+def test_legacy_post_edit_prefills_simplified_editor(client, role_user_factory, cms_post):
+    editor = role_user_factory("web_aktuar")
+    client.force_login(editor)
+
+    response = client.get(reverse("cms:post_edit", args=[cms_post.pk]))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Dieser Beitrag stammt aus dem frueheren Block-Editor." in content
+    assert "Ein erster Textblock." in content
+
+
+def test_post_layout_change_updates_layout_without_losing_body_html(
+    client,
+    role_user_factory,
+):
+    editor = role_user_factory("web_aktuar")
+    post = create_simplified_post(
+        author=editor,
+        title="Layoutwechsel",
+        slug="layoutwechsel",
+        layout_key="simple_classic",
+        body_html="<p>Inhalt bleibt erhalten.</p>",
+    )
+    client.force_login(editor)
+
+    response = client.post(
+        reverse("cms:post_change_layout", args=[post.pk]),
+        {"layout_key": "simple_magazine"},
+        follow=True,
+    )
+    post.refresh_from_db()
+
+    assert response.status_code == 200
+    assert "Layout auf Magazin umgestellt." in response.content.decode()
+    assert post.layout_preset.key == "simple_magazine"
+    assert post.body_html == "<p>Inhalt bleibt erhalten.</p>"
+    assert post.revisions.count() == 1
+
+
+def test_post_feature_action_replaces_current_and_clears_queued_posts(
+    client,
+    role_user_factory,
+):
+    editor = role_user_factory("web_aktuar")
+    now = timezone.now()
+    current = create_simplified_post(
+        author=editor,
+        title="Aktuell sichtbar",
+        slug="aktuell-sichtbar",
+        status=PublishableStatus.PUBLISHED,
+        published_at=now - timedelta(days=1),
+        is_homepage_pinned=True,
+        pin_priority=100,
+    )
+    queued = create_simplified_post(
+        author=editor,
+        title="Spaeter sichtbar",
+        slug="spaeter-sichtbar",
+        status=PublishableStatus.SCHEDULED,
+        scheduled_for=now + timedelta(days=2),
+        is_homepage_pinned=True,
+        pin_priority=101,
+    )
+    replacement = create_simplified_post(
+        author=editor,
+        title="Neue Startseite",
+        slug="neue-startseite",
+        status=PublishableStatus.PUBLISHED,
+        published_at=now - timedelta(hours=1),
+    )
+    client.force_login(editor)
+
+    response = client.post(
+        reverse("cms:post_feature", args=[replacement.pk]),
+        follow=True,
+    )
+    current.refresh_from_db()
+    queued.refresh_from_db()
+    replacement.refresh_from_db()
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Neue Startseite" in content
+    assert "wird jetzt auf der Startseite hervorgehoben." in content
+    assert replacement.is_homepage_pinned is True
+    assert replacement.pin_priority == 100
+    assert current.is_homepage_pinned is False
+    assert queued.is_homepage_pinned is False
 
 
 def test_media_upload_rejects_private_visibility_for_web_aktuar(

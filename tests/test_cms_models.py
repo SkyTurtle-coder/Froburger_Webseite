@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.utils import timezone
 
+from apps.content.forms import SimplifiedPostForm
 from apps.content.models import (
     Carousel,
     CarouselItem,
@@ -18,6 +19,8 @@ from apps.content.models import (
     PublishableStatus,
     Visibility,
 )
+from apps.content.rich_text import sanitize_post_body_html
+from apps.content.services import feature_post_on_homepage, save_post_editor
 from apps.media_library.models import MediaAsset
 
 pytestmark = pytest.mark.django_db
@@ -274,6 +277,135 @@ def test_cta_blocks_allow_relative_and_contact_links(user_factory):
         invalid_cta.full_clean()
 
 
+def test_simplified_post_slug_and_seo_are_generated(
+    settings,
+    tmp_path,
+    user_factory,
+):
+    settings.MEDIA_ROOT = tmp_path / "test-media"
+    author = user_factory()
+    post_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.POST, key="simple_classic")
+    Post.objects.create(
+        title="Sommeranlass am Rhein",
+        slug="sommeranlass-am-rhein",
+        teaser="Kurzbeschreibung fuer den ersten Beitrag.",
+        body_html="<p>Ein erster Beitrag.</p>",
+        layout_preset=post_layout,
+        status=PublishableStatus.DRAFT,
+        visibility=Visibility.PUBLIC,
+        author=author,
+        created_by=author,
+        last_edited_by=author,
+        meta_title="Sommeranlass am Rhein",
+        meta_description="Kurzbeschreibung fuer den ersten Beitrag.",
+    )
+
+    form = SimplifiedPostForm(
+        data={
+            "event_date": "2026-07-18",
+            "title": "Sommeranlass am Rhein",
+            "teaser": "Noch eine Kurzbeschreibung.",
+            "body_html": "<p>Ein zweiter Beitrag.</p>",
+            "version_number": "1",
+            "change_reason": "",
+        },
+        instance=Post(),
+        user=author,
+        layout_key="simple_classic",
+    )
+    assert form.is_valid(), form.errors
+
+    post, revision = save_post_editor(form=form, actor=author)
+
+    assert post.slug == "sommeranlass-am-rhein-2"
+    assert post.meta_title == "Sommeranlass am Rhein"
+    assert post.meta_description == "Noch eine Kurzbeschreibung."
+    assert post.author == author
+    assert revision.snapshot["body_html"] == "<p>Ein zweiter Beitrag.</p>"
+
+
+def test_homepage_feature_allows_one_current_and_one_upcoming_pin(
+    settings,
+    tmp_path,
+    user_factory,
+):
+    settings.MEDIA_ROOT = tmp_path / "test-media"
+    author = user_factory()
+    post_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.POST, key="simple_classic")
+    current = Post.objects.create(
+        title="Aktuell sichtbar",
+        slug="aktuell-sichtbar",
+        teaser="Bereits auf der Startseite.",
+        body_html="<p>Text</p>",
+        layout_preset=post_layout,
+        status=PublishableStatus.PUBLISHED,
+        visibility=Visibility.PUBLIC,
+        published_at=timezone.now() - timedelta(hours=1),
+        author=author,
+        created_by=author,
+        last_edited_by=author,
+        is_homepage_pinned=True,
+        pin_priority=10,
+        meta_title="Aktuell sichtbar",
+        meta_description="Bereits auf der Startseite.",
+    )
+    upcoming = Post.objects.create(
+        title="Spaeter sichtbar",
+        slug="spaeter-sichtbar",
+        teaser="Soll spaeter uebernehmen.",
+        body_html="<p>Text</p>",
+        layout_preset=post_layout,
+        status=PublishableStatus.SCHEDULED,
+        visibility=Visibility.PUBLIC,
+        scheduled_for=timezone.now() + timedelta(days=1),
+        author=author,
+        created_by=author,
+        last_edited_by=author,
+        is_homepage_pinned=True,
+        pin_priority=11,
+        meta_title="Spaeter sichtbar",
+        meta_description="Soll spaeter uebernehmen.",
+    )
+
+    current.full_clean()
+    current.save()
+    upcoming.is_homepage_pinned = False
+    upcoming.pin_priority = 0
+    upcoming.save(update_fields=["is_homepage_pinned", "pin_priority", "updated_at"])
+
+    feature_post_on_homepage(post=upcoming, actor=author)
+    current.refresh_from_db()
+    upcoming.refresh_from_db()
+
+    assert current.is_homepage_pinned is True
+    assert upcoming.is_homepage_pinned is True
+    assert upcoming.pin_priority > current.pin_priority
+    assert Post.objects.filter(is_homepage_pinned=True).count() == 2
+
+
+def test_simplified_body_html_accepts_safe_markup_and_rejects_unsafe_links(
+    settings,
+    tmp_path,
+):
+    settings.MEDIA_ROOT = tmp_path / "test-media"
+    cleaned = sanitize_post_body_html(
+        "<p><strong>Fett</strong></p>"
+        "<p><a href=\"/mitglied-werden/\">Intern</a></p>"
+        "<p><a href=\"mailto:test@example.invalid\">Mail</a></p>"
+        "<p><a href=\"javascript:alert(1)\" onclick=\"alert(1)\">Boese</a></p>"
+        "<script>alert(1)</script>"
+        "<iframe src=\"https://example.invalid/embed\"></iframe>"
+    )
+
+    assert "<strong>Fett</strong>" in cleaned
+    assert 'href="/mitglied-werden/"' in cleaned
+    assert 'href="mailto:test@example.invalid"' in cleaned
+    assert "javascript:" not in cleaned
+    assert "onclick" not in cleaned
+    assert "<script" not in cleaned
+    assert "<iframe" not in cleaned
+
+
 def test_post_revision_snapshots_include_blocks(
     settings, tmp_path, user_factory, image_upload_factory
 ):
@@ -303,6 +435,7 @@ def test_post_revision_snapshots_include_blocks(
 
     assert revision.revision_number == 1
     assert revision.snapshot["title"] == "Rueckblick"
+    assert revision.snapshot["body_html"] == ""
     assert revision.snapshot["blocks"][0]["body"] == "Ein erster Absatz."
 
 

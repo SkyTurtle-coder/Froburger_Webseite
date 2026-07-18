@@ -1,11 +1,27 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from django import forms
 from django.forms import inlineformset_factory
+from django.utils import timezone
+from django.utils.html import strip_tags
 
 from apps.media_library.models import MediaAsset
 
-from .models import Carousel, CarouselItem, LayoutPreset, Page, PageSection, Post, PostBlock
+from .constants import SIMPLIFIED_POST_LAYOUT_KEYS
+from .models import (
+    Carousel,
+    CarouselItem,
+    LayoutPreset,
+    Page,
+    PageSection,
+    Post,
+    PostBlock,
+    Visibility,
+)
+from .rich_text import sanitize_post_body_html
+from .services import initial_post_body_html
 
 DATETIME_LOCAL_FORMAT = "%Y-%m-%dT%H:%M"
 
@@ -51,6 +67,151 @@ class VersionedModelForm(forms.ModelForm):
                 "Bitte neu laden und erneut pruefen."
             )
         return submitted
+
+
+def simplified_post_layout_choices():
+    presets = LayoutPreset.objects.filter(
+        scope=LayoutPreset.Scope.POST,
+        key__in=SIMPLIFIED_POST_LAYOUT_KEYS,
+        is_active=True,
+    )
+    preset_map = {preset.key: preset for preset in presets}
+    return [
+        (key, preset_map[key].name)
+        for key in SIMPLIFIED_POST_LAYOUT_KEYS
+        if key in preset_map
+    ]
+
+
+class PostLayoutSelectionForm(forms.Form):
+    layout_key = forms.ChoiceField(
+        label="Layout",
+        choices=(),
+        widget=forms.RadioSelect,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["layout_key"].choices = simplified_post_layout_choices()
+
+
+class SimplifiedPostForm(VersionedModelForm):
+    body_html = forms.CharField(
+        label="Beitrag",
+        widget=forms.HiddenInput(),
+        required=True,
+    )
+    schedule_date = forms.DateField(
+        label="Veroeffentlichungsdatum",
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    schedule_time = forms.TimeField(
+        label="Uhrzeit",
+        required=False,
+        widget=forms.TimeInput(attrs={"type": "time"}),
+    )
+
+    class Meta:
+        model = Post
+        fields = ("event_date", "title", "teaser", "body_html")
+        widgets = {
+            "event_date": forms.DateInput(attrs={"type": "date"}),
+            "title": forms.TextInput(
+                attrs={"placeholder": "Zum Beispiel: Sommeranlass am Rhein"}
+            ),
+            "teaser": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "placeholder": (
+                        "Ein kurzer Einfuehrungstext fuer die "
+                        "Uebersicht und die Startseite."
+                    ),
+                    "data-teaser-counter": "true",
+                }
+            ),
+            "body_html": forms.HiddenInput(),
+        }
+        labels = {
+            "event_date": "Datum",
+            "title": "Titel",
+            "teaser": "Kurzbeschreibung",
+            "body_html": "Beitrag",
+        }
+        help_texts = {
+            "event_date": "Dieses Datum wird beim Beitrag angezeigt.",
+            "teaser": "Ein kurzer Einfuehrungstext fuer die Uebersicht und die Startseite.",
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        self.layout_key = kwargs.pop("layout_key", "")
+        super().__init__(*args, **kwargs)
+        self.fields["version_number"].widget = forms.HiddenInput()
+        self.fields["change_reason"].widget = forms.HiddenInput()
+        if not self.instance.pk:
+            self.fields["event_date"].initial = timezone.localdate()
+        if self.instance.pk and not self.initial.get("body_html"):
+            self.initial["body_html"] = initial_post_body_html(self.instance)
+        if self.instance.pk and self.instance.scheduled_for:
+            local_value = timezone.localtime(self.instance.scheduled_for)
+            self.fields["schedule_date"].initial = local_value.date()
+            self.fields["schedule_time"].initial = local_value.time().replace(
+                second=0,
+                microsecond=0,
+            )
+
+    def clean_title(self):
+        return self.cleaned_data["title"].strip()
+
+    def clean_teaser(self):
+        return self.cleaned_data["teaser"].strip()
+
+    def clean_body_html(self):
+        cleaned = sanitize_post_body_html(self.cleaned_data["body_html"])
+        plain_text = strip_tags(cleaned).strip()
+        if not plain_text and "<img" not in cleaned:
+            raise forms.ValidationError("Bitte erfasse den eigentlichen Beitragsinhalt.")
+        return cleaned
+
+    def clean(self):
+        cleaned_data = super().clean()
+        workflow_action = self.data.get("workflow_action", "save")
+        schedule_date = cleaned_data.get("schedule_date")
+        schedule_time = cleaned_data.get("schedule_time")
+        if workflow_action == "schedule":
+            if not schedule_date:
+                self.add_error(
+                    "schedule_date",
+                    "Bitte waehle ein Datum fuer die Veroeffentlichung.",
+                )
+            if not schedule_time:
+                self.add_error(
+                    "schedule_time",
+                    "Bitte waehle eine Uhrzeit fuer die Veroeffentlichung.",
+                )
+            if schedule_date and schedule_time:
+                combined = datetime.combine(schedule_date, schedule_time)
+                cleaned_data["scheduled_for"] = timezone.make_aware(
+                    combined,
+                    timezone.get_current_timezone(),
+                )
+        else:
+            cleaned_data["scheduled_for"] = None
+        return cleaned_data
+
+    def save(self, commit=True):
+        post = super().save(commit=False)
+        post.layout_preset = LayoutPreset.objects.get(
+            scope=LayoutPreset.Scope.POST,
+            key=self.layout_key or self.instance.layout_preset.key,
+        )
+        post.visibility = Visibility.PUBLIC
+        post.body_html = self.cleaned_data["body_html"]
+        post.scheduled_for = self.cleaned_data.get("scheduled_for")
+        if commit:
+            post.save()
+        return post
 
 
 class PostForm(VersionedModelForm):

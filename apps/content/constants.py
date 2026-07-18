@@ -29,6 +29,12 @@ PUBLIC_MEMBER_GROUP_KEYS = (
     "altherren_committee",
 )
 
+SIMPLIFIED_POST_LAYOUT_KEYS = (
+    "simple_classic",
+    "simple_focus",
+    "simple_magazine",
+)
+
 
 @dataclass(frozen=True)
 class LayoutPresetDefinition:
@@ -95,6 +101,33 @@ PAGE_LAYOUT_PRESET_DEFINITIONS = (
 
 
 POST_LAYOUT_PRESET_DEFINITIONS = (
+    LayoutPresetDefinition(
+        scope="post",
+        key="simple_classic",
+        name="Klassisch",
+        description="Ein uebersichtlicher Beitrag mit Titel, Einleitung und fortlaufendem Text.",
+        template_name="public/posts/layouts/simple_classic.html",
+        required_fields=("title", "teaser", "body_html"),
+    ),
+    LayoutPresetDefinition(
+        scope="post",
+        key="simple_focus",
+        name="Fokus",
+        description=(
+            "Fuer wichtige Mitteilungen mit grosser Ueberschrift "
+            "und hervorgehobener Einleitung."
+        ),
+        template_name="public/posts/layouts/simple_focus.html",
+        required_fields=("title", "teaser", "body_html"),
+    ),
+    LayoutPresetDefinition(
+        scope="post",
+        key="simple_magazine",
+        name="Magazin",
+        description="Ein moderner Aufbau fuer Rueckblicke, Berichte und laengere Geschichten.",
+        template_name="public/posts/layouts/simple_magazine.html",
+        required_fields=("title", "teaser", "body_html"),
+    ),
     LayoutPresetDefinition(
         scope="post",
         key="standard_article",

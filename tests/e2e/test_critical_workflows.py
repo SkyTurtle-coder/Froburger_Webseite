@@ -62,6 +62,152 @@ def logout(page: Page, base_url: str):
     expect(page).to_have_url(urljoin(base_url, reverse("accounts:login")))
 
 
+def set_post_body_html(page: Page, html: str):
+    page.locator('input[name="body_html"]').evaluate(
+        """(element, value) => {
+            element.value = value;
+            element.dispatchEvent(new Event("input", { bubbles: true }));
+            element.dispatchEvent(new Event("change", { bubbles: true }));
+        }""",
+        html,
+    )
+
+
+def test_simplified_post_browser_workflow(browser_page_factory, live_server):
+    ensure_layout_presets()
+    call_command("bootstrap_roles")
+    web_x = User.objects.create_user(
+        email="webx-posts@example.invalid",
+        password="Secret1234!",
+        first_name="Web",
+        last_name="Posts",
+    )
+    web_x.groups.add(Group.objects.get(name="web_aktuar"))
+
+    session = browser_page_factory("desktop")
+    page = session.page
+    try:
+        login(page, live_server.url, email=web_x.email, password="Secret1234!")
+        page.get_by_role("link", name="CMS oeffnen").click()
+        expect(page).to_have_url(urljoin(live_server.url, reverse("cms:dashboard")))
+
+        page.get_by_role("link", name="Neuen Beitrag erstellen").first.click()
+        expect(
+            page.get_by_role(
+                "heading",
+                name="Welche Art von Beitrag moechtest du erstellen?",
+            )
+        ).to_be_visible()
+
+        page.locator('input[name="layout"][value="simple_classic"]').check(force=True)
+        page.get_by_role("button", name="Weiter").click()
+        expect(page).to_have_url(
+            urljoin(live_server.url, reverse("cms:post_create") + "?layout=simple_classic")
+        )
+
+        page.locator('input[name="event_date"]').fill("2026-07-18")
+        page.locator('input[name="title"]').fill("Browser CMS Beitrag")
+        page.locator('textarea[name="teaser"]').fill(
+            "Kurzbeschreibung fuer den vereinfachten Browser-Beitrag."
+        )
+        set_post_body_html(page, "<p>Erster Absatz</p><p>Zweiter Absatz</p>")
+        page.locator('button[name="workflow_action"][value="save"]').click()
+        expect(page.get_by_text("Entwurf gespeichert.")).to_be_visible()
+
+        page.locator('button[name="workflow_action"][value="preview"]').click()
+        expect(page.get_by_text("Diese Vorschau ist nur intern sichtbar.")).to_be_visible()
+        expect(page.get_by_role("heading", name="Browser CMS Beitrag")).to_be_visible()
+        page.go_back()
+
+        page.locator('button[name="workflow_action"][value="publish"]').click()
+        expect(page.get_by_text("Beitrag ist jetzt veroefentlicht.")).to_be_visible()
+
+        page.get_by_role("link", name="Layout aendern").click()
+        page.locator('input[name="layout_key"][value="simple_magazine"]').check(force=True)
+        page.get_by_role("button", name="Layout uebernehmen").click()
+        expect(page.get_by_text("Layout auf Magazin umgestellt.")).to_be_visible()
+
+        page.get_by_role("link", name="Gespeicherte Vorschau").click()
+        expect(page.locator(".post-layout-magazine")).to_be_visible()
+        page.go_back()
+
+        page.get_by_role("link", name="Zur Beitragsuebersicht").click()
+        row = page.locator("article.cms-post-row", has_text="Browser CMS Beitrag")
+        row.get_by_role("button", name="Diesen Beitrag auf der Startseite hervorheben").click()
+        expect(
+            page.get_by_text('"Browser CMS Beitrag" wird jetzt auf der Startseite hervorgehoben.')
+        ).to_be_visible()
+
+        page.goto(urljoin(live_server.url, reverse("core:home")))
+        expect(page.get_by_role("heading", name="Aktuell auf der Startseite")).to_be_visible()
+        expect(page.get_by_text("Browser CMS Beitrag")).to_be_visible()
+
+        page.goto(
+            urljoin(
+                live_server.url,
+                reverse("core:news_detail", args=["browser-cms-beitrag"]),
+            )
+        )
+        expect(page.locator(".post-layout-magazine")).to_be_visible()
+        expect(page.get_by_role("heading", name="Browser CMS Beitrag")).to_be_visible()
+    finally:
+        session.close()
+
+
+def test_scheduled_post_and_cms_permissions_browser_workflow(browser_page_factory, live_server):
+    ensure_layout_presets()
+    call_command("bootstrap_roles")
+    web_x = User.objects.create_user(
+        email="webx-schedule@example.invalid",
+        password="Secret1234!",
+        first_name="Web",
+        last_name="Schedule",
+    )
+    web_x.groups.add(Group.objects.get(name="web_aktuar"))
+    member = User.objects.create_user(
+        email="member-no-cms@example.invalid",
+        password="Secret1234!",
+        first_name="Normales",
+        last_name="Mitglied",
+    )
+    member.groups.add(Group.objects.get(name="member"))
+
+    session = browser_page_factory("mobile")
+    page = session.page
+    try:
+        login(page, live_server.url, email=web_x.email, password="Secret1234!")
+        page.get_by_role("link", name="CMS oeffnen").click()
+        page.get_by_role("link", name="Neuen Beitrag erstellen").first.click()
+        page.locator('input[name="layout"][value="simple_focus"]').check(force=True)
+        page.get_by_role("button", name="Weiter").click()
+
+        page.locator('input[name="event_date"]').fill("2026-08-20")
+        page.locator('input[name="title"]').fill("Geplanter Browser Beitrag")
+        page.locator('textarea[name="teaser"]').fill("Diese Meldung soll spaeter erscheinen.")
+        set_post_body_html(page, "<p>Der Beitrag ist vorbereitet.</p>")
+        page.get_by_text("Veroeffentlichung planen").first.click()
+        page.locator('input[name="schedule_date"]').fill("2026-08-20")
+        page.locator('input[name="schedule_time"]').fill("18:00")
+        page.locator('button[name="workflow_action"][value="schedule"]').click()
+        expect(page.get_by_text("Beitrag ist geplant fuer 20.08.2026 18:00 Uhr.")).to_be_visible()
+
+        page.get_by_role("link", name="Zur Beitragsuebersicht").click()
+        row = page.locator("article.cms-post-row", has_text="Geplanter Browser Beitrag")
+        expect(row.get_by_text("Geplant", exact=True)).to_be_visible()
+
+        page.goto(urljoin(live_server.url, reverse("core:news")))
+        expect(page.get_by_role("link", name="Geplanter Browser Beitrag")).to_have_count(0)
+
+        logout(page, live_server.url)
+        login(page, live_server.url, email=member.email, password="Secret1234!")
+        expect(page.get_by_role("link", name="CMS oeffnen")).to_have_count(0)
+        response = session.context.request.get(urljoin(live_server.url, reverse("cms:dashboard")))
+        assert response is not None
+        assert response.status == 403
+    finally:
+        session.close()
+
+
 def test_event_browser_workflow(browser_page_factory, live_server):
     call_command("bootstrap_roles")
     web_x = User.objects.create_user(

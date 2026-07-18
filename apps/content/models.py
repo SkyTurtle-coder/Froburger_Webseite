@@ -314,6 +314,7 @@ class Post(PublishableModel):
     title = models.CharField("Titel", max_length=200)
     slug = models.SlugField("Slug", unique=True)
     teaser = models.CharField("Teaser", max_length=280)
+    body_html = models.TextField("Beitrag", blank=True)
     layout_preset = models.ForeignKey(
         LayoutPreset,
         on_delete=models.PROTECT,
@@ -404,11 +405,33 @@ class Post(PublishableModel):
         if self.is_homepage_pinned and self.visibility != Visibility.PUBLIC:
             errors["visibility"] = "Angepinnte Beitraege muessen oeffentlich sichtbar sein."
         if self.is_homepage_pinned:
-            limit = getattr(settings, "CMS_HOMEPAGE_PIN_LIMIT", 3)
-            pinned_count = Post.objects.exclude(pk=self.pk).filter(is_homepage_pinned=True).count()
-            if pinned_count >= limit:
+            if self.status not in {PublishableStatus.PUBLISHED, PublishableStatus.SCHEDULED}:
                 errors["is_homepage_pinned"] = (
-                    f"Es duerfen hoechstens {limit} Beitraege auf der Startseite angepinnt sein."
+                    "Nur veroeffentlichte oder geplante Beitraege "
+                    "koennen auf der Startseite erscheinen."
+                )
+            now = timezone.now()
+            other_pins = Post.objects.exclude(pk=self.pk).filter(is_homepage_pinned=True)
+            future_scheduled = (
+                self.status == PublishableStatus.SCHEDULED
+                and self.scheduled_for is not None
+                and self.scheduled_for > now
+            )
+            active_pins = other_pins.exclude(
+                status=PublishableStatus.SCHEDULED,
+                scheduled_for__gt=now,
+            )
+            queued_pins = other_pins.filter(
+                status=PublishableStatus.SCHEDULED,
+                scheduled_for__gt=now,
+            )
+            if future_scheduled and queued_pins.exists():
+                errors["is_homepage_pinned"] = (
+                    "Es kann nur ein geplanter Startseitenbeitrag vorgemerkt sein."
+                )
+            elif not future_scheduled and active_pins.exists():
+                errors["is_homepage_pinned"] = (
+                    "Es kann nur ein aktueller Startseitenbeitrag hervorgehoben sein."
                 )
         if not isinstance(self.categories, list):
             errors["categories"] = "Kategorien muessen als Liste gespeichert werden."
@@ -420,6 +443,7 @@ class Post(PublishableModel):
             "title": self.title,
             "slug": self.slug,
             "teaser": self.teaser,
+            "body_html": self.body_html,
             "status": self.status,
             "visibility": self.visibility,
             "published_at": self.published_at.isoformat() if self.published_at else "",
@@ -455,6 +479,10 @@ class Post(PublishableModel):
             reason=reason,
             status=self.status,
         )
+
+    @property
+    def has_body_html(self) -> bool:
+        return bool((self.body_html or "").strip())
 
 
 class StructuredBlockBase(TimestampedModel):

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from django.core.management import call_command
 from django.urls import reverse
@@ -106,6 +108,42 @@ def published_post(settings, tmp_path, user_factory, image_upload_factory):
     )
 
 
+def create_simplified_public_post(
+    *,
+    author,
+    title,
+    slug,
+    layout_key="simple_classic",
+    body_html="<p>Ein vereinfachter Beitrag.</p>",
+    status=PublishableStatus.PUBLISHED,
+    published_at=None,
+    scheduled_for=None,
+    is_homepage_pinned=False,
+    pin_priority=0,
+):
+    layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.POST, key=layout_key)
+    return Post.objects.create(
+        title=title,
+        slug=slug,
+        teaser="Kurzbeschreibung fuer die Uebersicht.",
+        body_html=body_html,
+        layout_preset=layout,
+        status=status,
+        visibility=Visibility.PUBLIC,
+        published_at=published_at
+        if published_at is not None
+        else (timezone.now() if status == PublishableStatus.PUBLISHED else None),
+        scheduled_for=scheduled_for,
+        is_homepage_pinned=is_homepage_pinned,
+        pin_priority=pin_priority,
+        meta_title=title,
+        meta_description="Kurzbeschreibung fuer die Uebersicht.",
+        created_by=author,
+        last_edited_by=author,
+        author=author,
+    )
+
+
 @pytest.mark.django_db
 def test_news_list_and_detail_render_published_cms_posts(client, published_post):
     list_response = client.get(reverse("core:news"))
@@ -132,6 +170,62 @@ def test_homepage_falls_back_without_cms_page(client):
     assert response.status_code == 200
     assert "Verbunden in Tradition." in content
     assert "Spargelfahrt 2026" in content
+
+
+@pytest.mark.django_db
+def test_news_detail_renders_simplified_post_layout_and_body_html(client, user_factory):
+    author = user_factory()
+    post = create_simplified_public_post(
+        author=author,
+        title="Fokus-Mitteilung",
+        slug="fokus-mitteilung",
+        layout_key="simple_focus",
+        body_html="<p><strong>Wichtige Neuigkeit</strong> mit Link.</p>",
+    )
+
+    response = client.get(reverse("core:news_detail", args=[post.slug]))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert 'class="post-layout post-layout-focus"' in content
+    assert "<strong>Wichtige Neuigkeit</strong>" in content
+    assert post.teaser in content
+
+
+@pytest.mark.django_db
+def test_homepage_only_renders_current_featured_post_when_future_pin_exists(
+    client,
+    user_factory,
+):
+    author = user_factory()
+    now = timezone.now()
+    current = create_simplified_public_post(
+        author=author,
+        title="Heute im Fokus",
+        slug="heute-im-fokus",
+        layout_key="simple_classic",
+        published_at=now - timedelta(hours=2),
+        is_homepage_pinned=True,
+        pin_priority=100,
+    )
+    create_simplified_public_post(
+        author=author,
+        title="Spaeter im Fokus",
+        slug="spaeter-im-fokus",
+        layout_key="simple_magazine",
+        status=PublishableStatus.SCHEDULED,
+        scheduled_for=now + timedelta(days=2),
+        is_homepage_pinned=True,
+        pin_priority=101,
+    )
+
+    response = client.get(reverse("core:home"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Aktuell auf der Startseite" in content
+    assert current.title in content
+    assert "Spaeter im Fokus" not in content
 
 
 @pytest.mark.django_db

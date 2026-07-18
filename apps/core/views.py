@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
@@ -10,7 +9,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import TemplateView
 
+from apps.content.constants import SIMPLIFIED_POST_LAYOUT_KEYS
 from apps.content.models import Page, Post, Visibility
+from apps.content.rich_text import build_legacy_post_body_html
 from apps.members.models import PublicMemberProfile
 
 
@@ -244,6 +245,19 @@ def _post_blocks(post):
     return [block for block in blocks if getattr(block, "is_active", True)]
 
 
+def _post_body_html(post):
+    if getattr(post, "body_html", "").strip():
+        return post.body_html
+    return build_legacy_post_body_html(_post_blocks(post))
+
+
+def _post_layout_template(post):
+    layout_key = getattr(getattr(post, "layout_preset", None), "key", "")
+    if layout_key in SIMPLIFIED_POST_LAYOUT_KEYS:
+        return getattr(post.layout_preset, "template_name", "")
+    return "public/posts/layouts/legacy_post.html"
+
+
 def _carousel_items(carousel, *, preview_mode=False):
     if not carousel:
         return []
@@ -305,12 +319,12 @@ def build_homepage_render_context(
         getattr(carousel_section, "carousel", None),
         preview_mode=preview_mode,
     )
-    pinned_limit = getattr(settings, "CMS_HOMEPAGE_PIN_LIMIT", 3)
-    pinned_posts = list(
+    featured_post = (
         Post.objects.public()
         .select_related("hero_image")
         .filter(is_homepage_pinned=True)
-        .order_by("-pin_priority", "-published_at", "-created_at")[:pinned_limit]
+        .order_by("-pin_priority", "-published_at", "-created_at")
+        .first()
     )
     og_image_url = _media_absolute_url(
         request,
@@ -326,7 +340,7 @@ def build_homepage_render_context(
         "homepage_recap_section": sections_by_anchor.get("homepage-recap"),
         "homepage_carousel_section": carousel_section,
         "homepage_carousel_items": homepage_carousel_items,
-        "homepage_pinned_posts": pinned_posts,
+        "homepage_featured_post": featured_post,
         "meta_description": (
             page.meta_description if page and page.meta_description else page_definition.description
         ),
@@ -389,6 +403,8 @@ def build_news_detail_render_context(
         or page_definition.og_image_alt,
         "og_image_url": og_image_url,
         "page_slug": page_definition.slug,
+        "post_body_html": _post_body_html(post),
+        "post_layout_template": _post_layout_template(post),
         "post": post,
         "post_blocks": blocks,
         "preview_mode": preview_mode,

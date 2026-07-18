@@ -1,0 +1,63 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Neuer Beitrag</p>
+    <h1>{% if is_layout_change %}Welches Layout soll dieser Beitrag kuenftig verwenden?{% else %}Welche Art von Beitrag moechtest du erstellen?{% endif %}</h1>
+    <p>Waehle die Vorlage, die am besten zu deinem Inhalt passt. Danach erfasst du nur Datum, Titel, Kurzbeschreibung und Text.</p>
+  </div>
+  <div class="cms-actions">
+    {% if is_layout_change and post %}
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:post_edit' post.pk %}">Zurueck zum Beitrag</a>
+    {% else %}
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:post_list' %}">Zur Beitragsuebersicht</a>
+    {% endif %}
+  </div>
+</section>
+
+{% if is_layout_change and post %}
+  <form method="post" class="cms-editor">
+    {% csrf_token %}
+    <section class="cms-layout-grid">
+      {% for preset in layout_cards %}
+        <label class="cms-layout-card{% if selected_layout_key == preset.key %} is-selected{% endif %}">
+          <input type="radio" name="layout_key" value="{{ preset.key }}"{% if selected_layout_key == preset.key %} checked{% endif %}>
+          <span class="cms-layout-preview cms-layout-preview-{{ preset.key }}">
+            <span class="cms-layout-line short"></span>
+            <span class="cms-layout-line title"></span>
+            <span class="cms-layout-line body"></span>
+            <span class="cms-layout-line body"></span>
+          </span>
+          <strong>{{ preset.name }}</strong>
+          <span>{{ preset.description }}</span>
+        </label>
+      {% endfor %}
+    </section>
+    <div class="cms-toolbar">
+      <button class="cms-button" type="submit">Layout uebernehmen</button>
+    </div>
+  </form>
+{% else %}
+  <form method="get" action="{% url 'cms:post_create' %}" class="cms-editor">
+    <section class="cms-layout-grid">
+      {% for preset in layout_cards %}
+        <label class="cms-layout-card{% if selected_layout_key == preset.key %} is-selected{% endif %}">
+          <input type="radio" name="layout" value="{{ preset.key }}"{% if selected_layout_key == preset.key or forloop.first and not selected_layout_key %} checked{% endif %}>
+          <span class="cms-layout-preview cms-layout-preview-{{ preset.key }}">
+            <span class="cms-layout-line short"></span>
+            <span class="cms-layout-line title"></span>
+            <span class="cms-layout-line body"></span>
+            <span class="cms-layout-line body"></span>
+          </span>
+          <strong>{{ preset.name }}</strong>
+          <span>{{ preset.description }}</span>
+        </label>
+      {% endfor %}
+    </section>
+    <div class="cms-toolbar">
+      <button class="cms-button" type="submit">Weiter</button>
+    </div>
+  </form>
+{% endif %}
+{% endblock %}
