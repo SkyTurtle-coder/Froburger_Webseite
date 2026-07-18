@@ -381,6 +381,136 @@ CarouselItemFormSet = inlineformset_factory(
 )
 
 
+class PageForm(VersionedModelForm):
+    class Meta:
+        model = Page
+        fields = (
+            "title",
+            "slug",
+            "layout_preset",
+            "meta_title",
+            "meta_description",
+            "og_image",
+            "status",
+            "visibility",
+            "published_at",
+            "scheduled_for",
+        )
+        widgets = {
+            "meta_description": forms.Textarea(attrs={"rows": 3}),
+            "published_at": datetime_local_widget(),
+            "scheduled_for": datetime_local_widget(),
+        }
+        labels = {
+            "title": "Seitentitel",
+            "slug": "Slug",
+            "layout_preset": "Seitenlayout",
+            "meta_title": "SEO-Titel",
+            "meta_description": "SEO-Beschreibung",
+            "og_image": "Open-Graph-Bild",
+            "status": "Status",
+            "visibility": "Sichtbarkeit",
+            "published_at": "Veroeffentlicht am",
+            "scheduled_for": "Geplant fuer",
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        self.fields["layout_preset"].queryset = LayoutPreset.objects.filter(
+            scope=LayoutPreset.Scope.PAGE,
+            is_active=True,
+        ).exclude(key="homepage").order_by("name")
+        self.fields["og_image"].queryset = editable_media_queryset_for_user(self.user)
+        self.fields["published_at"].input_formats = [DATETIME_LOCAL_FORMAT]
+        self.fields["scheduled_for"].input_formats = [DATETIME_LOCAL_FORMAT]
+        self.fields["og_image"].required = False
+
+
+class PageSectionForm(forms.ModelForm):
+    class Meta:
+        model = PageSection
+        fields = (
+            "block_type",
+            "layout_preset",
+            "position",
+            "is_active",
+            "anchor_id",
+            "eyebrow",
+            "heading",
+            "body",
+            "image",
+            "carousel",
+            "link_label",
+            "link_url",
+            "options",
+        )
+        widgets = {
+            "body": forms.Textarea(attrs={"rows": 4}),
+            "options": forms.Textarea(attrs={"rows": 2, "placeholder": '{"tone": "default"}'}),
+        }
+        labels = {
+            "block_type": "Blocktyp",
+            "layout_preset": "Layoutvariante",
+            "position": "Position",
+            "is_active": "Aktiv",
+            "anchor_id": "Anker-ID",
+            "eyebrow": "Eyebrow",
+            "heading": "Ueberschrift",
+            "body": "Textinhalt",
+            "image": "Bild",
+            "carousel": "Karussell",
+            "link_label": "Link-Label",
+            "link_url": "Link-URL",
+            "options": "Optionen",
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        self.fields["layout_preset"].queryset = LayoutPreset.objects.filter(
+            scope=LayoutPreset.Scope.BLOCK,
+            is_active=True,
+        ).order_by("name")
+        self.fields["image"].queryset = editable_media_queryset_for_user(self.user)
+        self.fields["carousel"].queryset = Carousel.objects.order_by("name")
+        self.fields["options"].required = False
+        self.fields["anchor_id"].required = False
+        self.fields["eyebrow"].required = False
+        self.fields["heading"].required = False
+        self.fields["body"].required = False
+        self.fields["image"].required = False
+        self.fields["carousel"].required = False
+        self.fields["link_label"].required = False
+        self.fields["link_url"].required = False
+        self.fields["position"].widget.attrs.setdefault("min", 0)
+
+    def clean_options(self):
+        raw_value = self.cleaned_data.get("options")
+        if not raw_value:
+            return {}
+        if isinstance(raw_value, dict):
+            return raw_value
+        import json
+
+        try:
+            parsed = json.loads(raw_value)
+        except json.JSONDecodeError as exc:
+            raise forms.ValidationError("Optionen muessen gueltiges JSON sein.") from exc
+        if not isinstance(parsed, dict):
+            raise forms.ValidationError("Optionen muessen ein JSON-Objekt sein.")
+        return parsed
+
+
+PageSectionFormSet = inlineformset_factory(
+    Page,
+    PageSection,
+    form=PageSectionForm,
+    extra=2,
+    can_delete=True,
+)
+
+
 class HomepagePageForm(VersionedModelForm):
     class Meta:
         model = Page

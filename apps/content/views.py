@@ -21,6 +21,8 @@ from .forms import (
     HomepagePageForm,
     HomepageSectionFormSet,
     MediaAssetForm,
+    PageForm,
+    PageSectionFormSet,
     PostBlockFormSet,
     PostForm,
 )
@@ -44,7 +46,9 @@ from .services import (
     restore_post_revision,
     save_carousel_editor,
     save_homepage_editor,
+    save_page_editor,
     save_post_editor,
+    update_page_status,
     update_post_status,
 )
 
@@ -705,6 +709,263 @@ class CarouselRevisionRestoreView(CmsAccessMixin, View):
             f"Neue Revision {restored_revision.revision_number} erstellt.",
         )
         return redirect("cms:carousel_edit", pk=carousel.pk)
+
+
+def _cms_page_template_name(page_key: str) -> str:
+    return "public/pages/editorial_page.html"
+
+
+def _build_editorial_page_render_context(*, request, page, preview_mode=False, preview_title=""):
+    from apps.core.views import build_editorial_page_render_context
+
+    return build_editorial_page_render_context(
+        request=request,
+        preview_page=page,
+        preview_mode=preview_mode,
+        preview_title=preview_title,
+    )
+
+
+class PageListView(CmsAccessMixin, ListView):
+    permission_required = "content.view_page"
+    template_name = "cms/page_list.html"
+    context_object_name = "pages"
+    cms_section = "pages"
+    page_title = "Seiten"
+
+    def get_queryset(self):
+        queryset = (
+            Page.objects.exclude(page_key="homepage")
+            .select_related("layout_preset", "last_edited_by")
+            .order_by("title", "pk")
+        )
+        status_filter = self.request.GET.get("status")
+        if status_filter in {choice[0] for choice in PublishableStatus.choices}:
+            queryset = queryset.filter(status=status_filter)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            self.get_cms_context(
+                status_filter=self.request.GET.get("status", ""),
+                status_choices=PublishableStatus.choices,
+            )
+        )
+        return context
+
+
+class PageEditorBaseView(CmsAccessMixin, TemplateView):
+    template_name = "cms/page_form.html"
+    cms_section = "pages"
+    page_title = "Seite bearbeiten"
+    permission_required = "content.change_page"
+    object: Page | None = None
+
+    def get_object(self) -> Page | None:
+        return None
+
+    def get_form(self, *, data=None):
+        return PageForm(data=data, instance=self.object, user=self.request.user)
+
+    def get_formset(self, *, data=None):
+        return PageSectionFormSet(
+            data=data,
+            instance=self.object,
+            prefix="sections",
+            form_kwargs={"user": self.request.user},
+        )
+
+    def validate_editor_forms(self, form, formset):
+        _validate_unique_positions(formset, label="Ein Seitenblock")
+        visibility = form.instance.visibility
+        asset = getattr(form.instance, "og_image", None)
+        if not _media_matches_content_visibility(asset, visibility):
+            form.add_error(
+                "og_image",
+                "Oeffentliche Seiten duerfen nur publizierte Medien "
+                "mit passender Sichtbarkeit nutzen.",
+            )
+        for section_form in formset.forms:
+            cleaned_data = getattr(section_form, "cleaned_data", None) or {}
+            if not cleaned_data or cleaned_data.get("DELETE"):
+                continue
+            section_asset = cleaned_data.get("image")
+            carousel = cleaned_data.get("carousel")
+            if not _media_matches_content_visibility(section_asset, visibility):
+                section_form.add_error(
+                    "image",
+                    "Der Block verweist auf ein Medium mit unpassender Sichtbarkeit.",
+                )
+            if not _carousel_matches_content_visibility(carousel, visibility):
+                section_form.add_error(
+                    "carousel",
+                    "Das verknuepfte Karussell passt nicht zur Sichtbarkeit dieser Seite.",
+                )
+
+    def render_editor(self, *, form, formset, status=200):
+        return self.render_to_response(
+            self.get_cms_context(
+                form=form,
+                formset=formset,
+                page=self.object,
+                workflow_action=(
+                    self.request.POST.get("workflow_action", "save")
+                    if self.request.method == "POST"
+                    else "save"
+                ),
+            ),
+            status=status,
+        )
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.render_editor(form=self.get_form(), formset=self.get_formset())
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form(data=request.POST)
+        formset = self.get_formset(data=request.POST)
+        if form.is_valid() and formset.is_valid():
+            workflow_action = request.POST.get("workflow_action", "save")
+            if workflow_action in {"publish", "review", "schedule", "withdraw", "archive"}:
+                if not request.user.has_perm("content.publish_page"):
+                    raise PermissionDenied
+            _apply_publishable_workflow(form.instance, workflow_action)
+            self.validate_editor_forms(form, formset)
+            if not form.errors and all(not inline_form.errors for inline_form in formset.forms):
+                page, revision = save_page_editor(form=form, formset=formset, actor=request.user)
+                messages.success(
+                    request,
+                    f"Seite gespeichert. Revision {revision.revision_number} wurde erstellt.",
+                )
+                return redirect("cms:page_edit", pk=page.pk)
+        return self.render_editor(form=form, formset=formset, status=400)
+
+
+class PageUpdateView(PageEditorBaseView):
+    permission_required = "content.change_page"
+
+    def get_object(self):
+        return get_object_or_404(
+            Page.objects.exclude(page_key="homepage").select_related("og_image", "layout_preset"),
+            pk=self.kwargs["pk"],
+        )
+
+
+class PageWorkflowView(CmsAccessMixin, View):
+    permission_required = "content.publish_page"
+    target_status = PublishableStatus.PUBLISHED
+    success_message = "Seite aktualisiert."
+
+    def post(self, request, *args, **kwargs):
+        page = get_object_or_404(Page.objects.exclude(page_key="homepage"), pk=kwargs["pk"])
+        update_page_status(
+            page=page,
+            actor=request.user,
+            status=self.target_status,
+            reason=self.success_message,
+        )
+        messages.success(request, self.success_message)
+        return redirect("cms:page_edit", pk=page.pk)
+
+
+class PagePublishView(PageWorkflowView):
+    target_status = PublishableStatus.PUBLISHED
+    success_message = "Seite wurde veroeffentlicht."
+
+
+class PageWithdrawView(PageWorkflowView):
+    target_status = PublishableStatus.DRAFT
+    success_message = "Seite wurde zurueck in den Entwurf gesetzt."
+
+
+class PagePreviewView(CmsAccessMixin, TemplateView):
+    permission_required = "content.preview_page"
+    cms_section = "pages"
+    page_title = "Seitenvorschau"
+
+    def get_template_names(self):
+        page = get_object_or_404(Page.objects.exclude(page_key="homepage"), pk=self.kwargs["pk"])
+        return [_cms_page_template_name(page.page_key)]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page = get_object_or_404(
+            Page.objects.exclude(page_key="homepage").select_related(
+                "og_image",
+                "layout_preset",
+            ).prefetch_related("sections__image", "sections__carousel__items__image"),
+            pk=self.kwargs["pk"],
+        )
+        context.update(
+            _build_editorial_page_render_context(
+                request=self.request,
+                page=build_page_preview(page=page),
+                preview_mode=True,
+                preview_title=f"Vorschau {page.title}",
+            )
+        )
+        return context
+
+
+class PageRevisionListView(CmsAccessMixin, TemplateView):
+    permission_required = "content.view_pagerevision"
+    template_name = "cms/revision_list.html"
+    cms_section = "pages"
+    page_title = "Seitenrevisionen"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page = get_object_or_404(Page.objects.exclude(page_key="homepage"), pk=self.kwargs["pk"])
+        context.update(
+            self.get_cms_context(
+                object_label="Seite",
+                object_name=page.title,
+                back_url=reverse("cms:page_edit", kwargs={"pk": page.pk}),
+                revisions=page.revisions.select_related("created_by"),
+            )
+        )
+        return context
+
+
+class PageRevisionPreviewView(CmsAccessMixin, TemplateView):
+    permission_required = "content.preview_page"
+    cms_section = "pages"
+    page_title = "Seiten-Revisionsvorschau"
+
+    def get_template_names(self):
+        page = get_object_or_404(Page.objects.exclude(page_key="homepage"), pk=self.kwargs["pk"])
+        return [_cms_page_template_name(page.page_key)]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page = get_object_or_404(Page.objects.exclude(page_key="homepage"), pk=self.kwargs["pk"])
+        revision = get_object_or_404(PageRevision, page=page, pk=self.kwargs["revision_id"])
+        context.update(
+            _build_editorial_page_render_context(
+                request=self.request,
+                page=build_page_preview(snapshot=revision.snapshot),
+                preview_mode=True,
+                preview_title=f"Revision {revision.revision_number}",
+            )
+        )
+        return context
+
+
+class PageRevisionRestoreView(CmsAccessMixin, View):
+    permission_required = "content.restore_page_revision"
+
+    def post(self, request, *args, **kwargs):
+        page = get_object_or_404(Page.objects.exclude(page_key="homepage"), pk=kwargs["pk"])
+        revision = get_object_or_404(PageRevision, page=page, pk=kwargs["revision_id"])
+        restored_revision = restore_page_revision(page=page, revision=revision, actor=request.user)
+        messages.success(
+            request,
+            f"Revision {revision.revision_number} wurde wiederhergestellt. "
+            f"Neue Revision {restored_revision.revision_number} erstellt.",
+        )
+        return redirect("cms:page_edit", pk=page.pk)
 
 
 class HomepageEditView(CmsAccessMixin, TemplateView):

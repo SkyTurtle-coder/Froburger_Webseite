@@ -1,0 +1,59 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Seiten</p>
+    <h1>Oeffentliche Seiten verwalten</h1>
+    <p>Bearbeitbare CMS-Seiten mit Vorschau, Publikation, Rueckzug und Revisionshistorie.</p>
+  </div>
+</section>
+
+<section class="cms-filter-row">
+  <a href="{% url 'cms:page_list' %}"{% if not status_filter %} aria-current="page"{% endif %}>Alle</a>
+  {% for value, label in status_choices %}
+    <a href="{% url 'cms:page_list' %}?status={{ value }}"{% if status_filter == value %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</section>
+
+<section class="cms-card-grid">
+  {% for page in pages %}
+    <article class="cms-card">
+      <div class="cms-card-top">
+        <div>
+          <p class="cms-status">{{ page.get_status_display }} Â· {{ page.get_visibility_display }}</p>
+          <h2>{{ page.title }}</h2>
+        </div>
+      </div>
+      <p>{{ page.meta_description|default:"Keine Meta-Beschreibung gepflegt." }}</p>
+      <dl class="cms-meta-list">
+        <div><dt>Slug</dt><dd>{{ page.slug }}</dd></div>
+        <div><dt>Schluessel</dt><dd>{{ page.page_key }}</dd></div>
+        <div><dt>Layout</dt><dd>{{ page.layout_preset.name }}</dd></div>
+        <div><dt>Version</dt><dd>{{ page.version_number }}</dd></div>
+      </dl>
+      <div class="cms-inline-actions">
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:page_edit' page.pk %}">Bearbeiten</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:page_preview' page.pk %}">Vorschau</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:page_revisions' page.pk %}">Revisionen</a>
+      </div>
+      {% if perms.content.publish_page %}
+        <div class="cms-inline-actions">
+          <form method="post" action="{% url 'cms:page_publish' page.pk %}">
+            {% csrf_token %}
+            <button class="cms-button" type="submit">Veroeffentlichen</button>
+          </form>
+          <form method="post" action="{% url 'cms:page_withdraw' page.pk %}">
+            {% csrf_token %}
+            <button class="cms-button cms-button-secondary" type="submit">Zurueckziehen</button>
+          </form>
+        </div>
+      {% endif %}
+    </article>
+  {% empty %}
+    <article class="cms-panel">
+      <p class="cms-empty">Noch keine CMS-Seiten vorhanden.</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

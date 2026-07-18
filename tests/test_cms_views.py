@@ -9,6 +9,8 @@ from django.utils import timezone
 from apps.audit.models import AuditLogEntry
 from apps.content.models import (
     LayoutPreset,
+    Page,
+    PageSection,
     Post,
     PostBlock,
     PublishableStatus,
@@ -74,11 +76,40 @@ def cms_post(settings, tmp_path, role_user_factory, image_upload_factory):
     return post
 
 
+@pytest.fixture
+def cms_page(settings, tmp_path, role_user_factory):
+    settings.MEDIA_ROOT = tmp_path / "test-media"
+    editor = role_user_factory("web_aktuar")
+    page_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.PAGE, key="standard_page")
+    block_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.BLOCK, key="text_only")
+    page = Page.objects.create(
+        title="CMS Testseite",
+        slug="cms-testseite",
+        page_key="cms-testseite",
+        page_type=Page.PageType.EDITORIAL,
+        layout_preset=page_layout,
+        status=PublishableStatus.DRAFT,
+        visibility=Visibility.PUBLIC,
+        created_by=editor,
+        last_edited_by=editor,
+    )
+    PageSection.objects.create(
+        page=page,
+        block_type=PageSection.BlockType.TEXT,
+        layout_preset=block_layout,
+        body="Ein Seitenabschnitt aus dem CMS.",
+        position=10,
+    )
+    page.create_revision(actor=editor, reason="Initial")
+    return page
+
+
 @pytest.mark.parametrize(
     ("route_name", "kwargs"),
     [
         ("cms:dashboard", {}),
         ("cms:post_list", {}),
+        ("cms:page_list", {}),
         ("cms:post_create", {}),
         ("cms:media_list", {}),
         ("cms:carousel_list", {}),
@@ -280,3 +311,75 @@ def test_homepage_preview_requires_permission(client, role_user_factory, setting
 
     assert response.status_code == 200
     assert "Vorschau Startseite" in response.content.decode()
+
+
+def test_page_preview_requires_preview_permission(client, role_user_factory, cms_page):
+    url = reverse("cms:page_preview", args=[cms_page.pk])
+
+    assert client.get(url).status_code == 302
+
+    member = role_user_factory("member")
+    client.force_login(member)
+    assert client.get(url).status_code == 403
+
+    web_aktuar = role_user_factory("web_aktuar")
+    client.force_login(web_aktuar)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert "Ein Seitenabschnitt aus dem CMS." in response.content.decode()
+
+
+def test_page_workflow_views_publish_and_withdraw_page(
+    client,
+    role_user_factory,
+    cms_page,
+):
+    editor = role_user_factory("web_aktuar")
+    client.force_login(editor)
+
+    publish_response = client.post(reverse("cms:page_publish", args=[cms_page.pk]))
+    cms_page.refresh_from_db()
+    assert publish_response.status_code == 302
+    assert cms_page.status == PublishableStatus.PUBLISHED
+
+    withdraw_response = client.post(reverse("cms:page_withdraw", args=[cms_page.pk]))
+    cms_page.refresh_from_db()
+    assert withdraw_response.status_code == 302
+    assert cms_page.status == PublishableStatus.DRAFT
+    assert cms_page.revisions.count() == 3
+
+
+def test_page_revision_restore_creates_new_revision_and_restores_content(
+    client,
+    role_user_factory,
+    cms_page,
+):
+    editor = role_user_factory("web_aktuar")
+    client.force_login(editor)
+    first_revision = cms_page.revisions.get(revision_number=1)
+
+    cms_page.title = "CMS Testseite Aktualisiert"
+    cms_page.version_number += 1
+    cms_page.save(update_fields=["title", "version_number", "updated_at"])
+    cms_page.sections.all().delete()
+    block_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.BLOCK, key="text_only")
+    PageSection.objects.create(
+        page=cms_page,
+        block_type=PageSection.BlockType.TEXT,
+        layout_preset=block_layout,
+        body="Neue Seitenfassung.",
+        position=10,
+    )
+    cms_page.create_revision(actor=editor, reason="Version 2")
+
+    response = client.post(
+        reverse("cms:page_revision_restore", args=[cms_page.pk, first_revision.pk])
+    )
+
+    cms_page.refresh_from_db()
+
+    assert response.status_code == 302
+    assert cms_page.title == "CMS Testseite"
+    assert cms_page.sections.get().body == "Ein Seitenabschnitt aus dem CMS."
+    assert cms_page.revisions.count() == 4

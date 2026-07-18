@@ -271,6 +271,29 @@ def save_homepage_editor(*, form, formset, actor):
 
 
 @transaction.atomic
+def save_page_editor(*, form, formset, actor):
+    page = form.save(commit=False)
+    is_new = page.pk is None
+    page.last_edited_by = actor
+    if is_new:
+        page.created_by = actor
+    page.version_number = (page.version_number or 1) + (0 if is_new else 1)
+    page.full_clean()
+    page.save()
+    sync_inline_children(formset, page, actor=actor)
+    revision = page.create_revision(actor=actor, reason=form.cleaned_data.get("change_reason", ""))
+    record_audit_event(
+        action="content.page.created" if is_new else "content.page.updated",
+        actor=actor,
+        object_type="Page",
+        object_id=str(page.pk),
+        result=AuditLogEntry.Result.SUCCESS,
+        detail=f"status={page.status}"[:255],
+    )
+    return page, revision
+
+
+@transaction.atomic
 def update_post_status(*, post: Post, actor, status: str, reason: str = ""):
     post.status = status
     if status == PublishableStatus.PUBLISHED:
@@ -298,6 +321,38 @@ def update_post_status(*, post: Post, actor, status: str, reason: str = ""):
         actor=actor,
         object_type="Post",
         object_id=str(post.pk),
+        result=AuditLogEntry.Result.SUCCESS,
+        detail=f"status={status}"[:255],
+    )
+    return revision
+
+
+@transaction.atomic
+def update_page_status(*, page: Page, actor, status: str, reason: str = ""):
+    page.status = status
+    if status == PublishableStatus.PUBLISHED:
+        page.published_at = page.published_at or timezone.now()
+    if status != PublishableStatus.SCHEDULED:
+        page.scheduled_for = None
+    if status == PublishableStatus.ARCHIVED:
+        page.visibility = Visibility.PRIVATE
+    page.last_edited_by = actor
+    page.version_number += 1
+    page.full_clean()
+    page.save()
+    revision = page.create_revision(actor=actor, reason=reason)
+    audit_action_map = {
+        PublishableStatus.PUBLISHED: "content.page.published",
+        PublishableStatus.DRAFT: "content.page.withdrawn",
+        PublishableStatus.ARCHIVED: "content.page.archived",
+        PublishableStatus.SCHEDULED: "content.page.scheduled",
+        PublishableStatus.REVIEW: "content.page.review",
+    }
+    record_audit_event(
+        action=audit_action_map[status],
+        actor=actor,
+        object_type="Page",
+        object_id=str(page.pk),
         result=AuditLogEntry.Result.SUCCESS,
         detail=f"status={status}"[:255],
     )
