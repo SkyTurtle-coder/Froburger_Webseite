@@ -32,6 +32,21 @@
 - `README.md` auf den Django- und CMS-Stand umgestellt.
 - Neue Web-X-CMS-Dokumente fuer Ist-Stand, Architektur, Workflows, Security, Guide und Testing hinzugefuegt.
 - `docs/EXECUTION_PLAN.md`, `docs/MIGRATION_STATUS.md` und `docs/ROLE_PERMISSION_MATRIX.md` auf den neuen CMS-Grundstand aktualisiert.
+- Abschlussdokumentation fuer Events, private Dokumente, oeffentliche Mitgliederseite, Browser-E2E, Deployment und Security auf den finalen Branch-Stand gebracht.
+
+### Events, Documents and Members Page
+- `events` als strukturierte CMS-Domain mit Status-, Sichtbarkeits-, Preview-, Publish-, Archiv- und ICS-Workflows produktiv angebunden.
+- `documents` mit privatem Storage, Versionen, serverseitigem Download-Schutz und Mitgliederansicht umgesetzt.
+- Dashboard und interne Navigation um direkte Einstiege fuer Veranstaltungen und Dokumente erweitert.
+- `members.PublicMemberProfile` fuer freigegebene oeffentliche Personendaten eingefuehrt.
+- oeffentliche Mitgliederseite auf `Page.page_key = members` und `people_list`-Bloecke migriert.
+
+### Browser E2E and Validation Fixes
+- Playwright in die Entwicklungsabhaengigkeiten aufgenommen und Chromium fuer lokale E2E-Checks eingerichtet.
+- Browser-E2E fuer Veranstaltungen, Dokumente und die oeffentliche Mitgliederseite hinzugefuegt.
+- Regression im CMS-Seiteneditor behoben, damit leere Zusatz-Inline-Formulare das Speichern nicht blockieren.
+- Link-Validierung auf site-relative Pfade sowie `mailto:`- und `tel:`-URLs erweitert.
+- neue fokussierte Tests fuer die Mitgliederseiten-Schemavalidierung, relative CMS-Links und den leeren Section-Form-Flow ergaenzt.
 
 ## 2026-07-17
 

@@ -4,9 +4,9 @@ Stand: 2026-07-18
 
 ## Zielbild
 
-Die Website wird als Django-Anwendung mit getrennten Settings und strukturiertem CMS betrieben. Oeffentliche CMS-Medien und private Mitglieder-Profilbilder bleiben getrennt.
+Die Website wird als Django-Anwendung mit getrennten Settings und strukturierten CMS-Workflows betrieben. Oeffentliche CMS-Medien und private Dateien bleiben strikt getrennt.
 
-## Produktionsrelevante Umgebungsvariablen
+## Wichtige Umgebungsvariablen
 
 - `DJANGO_SETTINGS_MODULE=config.settings.production`
 - `DJANGO_SECRET_KEY`
@@ -27,7 +27,7 @@ Die Website wird als Django-Anwendung mit getrennten Settings und strukturiertem
 
 ## Verbindliche Vorpruefung
 
-1. `git status` pruefen
+1. `git diff --check`
 2. `uv run ruff check .`
 3. `uv run python manage.py check`
 4. `uv run python manage.py makemigrations --check`
@@ -39,36 +39,28 @@ Die Website wird als Django-Anwendung mit getrennten Settings und strukturiertem
 1. Abhaengigkeiten installieren.
 2. Produktions-Env-Variablen setzen.
 3. `uv run python manage.py migrate`
-4. optional bestehende Profilbilder sicher migrieren:
+4. Rollen initialisieren oder nachziehen:
+   - `uv run python manage.py bootstrap_roles`
+5. statische Inhalte einmalig importieren:
+   - `uv run python manage.py import_existing_public_pages`
+   - `uv run python manage.py import_existing_members_page`
+6. optional bestehende Profilbilder sicher migrieren:
    - `uv run python manage.py migrate_profile_photos_to_private_storage --dry-run`
    - danach ohne `--dry-run`
-5. fuer `about` und `join` initiale CMS-Inhalte anlegen:
-   - `uv run python manage.py import_existing_public_pages`
-6. `uv run python manage.py collectstatic --noinput`
-7. Anwendung hinter dem produktiven WSGI-/ASGI-Setup starten.
+7. `uv run python manage.py collectstatic --noinput`
+8. Anwendung hinter dem produktiven WSGI-/ASGI-Setup starten.
 
-## Reverse Proxy und HTTPS
+## Private Dateien
 
-- `SECURE_PROXY_SSL_HEADER` nur setzen, wenn der Proxy `X-Forwarded-Proto` kontrolliert und keine manipulierten Fremdwerte ungeprueft durchreicht.
 - `PRIVATE_MEDIA_ROOT` darf keinen oeffentlichen Alias erhalten.
-- fuer private Profilbilder entweder Django-Streaming oder internen Proxy-Mechanismus wie `X-Accel-Redirect` verwenden.
+- Dokumentversionen und Profilbilder duerfen nie direkt ueber eine oeffentliche Rohdatei-URL erreichbar sein.
+- fuer Production ist entweder Django-Streaming oder ein interner Reverse-Proxy-Mechanismus wie `X-Accel-Redirect` vorgesehen.
 
-## HSTS-Einfuehrung
+## Erwartete `check --deploy`-Warnungen
 
-Schrittweise aktivieren:
-
-1. HTTPS-Ende pruefen
-2. `DJANGO_SECURE_SSL_REDIRECT=True`
-3. kurze HSTS-Zeit, z. B. `DJANGO_SECURE_HSTS_SECONDS=3600`
-4. HSTS schrittweise erhoehen
-5. erst spaeter `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS=True`
-6. zuletzt optional `DJANGO_SECURE_HSTS_PRELOAD=True`
-
-## Aktueller Stand von `check --deploy`
-
-Mit kurzer HSTS-Zeit und bewusst noch deaktivierten spaeten HSTS-Stufen bleiben erwartete Warnungen moeglich fuer:
+Mit kurzer HSTS-Zeit und bewusst noch deaktivierten Spaetschritten bleiben erwartete Warnungen moeglich fuer:
 
 - `SECURE_HSTS_INCLUDE_SUBDOMAINS`
 - `SECURE_HSTS_PRELOAD`
 
-Diese Warnungen sollen erst dann geschlossen werden, wenn alle Subdomains und das reale HTTPS-Setup verifiziert sind.
+Diese Punkte sollen erst nach verifizierter HTTPS-Infrastruktur fuer alle relevanten Subdomains geschlossen werden.

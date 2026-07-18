@@ -4,51 +4,58 @@ Last updated: 2026-07-18
 
 ## Overall status
 
-The branch `feature/web-x-block-cms` now contains the Django foundation, the internal members area, the Web-X CMS interface, protected member profile photos, and the first reusable structured page editor for public CMS pages.
+The branch `feature/web-x-block-cms` now includes the Django foundation, the internal members area, the Web-X CMS, protected member media, private documents, CMS-backed events, and the structured public members page.
 
 ## Current baseline
 
-- Django project, split settings, auth, and role bootstrap are in place
-- public pages render through Django templates
-- structured CMS exists for posts, homepage, carousels, media, and reusable pages
-- `home`, `news`, `about`, and `join` can use CMS-backed content paths
-- member profile photos use private storage plus authorized delivery
-- production settings are prepared with explicit security env vars
+- public routes render through Django templates
+- `home`, `news`, `about`, `join`, and `members` have CMS-backed paths
+- events are CMS-managed and expose public plus members-only ICS feeds
+- private documents use protected storage and server-side authorization
+- profile photos use protected storage and server-side authorization
+- browser E2E coverage exists for the most critical editorial workflows
 
 ## Phase tracking
 
 | Phase | Status | Notes |
 | --- | --- | --- |
-| 0 - Analysis and architecture | completed | architecture, ADRs, security model and repo rules established |
-| 1 - Django foundation | completed | project bootstrap, split settings, `uv`, tests and linting are in place |
-| 2 - Accounts/auth | completed | custom user model, invite onboarding, auth templates and audit baseline are active |
+| 0 - Analysis and architecture | completed | architecture, ADRs, repo rules, and security model documented |
+| 1 - Django foundation | completed | project bootstrap, split settings, `uv`, pytest, and Ruff are in place |
+| 2 - Accounts/auth | completed | custom user model, invite onboarding, auth views, and audit baseline are active |
 | 3 - Public-site migration | completed | public routes run through Django templates with canonical slash URLs |
-| 4 - Members and roles | completed | internal portal, directory, admin views and role bootstrap are present |
-| 5 - Documents | not started | private document storage and workflows remain open |
-| 6 - Media library | in progress | public CMS media are managed; private member media are now protected; wider private media flows remain open |
-| 7 - CMS | in progress | dashboard, post editor, media, carousels, homepage, reusable pages and revisions are active |
-| 8 - News/events | in progress | news is CMS-backed; events remain static |
-| 9 - Security/privacy hardening | in progress | private profile-photo delivery and production settings are prepared; legal and hosting details remain open |
-| 10 - Tests/QA | in progress | 69 tests pass; browser automation is still absent |
-| 11 - CI | not started | local quality gates are documented, CI pipeline still missing |
-| 12 - Production prep | in progress | `production.py`, deploy docs and `check --deploy` guidance updated |
-| 13 - Documentation finalization | in progress | CMS, deployment, security and private-media docs updated |
-| 14 - Final review loop | in progress | branch still needs final push/PR and review cycle |
+| 4 - Members and roles | completed | internal portal, directory, admin workflows, and role bootstrap are active |
+| 5 - Documents | completed | protected storage, CMS editing, versioning, and member download authorization are implemented |
+| 6 - Media library | in progress | public CMS media and private profile photos are covered; final proxy delivery remains environment-specific |
+| 7 - CMS | in progress | dashboard, posts, pages, homepage, media, carousels, events, documents, and revisions are active |
+| 8 - News/events | completed | news and events are CMS-backed; public and internal calendar feeds exist |
+| 9 - Security/privacy hardening | in progress | protected delivery, permission checks, and deploy settings are active; legal and hosting facts remain open |
+| 10 - Tests/QA | completed | local checks, focused auth tests, and browser E2E coverage are in place |
+| 11 - CI | not started | local quality gates exist, CI pipeline still open |
+| 12 - Production prep | in progress | deployment docs and production settings are prepared, real infrastructure values remain open |
+| 13 - Documentation finalization | in progress | operations and reviewer docs are substantially updated |
+| 14 - Final review loop | in progress | branch still needs final commit/push and external review |
 
 ## Known external TODOs
 
 - responsible legal representative
 - full postal address
 - final hosting details
-- production server paths, service users and certificate paths
+- production server paths, service users, and certificate paths
 - final privacy statement details
 
 ## Latest verified checks
 
+- `git diff --check`
 - `uv run ruff check .`
 - `uv run python manage.py check`
 - `uv run python manage.py makemigrations --check`
 - `uv run python manage.py migrate`
-- `uv run pytest -q`
+- `uv run pytest -q` -> `97 passed`
 - `uv run coverage run -m pytest`
-- `uv run coverage report`
+- `uv run coverage report` -> `82%`
+- `uv run python manage.py check --deploy --settings=config.settings.production`
+
+## Expected deploy warnings
+
+- `security.W005` for `SECURE_HSTS_INCLUDE_SUBDOMAINS`
+- `security.W021` for `SECURE_HSTS_PRELOAD`

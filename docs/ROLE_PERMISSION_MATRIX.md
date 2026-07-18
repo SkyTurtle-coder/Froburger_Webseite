@@ -1,58 +1,40 @@
 # Role Permission Matrix
 
-This matrix describes the intended target-state permissions. Final implementation may refine details, but must not broaden access without documentation.
+Stand: 2026-07-18
 
-## Roles
+## Rollen
 
 - `anonymous`
 - `member`
 - `web_aktuar`
+- `event_verantwortlich`
+- `document_verantwortlich`
 - `member_admin`
 - `president`
 - `system_admin`
 
 ## Matrix
 
-| Capability | anonymous | member | web_aktuar | member_admin | president | system_admin |
-| --- | --- | --- | --- | --- | --- | --- |
-| View public pages | yes | yes | yes | yes | yes | yes |
-| View own account | no | yes | yes | yes | yes | yes |
-| Edit own basic profile | no | yes | yes | yes | yes | yes |
-| View internal dashboard | no | yes, limited | yes | yes | yes | yes |
-| View internal events | no | if permitted | if permitted | if permitted | yes | yes |
-| Download public documents | yes | yes | yes | yes | yes | yes |
-| Download role-restricted private documents | no | if permitted | if permitted | if permitted | yes | yes |
-| Upload public media | no | no | yes | no | optional | yes |
-| Upload private media/documents | no | no | limited | yes | yes | yes |
-| Create and edit drafts | no | no | yes | no | optional | yes |
-| Publish or unpublish public content | no | no | yes, if granted | no | yes | yes |
-| Manage navigation | no | no | yes | no | optional | yes |
-| Manage events and news | no | no | yes | no | optional | yes |
-| Invite new users | no | no | no | yes | yes | yes |
-| Manage member profiles | no | no | no | yes | yes | yes |
-| Change roles/groups | no | no | no | no | limited | yes |
-| View audit logs | no | no | limited if granted | limited if granted | yes | yes |
-| Manage system settings | no | no | no | no | no | yes |
+| Faehigkeit | anonymous | member | web_aktuar | event_verantwortlich | document_verantwortlich | member_admin | president | system_admin |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Oeffentliche Seiten ansehen | ja | ja | ja | ja | ja | ja | ja | ja |
+| Internes Dashboard sehen | nein | ja | ja | ja | ja | ja | ja | ja |
+| Mitgliederprofil selbst pflegen | nein | ja | ja | ja | ja | ja | ja | ja |
+| Oeffentliche Events sehen | ja | ja | ja | ja | ja | ja | ja | ja |
+| Interne Events sehen | nein | ja, falls freigegeben | ja | ja | ja | ja | ja | ja |
+| Event-CMS nutzen | nein | nein | ja | ja | nein | nein | ja | ja |
+| Dokument-CMS nutzen | nein | nein | ja, ohne hochsensible Verwaltung | nein | ja | nein | ja | ja |
+| Mitgliederdokumente herunterladen | nein | ja, falls freigegeben | ja | ja | ja | ja | ja | ja |
+| Sensible Dokumente sehen | nein | nein, ausser Zusatzrecht oder Bursch-Rolle | nein | nein | nein | nein | ja | ja |
+| Mitgliederverwaltung nutzen | nein | nein | nein | nein | nein | ja | ja | ja |
+| Private Profilbilder serverseitig sehen | nein | begrenzt | begrenzt | begrenzt | begrenzt | ja | ja | ja |
+| CMS-Posts, Seiten, Homepage, Medien, Karussells | nein | nein | ja | nein | nein | nein | ja | ja |
+| Audit- oder Systemaufsicht | nein | nein | begrenzt ueber eigene CMS-Aktionen | nein | begrenzt ueber eigene Dokumentaktionen | nein | ja | ja |
 
-## Notes
+## Hinweise
 
-- `web_aktuar` is a content/editorial role, not an infrastructure administrator.
-- `member_admin` is responsible for people and membership workflows, not unrestricted site design.
-- `president` is included as a policy-level role for elevated oversight, not as a technical superuser by default.
-- `system_admin` has technical control and must use stronger security controls, especially 2FA.
-
-## Implemented CMS foundation on 2026-07-18
-
-- `web_aktuar` now carries content and media permissions for the structured CMS foundation.
-- `member_admin` does not inherit these CMS rights automatically.
-- `president` and `system_admin` currently include the same CMS foundation rights plus their broader oversight permissions.
-
-## Sensitive actions that always require server-side checks
-
-- private document download
-- private media access
-- member data visibility
-- invitation creation and redemption
-- publishing and unpublishing
-- role changes
-- audit-log access
+- `web_aktuar` ist eine Redaktionsrolle, kein Infrastruktur-Admin.
+- `event_verantwortlich` fokussiert auf den Eventbereich.
+- `document_verantwortlich` fokussiert auf Publikationsdokumente, nicht auf hochsensible Dokumente.
+- `member_admin` verantwortet Personen- und Mitgliederprozesse, nicht die allgemeine Site-Redaktion.
+- sensible Bereiche bleiben serverseitig geschuetzt, auch wenn UI-Elemente ausgeblendet sind.

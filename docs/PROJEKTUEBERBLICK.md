@@ -2,68 +2,56 @@
 
 ## Zweck
 
-Die Website praesentiert die AV Froburger als statische, oeffentlich erreichbare Vereinswebsite. Das Repository soll sowohl den produktiven Quellstand als auch den organisatorischen Kontext fuer spaetere Pflege sauber dokumentieren.
+Die Website praesentiert die AV Froburger als oeffentlich sichtbare Vereinswebsite mit geschuetztem Mitgliederbereich. Das Repository enthaelt den produktiven Django-Quellstand, die Web-X-CMS-Basis sowie die betriebliche und organisatorische Dokumentation fuer Pflege, Rollout und Review.
 
 ## Architektur
 
-- statische HTML-Seiten pro Inhaltsbereich
-- gemeinsames Styling in `styles.css`
-- gemeinsames Verhalten in `script.js`
-- produktive Medien in `Bilder/`
-- zusaetzliche Betriebsdateien fuer Suche, Kalender und Branding
+- Django-Projekt mit getrennten Settings fuer Development, Test und Production
+- modulare Apps fuer Accounts, Members, Content, Events, Documents, Media Library und Audit
+- Django-Templates fuer oeffentliche und interne Seiten
+- `static/` fuer oeffentliche Assets
+- `private_media/` fuer geschuetzte Dateien wie Profilbilder und Dokumentversionen
+- relationale Datenbank ueber `DATABASE_URL`, lokal typischerweise SQLite oder PostgreSQL
 
 Es gibt bewusst:
 
-- kein Framework
-- keinen Build-Prozess
-- keine Datenbank
-- kein CMS
-- keine echte serverseitige Benutzerverwaltung
+- serverseitige Berechtigungspruefungen statt rein versteckter Navigation
+- strukturierte CMS-Modelle statt freier HTML-Eingabe
+- getrennte Datenfluesse fuer oeffentliche und private Personendaten
 
 ## Oeffentliche Seiten und Verantwortung
 
-| Seite | Funktion im Projekt |
+| Route | Funktion im Projekt |
 | --- | --- |
-| `index.html` | Startpunkt der Website und erste Orientierung |
-| `aktuelles.html` | redaktionelle Berichte und Rueckblicke |
-| `anlaesse.html` | Termine, Monatsansicht und Kalender-Download |
-| `mitglieder.html` | Personen- und Gruppenauftritt |
-| `mitglied-werden.html` | Conversion-Seite fuer Interessenten |
-| `ueber-uns.html` | Kontext, Geschichte und Selbstverstaendnis |
-| `impressum.html` | rechtliche Pflichtseite |
-| `datenschutz.html` | Datenschutzinformationen |
+| `/` | Startseite mit CMS-Inhalten und hervorgehobenen Beitraegen |
+| `/aktuelles/` | redaktionelle Berichte und Rueckblicke |
+| `/anlaesse/` | oeffentliche Veranstaltungen und Kalenderintegration |
+| `/mitglieder/` | oeffentliche Mitgliederseite aus freigegebenen Personendaten |
+| `/mitglied-werden/` | Conversion-Seite fuer Interessenten |
+| `/ueber-uns/` | Kontext, Geschichte und Selbstverstaendnis |
+| `/impressum/` | rechtliche Pflichtseite mit sichtbaren TODO-Platzhaltern bis zur Verifikation |
+| `/datenschutz/` | Datenschutzinformationen mit sichtbaren TODO-Platzhaltern bis zur Verifikation |
 
-## Gemeinsame Frontend-Funktionen
+## Interne Bereiche
 
-`script.js` ist bewusst klein gehalten, uebernimmt aber zentrale Aufgaben:
+- `/accounts/` fuer Authentifizierung und Kontoablaufe
+- `/intern/` als Einstieg in den geschuetzten Mitgliederbereich
+- `/members/` fuer Profil, Verzeichnis, Dokumente und Mitgliederfunktionen
+- `/cms/` fuer Web-X-CMS, Veranstaltungen, Dokumente und strukturierte Seitenpflege
 
-- mobile Hauptnavigation mit Toggle
-- Dropdown-Steuerung fuer `Ueber uns`
-- Tastaturverhalten wie Escape und Arrow-Navigation
-- Wechsel zwischen Listen- und Monatsansicht im Kalender
-- Rendern der Monatsansicht aus den vorhandenen Terminartikeln
-- Erzeugung lokaler ICS-Dateien aus `data-*`-Attributen
+## CMS- und Datenstrategie
 
-Wichtig dabei:
-
-- Die Kalender-Monatsansicht wird nicht separat gepflegt, sondern aus den vorhandenen `calendar-event`-Elementen erzeugt.
-- Unter kleinen Viewports bleibt die Listenansicht aktiv, damit die Nutzung mobil stabil bleibt.
-
-## Medienstrategie
-
-- Im Repository liegen nur die verwendeten Web-Assets.
-- Grosse Originaldateien sollen nur dann versioniert werden, wenn sie wirklich benoetigt werden.
-- Jeder Bildtausch auf einer oeffentlichen Seite braucht:
-  - passenden `alt`-Text
-  - korrekte `width`- und `height`-Werte
-  - Pruefung der Open-Graph-Bilder, falls das Motiv auch in Social Previews verwendet wird
+- Startseite, News, Seiten, Karussells, Veranstaltungen und Dokumente werden ueber Django-Modelle gepflegt.
+- Bestehende statische Inhalte werden ueber idempotente Management-Commands in CMS-Modelle uebernommen.
+- Die oeffentliche Mitgliederseite verwendet `members.PublicMemberProfile` statt direkter Freigabe interner Profildaten.
+- Dokumente und Profilbilder werden nicht direkt oeffentlich ausgeliefert, sondern serverseitig authorisiert.
 
 ## SEO- und Betriebsdateien
 
 - `sitemap.xml` beschreibt die oeffentlich indexierbaren Seiten.
-- `robots.txt` schliesst interne oder rein lokale Arbeitsbereiche aus.
-- `kalender.ics` bietet einen abonnierbaren Kalender fuer externe Clients.
-- `Zirkel.svg` dient als Branding- und Favicon-Basis.
+- `robots.txt` schliesst interne oder lokale Arbeitsbereiche aus.
+- ICS-Feeds werden ueber Django-Endpunkte fuer sichtbare Veranstaltungen erzeugt.
+- Branding-Assets liegen unter `static/`.
 
 ## Nicht versionierte Arbeitsbereiche
 
@@ -77,10 +65,8 @@ Diese Pfade sind bewusst nicht Teil des GitHub-Repositories:
 
 Sie koennen lokal weiterhin hilfreich sein, sind aber nicht Teil des offiziellen Quellstands.
 
-## Aktuelle fachliche Risiken
+## Aktuelle fachliche Restrisiken
 
-- Impressum noch nur unter Vorbehalt belastbar
-- Datenschutz noch nur unter Vorbehalt belastbar
-- kein echter geschuetzter Mitgliederbereich
-
-Diese Punkte muessen bei jeder Release-Entscheidung sichtbar bleiben.
+- `impressum` und `datenschutz` bleiben bis zur Verifikation rechtlicher und technischer Fakten bewusst unvollstaendig.
+- Die produktive Reverse-Proxy-Konfiguration fuer private Medien und Downloads ist dokumentiert, aber env-abhaengig.
+- Eine CI-Pipeline fuer die lokalen Quality-Gates fehlt noch.

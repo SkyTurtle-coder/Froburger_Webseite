@@ -4,126 +4,51 @@ Stand: 2026-07-18
 
 ## Kurzfazit
 
-Das Repository ist heute kein fertiges Web-X-CMS, aber auch nicht mehr nur ein statischer Seitenprototyp. Die Django-Basis, der Mitgliederbereich und die Rollenlogik sind vorhanden. Mit diesem Arbeitsstand existiert neu eine strukturierte CMS-Grundlage in `apps/content` und `apps/media_library`, inklusive Layout-Presets, Publikationsstatus, Pinning, Karussells und Revisions-Snapshots.
+Das Repository ist nicht mehr nur eine Django-Basis mit vorbereiteten CMS-Modellen, sondern ein funktionierender Web-X-CMS-Stand fuer die wichtigsten Vereinsablaeufe. Inhalte, Veranstaltungen, Dokumente und die oeffentliche Mitgliederseite sind strukturiert modelliert, serverseitig abgesichert und ueber Redaktionsoberflaechen nutzbar.
 
-Noch offen sind die redaktionelle Oberflaeche, Preview-/Publish-Views, Restore-Workflows, die Anbindung der oeffentlichen Seiten an die neuen Modelle sowie die Migration der bestehenden statischen Inhalte.
+## Produktiver Stand im Branch
 
-## Bereits vorhanden
+### Oeffentliche und interne Inhaltsbereiche
 
-### Technische Basis
+- Startseite, News, `about`, `join` und `members` rendern aus CMS-Daten
+- Veranstaltungen haben oeffentliche und interne Ausspielpfade
+- der interne Mitgliederbereich verlinkt direkt auf CMS-, Event- und Dokument-Workflows
 
-- Django-Projekt mit getrennten Settings fuer Development, Test und Production
-- Custom User, Einladungssystem und Audit-Basis
-- oeffentliche Seiten ueber Django-Templates
-- Mitgliederbereich mit Profilpflege, Verzeichnis und Rollen-Bootstrap
-- getrennte Verzeichnisse fuer `static/`, `media/` und `private_media/`
+### Redaktionsoberflaechen
 
-### Neue CMS-Grundlage
+- CMS-Dashboard mit Kennzahlen und Schnellzugriffen
+- Editoren fuer Beitraege, Seiten, Startseite, Karussells, Veranstaltungen und Dokumente
+- Preview-, Publish-, Withdraw-, Archive- und Restore-Workflows
+- Revisionshistorie fuer strukturierte Inhalte
 
-- `media_library.MediaAsset` fuer kontrollierte Bilduploads mit Alt-Text-Regel, MIME-/Formatpruefung und Metadaten
-- `content.LayoutPreset` als serverseitig freigegebene Layout-Whitelist
-- `content.Page` und `content.PageSection` fuer bearbeitbare Seiten mit geschuetzter Grundstruktur
-- `content.Post` und `content.PostBlock` fuer flexible redaktionelle Inhalte
-- `content.Carousel` und `content.CarouselItem` fuer Galerien und Karussells
-- `content.PageRevision`, `content.PostRevision` und `content.CarouselRevision` fuer nachvollziehbare Snapshots
-- Queryset-Helfer fuer publizierte und sichtbare Inhalte
-- Homepage-Pinning mit konfigurierbarem Standardlimit ueber `CMS_HOMEPAGE_PIN_LIMIT`
-- `bootstrap_roles` erweitert um echte CMS- und Medienrechte fuer `web_aktuar`
+### Geschuetzte Datenfluesse
 
-## Noch fehlend
+- Profilbilder liegen unter `PRIVATE_MEDIA_ROOT`
+- Dokumentversionen liegen unter geschuetztem Storage
+- Downloads und Bildauslieferungen laufen serverseitig authorisiert
+- sensible Dokumente bleiben von normalen Mitgliederdokumenten getrennt
 
-### Redaktionsoberflaeche
+### Oeffentliche Mitgliederseite
 
-- eigenes Web-X-Dashboard fuer Seiten, Beitraege, Medien und Karussells
-- Formulare fuer Blockbearbeitung ohne technische Kenntnisse
-- Preview-URLs im echten Seitendesign
-- Restore-Oberflaeche fuer Revisionsstaende
+- `Page.page_key = members` ist an eine strukturierte CMS-Seite gebunden
+- `people_list`-Bloecke erlauben freigegebene Gruppenansichten
+- oeffentliche Personendaten werden ueber `members.PublicMemberProfile` getrennt gepflegt
 
-### Oeffentliche Auslieferung
+## Relevante Management-Commands
 
-- `home`, `aktuelles`, `anlaesse`, `mitglieder`, `mitglied-werden` und `ueber-uns` werden noch nicht aus den neuen CMS-Modellen gerendert
-- bestehende Template-Inhalte wurden noch nicht in `Page`, `Post` oder `Carousel` migriert
-- es gibt noch keinen Import-Command fuer bestehende Seiteninhalte
+- `uv run python manage.py bootstrap_roles`
+- `uv run python manage.py import_existing_public_pages`
+- `uv run python manage.py import_existing_members_page`
+- `uv run python manage.py migrate_profile_photos_to_private_storage`
 
-### Sicherheits- und Betriebsgaenge
+## Relevante Qualitaetsabdeckung
 
-- Profilfotos aus dem Mitgliederbereich liegen weiterhin im oeffentlichen Media-Root
-- Audit ist fuer Einladungen vorhanden, aber noch nicht fuer CMS-Aktionen integriert
-- `events`, `documents` und private Dateiauslieferung sind fuer das CMS noch nicht umgesetzt
+- serverseitige Modell-, View- und Berechtigungstests
+- gezielte Authorisierungstests fuer sensible Dokumente und CMS-Zugriffe
+- Browser-E2E fuer Veranstaltungen, Dokumente und die oeffentliche Mitgliederseite
 
-## Teilweise umgesetzt
+## Verbleibende Restpunkte
 
-- Layout-Presets sind modelliert und per Datenmigration seedbar, aber noch nicht in einer benutzerfreundlichen Auswahloberflaeche verfuegbar
-- Revisionsmodelle und Snapshot-Methoden existieren, eine Wiederherstellung aus der Oberflaeche fehlt
-- Homepage-Pinning ist fachlich modelliert, aber noch nicht im oeffentlichen Startseitentemplate eingebunden
-- Medienvalidierung ist implementiert, aber eine redaktionelle Such-/Filteroberflaeche fehlt
-
-## Relevante Modelle
-
-- `apps/accounts/models.py`: `User`, `AccountInvitation`
-- `apps/members/models.py`: `MemberProfile`
-- `apps/audit/models.py`: `AuditLogEntry`
-- `apps/media_library/models.py`: `MediaAsset`
-- `apps/content/models.py`: `LayoutPreset`, `Page`, `PageSection`, `Post`, `PostBlock`, `Carousel`, `CarouselItem`, `PageRevision`, `PostRevision`, `CarouselRevision`
-
-## Relevante URLs und Templates
-
-### Bestehende oeffentliche Routen
-
-- `/`, `/aktuelles/`, `/anlaesse/`, `/mitglieder/`, `/mitglied-werden/`, `/ueber-uns/`, `/impressum/`, `/datenschutz/`
-- Templates weiterhin unter `templates/public/pages/`
-
-### Bestehende interne Routen
-
-- `/accounts/`
-- `/members/me/`
-- `/members/directory/`
-- `/members/admin/`
-
-### Noch fehlende CMS-Routen
-
-- Web-X-Dashboard
-- Post-Editor
-- Seiteneditor
-- Medienbibliothek
-- Karussellverwaltung
-- Preview- und Restore-Routen
-
-## Relevante Berechtigungen
-
-### Bereits vorhanden
-
-- `accounts.add_accountinvitation`
-- `members.manage_member_profiles`
-- `members.view_sensitive_documents`
-- Default-Model-Permissions auf bestehenden Apps
-
-### Neu hinzugekommen
-
-- `content.publish_page`
-- `content.preview_page`
-- `content.restore_page_revision`
-- `content.publish_post`
-- `content.preview_post`
-- `content.pin_post_homepage`
-- `content.restore_post_revision`
-- `content.preview_unpublished_content`
-- `content.preview_carousel`
-- `content.restore_carousel_revision`
-- `media_library.publish_mediaasset`
-- `media_library.manage_private_mediaasset`
-
-## Empfohlene Erweiterungsstrategie
-
-1. Die neue Modellbasis als verbindliche Source of Truth fuer CMS-Inhalte verwenden.
-2. Zuerst `Post` und `MediaAsset` ueber eine einfache Web-X-Oberflaeche nutzbar machen.
-3. Danach die Startseite und `Aktuelles` auf die neuen Datenmodelle umstellen.
-4. Anschliessend geschuetzte Seitenstrukturen ueber `Page` und `PageSection` migrieren.
-5. `anlaesse` spaeter ueber eigene Event-Modelle statt ueber generische Blocks anbinden.
-
-## Hauptrisiken
-
-- Die oeffentlichen Templates sind visuell fein abgestimmt; unkontrollierte Markup-Aenderungen riskieren Designregressionen.
-- `static/script.js` ist eng an die heutige Event-HTML-Struktur gekoppelt.
-- Mitgliederdaten sind intern und oeffentlich doppelt modelliert; eine spaetere Zusammenfuehrung braucht Datenschutz- und Freigaberegeln.
-- Profilfotos sind derzeit noch kein privater Medienfluss.
+- verifizierte Rechts- und Hosting-Fakten fuer `impressum` und `datenschutz`
+- produktive Reverse-Proxy-Integration fuer private Medien und Downloads
+- CI-Pipeline fuer die lokalen Quality-Gates

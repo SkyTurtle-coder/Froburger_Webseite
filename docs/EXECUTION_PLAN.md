@@ -4,374 +4,88 @@ Last updated: 2026-07-18
 
 ## Objective
 
-Migrate the static AV Froburger website into a secure Django application with:
+Migrate the AV Froburger website from the static prototype into a secure Django application with:
 
-- public site
+- public pages
 - members area
-- member profiles
-- protected document handling
-- public and private media handling
-- events and news management
-- custom CMS for the Web-Aktuar role
-- role and permission model
-- audit logging
-- production-ready operational structure
+- role-based authorization
+- structured Web-X CMS workflows
+- protected documents and private media
+- events, news, and editorial pages
+- production-ready operational documentation
 
-## Current status summary
+## Current status
 
 - Phase 0: completed
 - Phase 1: completed
 - Phase 2: completed
 - Phase 3: completed
 - Phase 4: completed
-- Phase 5: not started
-- Phase 6: foundation started
-- Phase 7: foundation started
-- Phases 8-14: not started
-- Current repository baseline: Django serves the public pages, authentication foundation, member profiles, and role bootstrap; the structured CMS and media model foundation now exists, but editor UI, public rendering, preview/publish flows, events, documents, and final operations work remain open
+- Phase 5: completed
+- Phase 6: in progress
+- Phase 7: in progress
+- Phase 8: completed
+- Phase 9: in progress
+- Phase 10: completed
+- Phase 11: not started
+- Phase 12: in progress
+- Phase 13: in progress
+- Phase 14: in progress
 
-## Consolidated Phase-0 findings
+## Completed implementation blocks
 
-- Shared header, navigation, footer, metadata, and legal links are manually duplicated across the current HTML files.
-- Event truth currently exists in four places: event cards, `data-*` attributes, client-side month rendering, and `kalender.ics`.
-- Public member information is already duplicated across sections and will need normalized structured models before any private member area is added.
-- Legal/privacy content is intentionally incomplete and must remain visibly marked as `TODO` until verified.
-- External Google Fonts are a current privacy/compliance issue and should be removed during migration if a lawful alternative can be used.
-- `robots.txt` and `noindex` are not security controls and must not be treated as access protection for any future private area.
+- Django foundation, split settings, `uv`, pytest, Ruff, and database configuration
+- custom user model, auth flows, invite onboarding, and audit baseline
+- public pages on Django templates with canonical slash URLs
+- internal dashboard, profile editing, member directory, and role bootstrap
+- protected member profile photos via private storage and server-side delivery
+- Web-X CMS dashboard, posts, pages, homepage, media, and carousel workflows
+- structured public imports for `about`, `join`, and `members`
+- CMS-backed public and members-visible events including ICS feeds
+- protected document workflows with private storage, CMS editing, member downloads, and sensitive-area checks
+- browser E2E coverage for events, documents, and the public members page
 
-## Phase 0 - Analysis and architecture
+## Remaining phases
 
-Status: completed
+### Phase 6 - Media library
 
-Tasks:
+- public CMS media are operational
+- private member profile photos are protected
+- a production reverse-proxy delivery path for private media remains infrastructure-dependent
 
-- [x] Create feature branch
-- [x] Audit repository documentation
-- [x] Audit HTML, CSS, JavaScript, assets, metadata, and URL structure
-- [x] Identify SEO, accessibility, privacy, and performance risks
-- [x] Run specialized review agents for frontend, architecture, security, and CMS UX
-- [x] Create architecture, security, role, data-classification, migration, and ADR documents
-- [x] Consolidate subagent findings into final Phase 0 updates
-- [x] Commit Phase 0
+### Phase 7 - Custom CMS
 
-Acceptance criteria:
+- editorial workflows are operational for posts, pages, homepage, events, and documents
+- broader navigation management is still intentionally not a free-form CMS capability
 
-- current system documented
-- target architecture documented
-- risks documented
-- no public functionality changed
+### Phase 9 - Security and privacy hardening
 
-Validation:
+- private delivery, permission checks, and production security settings are in place
+- verified legal and hosting facts remain `TODO`
 
-- documentation review
-- `git diff --check`
+### Phase 11 - CI
 
-## Phase 1 - Django foundation
+- local quality gates exist
+- a repository CI pipeline is still open
 
-Status: completed
+### Phase 12 - Production preparation
 
-Tasks:
+- deployment settings and runbooks are prepared
+- real server paths, service accounts, certificates, and proxy rules remain environment-specific
 
-- initialize Django project skeleton
-- add dependency management
-- add split settings
-- add `.env.example`
-- add PostgreSQL development setup via `compose.yaml`
-- configure Ruff and pytest
-- verify `uv run python manage.py check`
+### Phase 13 - Final documentation
 
-Completed notes:
+- operator and reviewer documentation now covers CMS, events, documents, members page, deployment, and browser tests
+- final README or PR wording may still be refined after review
 
-- local `.venv` bootstrapped with Python 3.12 via `uv`
-- Django 5.2 foundation initialized
-- settings split into `base`, `development`, `test`, and `production`
-- app namespace and core health endpoint created
-- requirements, `pyproject.toml`, `.env.example`, and `compose.yaml` added
-- baseline checks passing
+### Phase 14 - Final review loop
 
-Dependencies:
+- branch still needs the last commit/push cycle and external review
 
-- Phase 0 architecture decisions
-- usable Python toolchain via `uv`
+## Open external facts
 
-Acceptance criteria:
-
-- Django starts locally
-- no secrets committed
-- baseline checks runnable
-
-Validation:
-
-- `uv run python manage.py check`
-- `uv run python manage.py makemigrations --check`
-- `uv run pytest`
-- `uv run ruff check .`
-
-## Phase 2 - Accounts and authentication
-
-Status: completed
-
-Tasks:
-
-- [x] implement custom user model
-- [x] use email-based authentication
-- [x] implement login, logout, password reset, password change
-- [x] implement invite-only onboarding
-- [x] configure Django admin for technical admins
-- [x] add auth tests
-
-Dependencies:
-
-- Phase 1 complete before first real app migrations
-
-Risks:
-
-- choosing wrong user model timing would force painful migration later
-
-Completed notes:
-
-- custom `accounts.User` model introduced before further business-data migrations
-- authentication now uses email addresses instead of usernames
-- login, logout, password reset, password change, and protected account landing page are wired through Django auth views
-- invite-only onboarding implemented with hashed one-time tokens, expiry handling, activation on acceptance, and audit logging
-- Django admin now supports the custom user model and exposes read-only audit entries
-- auth regression tests cover login, logout, inactive users, password reset, password change, and invitation acceptance
-
-Acceptance criteria:
-
-- users can securely sign in and sign out
-- password reset works with the development email backend
-- no public self-registration exists
-- custom user model is in place before later domain migrations
-- tests for login, logout, password reset, inactive users, and invitations are passing
-
-Validation:
-
-- `uv run python manage.py check`
-- `uv run python manage.py makemigrations --check`
-- `uv run pytest`
-- `uv run ruff check .`
-- `git diff --check`
-
-## Phase 3 - Public site migration to Django templates
-
-Status: completed
-
-Tasks:
-
-- [x] migrate current static pages into templates
-- [x] extract reusable head, navigation, messages, and footer components
-- [x] move assets to Django staticfiles
-- [x] define canonical slash URLs
-- [x] redirect old `.html` URLs
-- [x] replace external fonts if legally safe
-
-Dependencies:
-
-- Phase 1 complete
-
-Completed notes:
-
-- created a public `templates/base.html` plus shared navigation, footer, and messages components
-- moved public HTML pages into Django templates under `templates/public/pages/`
-- moved legacy assets into Django `static/` and removed the old root-level public HTML source files
-- public routes now use canonical slash URLs with permanent redirects from legacy `.html` paths
-- added Django-served `robots.txt`, `sitemap.xml`, and the temporary legacy `kalender.ics` endpoint
-- removed external Google Fonts from the public base template and switched to local fallback font stacks
-- added public-route smoke tests for anonymous access, redirects, sitemap, robots, and ICS delivery
-
-Acceptance criteria:
-
-- current look and navigation preserved
-- no second public source of truth
-- slash URLs canonical
-
-Validation:
-
-- `uv run python manage.py check`
-- `uv run python manage.py makemigrations --check`
-- `uv run pytest`
-- `uv run ruff check .`
-- `git diff --check`
-
-## Phase 4 - Member profiles and role model
-
-Status: completed
-
-Tasks:
-
-- [x] separate account and member profile
-- [x] add statuses and visibility model
-- [x] add role/group bootstrap
-- [x] restrict access by server-side permissions
-
-Completed notes:
-
-- introduced `members.MemberProfile` as a separate one-to-one model tied to the authentication account
-- avoided duplicating first name and last name by keeping those fields on the user account and storing membership-specific data on the profile
-- added membership status, visibility, charge, number, join/leave dates, and short biography fields with validation
-- auto-create member profiles for new users and promote invited profiles to active on invitation acceptance
-- added protected member self-service routes for viewing and editing the own profile
-- added permission-gated member-admin routes for listing and editing member profiles
-- switched invitation creation from broad `is_staff` gating to explicit `accounts.add_accountinvitation` permission checks
-- added idempotent `bootstrap_roles` management command for `member`, `web_aktuar`, `member_admin`, `president`, and `system_admin`
-- added regression tests for profile creation, self-service editing, permission enforcement, admin profile updates, and role bootstrap
-
-Acceptance criteria:
-
-- account and member profile are separated
-- member-specific lifecycle fields are modeled without duplicating account identity fields unnecessarily
-- role bootstrap exists and can be rerun safely
-- privileged member management is protected by server-side permission checks
-- tests cover self-access, admin access, and role bootstrap
-
-Validation:
-
-- `uv run python manage.py check`
-- `uv run python manage.py makemigrations --check`
-- `uv run pytest`
-- `uv run ruff check .`
-- `git diff --check`
-
-## Phase 5 - Protected documents
-
-Status: pending
-
-Tasks:
-
-- protected document model
-- private storage path
-- secure upload validation
-- secure download authorization
-- versioning and metadata
-
-## Phase 6 - Media library
-
-Status: in progress
-
-Tasks:
-
-- public and private media separation
-- safe image handling and metadata
-- alt-text workflow
-- derivative generation where needed
-
-Completed notes:
-
-- `media_library.MediaAsset` added with visibility, publication status, Alt-Text rules, MIME and image-format validation, metadata capture, and custom media permissions
-
-## Phase 7 - Custom CMS
-
-Status: in progress
-
-Tasks:
-
-- custom page model
-- structured blocks
-- preview and publish workflow
-- navigation management
-- versioning and restore
-
-Completed notes:
-
-- structured content foundation added with `LayoutPreset`, `Page`, `PageSection`, `Post`, `PostBlock`, `Carousel`, `CarouselItem`, and revision models
-- seed migration for controlled page, post, and block layouts added
-- `web_aktuar` role bootstrap extended with content and media permissions
-- model tests added for layout seeding, publication querysets, pin limits, block validation, and revision snapshots
-
-## Phase 8 - News and events
-
-Status: pending
-
-Tasks:
-
-- migrate `aktuelles` content into structured news entries
-- migrate events from `anlaesse`
-- preserve list and month views
-- add per-event and feed ICS endpoints
-
-## Phase 9 - Security and privacy hardening
-
-Status: pending
-
-Tasks:
-
-- audit trail
-- rate limiting
-- 2FA preparation or integration
-- secure cookies and headers
-- threat model refresh
-- data minimization and retention guidance
-
-## Phase 10 - Tests and QA
-
-Status: pending
-
-Tasks:
-
-- model, form, view, template, authorization, upload, download, audit, ICS, and smoke tests
-- coverage report
-- frontend manual and automated checks where toolchain permits
-
-## Phase 11 - CI
-
-Status: pending
-
-Tasks:
-
-- GitHub Actions workflow
-- PostgreSQL-backed test job
-- lint, checks, migrations, tests, coverage
-
-## Phase 12 - Production preparation
-
-Status: pending
-
-Tasks:
-
-- Gunicorn example config
-- systemd units
-- Nginx example config
-- backup and restore docs
-- healthcheck
-- deployment runbook
-
-## Phase 13 - Final documentation
-
-Status: pending
-
-Tasks:
-
-- refresh README and operational docs
-- add CMS and member-admin guides
-- document setup, incident response, backup and restore
-
-## Phase 14 - Final multi-review and fix loop
-
-Status: pending
-
-Tasks:
-
-- security review
-- Django architecture review
-- frontend review
-- CMS workflow review
-- members area review
-- fix critical and high findings
-
-## Main risks
-
-- legal content is intentionally incomplete and must stay marked as `TODO`
-- no live production/server parameters are available yet
-- private documents and member data must never be modeled as public static assets
-- public content is still hard-coded and duplicated structurally, so later CMS and data migrations must avoid reintroducing multiple sources of truth
-
-## Open blockers
-
-- no verified legal and hosting facts for final legal/privacy pages
-- no production infrastructure details for a real deployment
-
-Tooling note:
-
-- `uv` is available locally
-- no system Python interpreter is currently available on PATH outside Windows Store aliasing
+- responsible legal representative
+- complete postal address
+- final hosting details
+- production filesystem paths and service users
+- final privacy statement content
