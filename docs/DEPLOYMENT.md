@@ -1,88 +1,74 @@
 # Deployment-Anleitung
 
+Stand: 2026-07-18
+
 ## Zielbild
 
-Dieses Repository enthaelt den versionierten Quellstand der Website. Deployments sollen bewusst und reproduzierbar aus dem aktuellen Git-Stand erfolgen.
+Die Website wird als Django-Anwendung mit getrennten Settings und strukturiertem CMS betrieben. Oeffentliche CMS-Medien und private Mitglieder-Profilbilder bleiben getrennt.
 
-## Verbindliche Quelle
+## Produktionsrelevante Umgebungsvariablen
 
-- Verbindlich ist der Projektroot.
-- Es gibt keinen Build-Schritt.
-- Ein Deployment ist im Kern ein sauberes Ausliefern der oeffentlichen Dateien plus `Bilder/`.
+- `DJANGO_SETTINGS_MODULE=config.settings.production`
+- `DJANGO_SECRET_KEY`
+- `DJANGO_ALLOWED_HOSTS`
+- `CSRF_TRUSTED_ORIGINS`
+- `DATABASE_URL`
+- `PUBLIC_MEDIA_ROOT`
+- `PRIVATE_MEDIA_ROOT`
+- `DJANGO_SECURE_SSL_REDIRECT`
+- `DJANGO_SECURE_HSTS_SECONDS`
+- `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS`
+- `DJANGO_SECURE_HSTS_PRELOAD`
+- `DJANGO_SESSION_COOKIE_SECURE`
+- `DJANGO_CSRF_COOKIE_SECURE`
+- `DJANGO_USE_X_FORWARDED_PROTO`
+- `DJANGO_PRIVATE_MEDIA_USE_X_ACCEL_REDIRECT`
+- `DJANGO_PRIVATE_MEDIA_ACCEL_REDIRECT_PREFIX`
 
-## Was ausgerollt werden soll
+## Verbindliche Vorpruefung
 
-- `index.html`
-- `aktuelles.html`
-- `anlaesse.html`
-- `mitglieder.html`
-- `mitglied-werden.html`
-- `ueber-uns.html`
-- `intern.html`
-- `impressum.html`
-- `datenschutz.html`
-- `styles.css`
-- `script.js`
-- `Bilder/`
-- `Zirkel.svg`
-- `kalender.ics`
-- `robots.txt`
-- `sitemap.xml`
-
-## Was nicht ausgerollt werden soll
-
-- `.git/`
-- `.agents/`
-- `.codex/`
-- `docs/`
-- `reports/`
-- `Screenshots/`
-- `output/`
-- interne Arbeitsdokumente und Altberichte, sofern sie nicht absichtlich oeffentlich mit ausgeliefert werden sollen
-
-## Pre-Deployment-Checkliste
-
-1. `git status` ist sauber.
-2. Der letzte Commit auf `main` entspricht dem gewuenschten Auslieferungsstand.
-3. Alle lokal referenzierten Bilder und Dateien existieren.
-4. `robots.txt` und `sitemap.xml` sind aktuell.
-5. `kalender.ics` ist aktuell, falls Termine geaendert wurden.
-6. `impressum.html` und `datenschutz.html` sind fachlich freigegeben.
+1. `git status` pruefen
+2. `uv run ruff check .`
+3. `uv run python manage.py check`
+4. `uv run python manage.py makemigrations --check`
+5. `uv run pytest -q`
+6. `uv run python manage.py check --deploy --settings=config.settings.production`
 
 ## Technische Deployment-Schritte
 
-1. Zielserver oder Hosting-Webroot bestimmen.
-2. Oeffentliche Root-Dateien und `Bilder/` hochladen.
-3. Darauf achten, dass keine lokalen Hilfsordner mitveroeffentlicht werden.
-4. Falls das Hosting bestehende Dateien cached, Cache leeren oder Versionierung kontrollieren.
+1. Abhaengigkeiten installieren.
+2. Produktions-Env-Variablen setzen.
+3. `uv run python manage.py migrate`
+4. optional bestehende Profilbilder sicher migrieren:
+   - `uv run python manage.py migrate_profile_photos_to_private_storage --dry-run`
+   - danach ohne `--dry-run`
+5. fuer `about` und `join` initiale CMS-Inhalte anlegen:
+   - `uv run python manage.py import_existing_public_pages`
+6. `uv run python manage.py collectstatic --noinput`
+7. Anwendung hinter dem produktiven WSGI-/ASGI-Setup starten.
 
-## Nachkontrolle
+## Reverse Proxy und HTTPS
 
-Nach dem Upload mindestens pruefen:
+- `SECURE_PROXY_SSL_HEADER` nur setzen, wenn der Proxy `X-Forwarded-Proto` kontrolliert und keine manipulierten Fremdwerte ungeprueft durchreicht.
+- `PRIVATE_MEDIA_ROOT` darf keinen oeffentlichen Alias erhalten.
+- fuer private Profilbilder entweder Django-Streaming oder internen Proxy-Mechanismus wie `X-Accel-Redirect` verwenden.
 
-- Startseite laedt
-- `aktuelles.html` laedt
-- `anlaesse.html` laedt
-- Monatsansicht auf `anlaesse.html` funktioniert
-- `kalender.ics` ist erreichbar
-- `robots.txt` ist erreichbar
-- `sitemap.xml` ist erreichbar
-- Bildpfade und Favicons funktionieren
+## HSTS-Einfuehrung
 
-## Release-Entscheidung
+Schrittweise aktivieren:
 
-Ein technisch erfolgreiches Deployment ist nicht automatisch eine fachliche Freigabe.
+1. HTTPS-Ende pruefen
+2. `DJANGO_SECURE_SSL_REDIRECT=True`
+3. kurze HSTS-Zeit, z. B. `DJANGO_SECURE_HSTS_SECONDS=3600`
+4. HSTS schrittweise erhoehen
+5. erst spaeter `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS=True`
+6. zuletzt optional `DJANGO_SECURE_HSTS_PRELOAD=True`
 
-Kein oeffentlicher Release ohne:
+## Aktueller Stand von `check --deploy`
 
-- finales Impressum
-- finale Datenschutzerklaerung
-- letzte Sichtpruefung der betroffenen Inhalte
+Mit kurzer HSTS-Zeit und bewusst noch deaktivierten spaeten HSTS-Stufen bleiben erwartete Warnungen moeglich fuer:
 
-## Ruecknahme
+- `SECURE_HSTS_INCLUDE_SUBDOMAINS`
+- `SECURE_HSTS_PRELOAD`
 
-Falls ein Release rueckgaengig gemacht werden muss:
-
-- vorherigen funktionierenden Git-Stand identifizieren
-- erneut deployen
-- zusaetzlich [ROLLBACK.md](../ROLLBACK.md) beachten
+Diese Warnungen sollen erst dann geschlossen werden, wenn alle Subdomains und das reale HTTPS-Setup verifiziert sind.
