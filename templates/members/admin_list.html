@@ -3,19 +3,72 @@
 {% block title %}Mitgliederverwaltung | AV Froburger{% endblock %}
 {% block heading %}Mitgliederverwaltung{% endblock %}
 {% block card_class %} auth-card-wide{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Profile, Sichtbarkeiten und Mitgliedsstatus lassen sich hier gesammelt verwalten.
+  </p>
+{% endblock %}
 
 {% block content %}
+  <section class="section-panel section-panel-hero">
+    <p class="tile-eyebrow">Administration</p>
+    <h2 class="section-lead">Mitgliederprofile im Blick behalten</h2>
+    <p class="dashboard-intro">
+      Aendern Sie Profile gezielt und behalten Sie Status sowie Sichtbarkeit zentral im Griff.
+    </p>
+  </section>
+
+  {% if profiles %}
   <ul class="admin-list">
     {% for profile in profiles %}
       <li>
-        <strong>{{ profile.display_name }}</strong><br>
-        {{ profile.user.email }}<br>
-        Status: {{ profile.get_membership_status_display }}<br>
-        <a href="{% url 'members:admin_edit' profile.pk %}">Bearbeiten</a>
+        <div class="member-identity member-identity-list">
+          <div class="member-avatar">
+            {% if profile.profile_photo %}
+              <img src="{% url 'members:profile_photo' profile.pk %}" alt="Profilfoto von {{ profile.display_name }}">
+            {% else %}
+              <span>{{ profile.initials }}</span>
+            {% endif %}
+          </div>
+          <div class="member-identity-copy">
+            <div class="list-card-top">
+              <div>
+                <h2 class="list-card-title">{{ profile.display_name }}</h2>
+                <p class="list-card-email">{{ profile.user.email }}</p>
+              </div>
+              <div class="pill-row">
+                <span class="status-pill">{{ profile.get_membership_status_display }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <dl class="list-card-grid">
+          <div>
+            <dt>Sichtbarkeit</dt>
+            <dd>{{ profile.get_directory_visibility_display }}</dd>
+          </div>
+          <div>
+            <dt>Charge</dt>
+            <dd>{{ profile.get_current_charge_display|default:"-" }}</dd>
+          </div>
+          <div>
+            <dt>Rollen</dt>
+            <dd>{{ profile.member_roles_display|default:"-" }}</dd>
+          </div>
+          <div>
+            <dt>Verein</dt>
+            <dd>{{ profile.get_association_type_display|default:"-" }}</dd>
+          </div>
+        </dl>
+        <div class="inline-actions">
+          <a class="button" href="{% url 'members:admin_edit' profile.pk %}">Bearbeiten</a>
+        </div>
       </li>
-    {% empty %}
-      <li>Es sind noch keine Mitgliederprofile vorhanden.</li>
     {% endfor %}
   </ul>
-  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum Mitgliederbereich</a></p>
+  {% else %}
+  <div class="empty-state">Es sind noch keine Mitgliederprofile vorhanden.</div>
+  {% endif %}
+
+  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum Dashboard</a></p>
 {% endblock %}

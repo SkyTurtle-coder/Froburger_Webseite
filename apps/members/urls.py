@@ -6,6 +6,7 @@ from .views import (
     MemberDirectoryView,
     MemberProfileAdminListView,
     MemberProfileAdminUpdateView,
+    MemberProfilePhotoView,
     OwnMemberProfileUpdateView,
     OwnMemberProfileView,
     SensitiveDocumentsView,
@@ -16,6 +17,7 @@ app_name = "members"
 urlpatterns = [
     path("directory/", MemberDirectoryView.as_view(), name="directory"),
     path("media/", MediaHubView.as_view(), name="media"),
+    path("profile-images/<int:pk>/", MemberProfilePhotoView.as_view(), name="profile_photo"),
     path("documents/", GeneralDocumentsView.as_view(), name="documents"),
     path(
         "documents/sensitive/",

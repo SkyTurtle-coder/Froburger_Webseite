@@ -9,14 +9,12 @@ User = get_user_model()
 class MemberProfileSelfForm(forms.ModelForm):
     class Meta:
         model = MemberProfile
-        fields = ("vulgar_name", "directory_visibility", "short_bio")
+        fields = ("vulgar_name", "directory_visibility", "profile_photo", "phone_number")
         labels = {
             "vulgar_name": "Vulgo",
             "directory_visibility": "Sichtbarkeit",
-            "short_bio": "Kurzbeschreibung",
-        }
-        widgets = {
-            "short_bio": forms.Textarea(attrs={"rows": 4}),
+            "profile_photo": "Profilfoto",
+            "phone_number": "Telefonnummer",
         }
 
 
@@ -25,33 +23,41 @@ class MemberProfileAdminForm(forms.ModelForm):
     last_name = forms.CharField(label="Nachname", max_length=150, required=False)
     email = forms.EmailField(label="E-Mail-Adresse")
     is_active = forms.BooleanField(label="Konto aktiv", required=False)
+    member_roles = forms.MultipleChoiceField(
+        label="Rollen",
+        choices=MemberProfile.MemberRole.choices,
+        required=False,
+        widget=forms.SelectMultiple(attrs={"size": 3}),
+    )
 
     class Meta:
         model = MemberProfile
         fields = (
-            "membership_number",
             "membership_status",
             "joined_on",
             "left_on",
             "current_charge",
+            "member_roles",
+            "association_type",
             "directory_visibility",
             "vulgar_name",
-            "short_bio",
+            "profile_photo",
+            "phone_number",
         )
         labels = {
-            "membership_number": "Mitgliedsnummer",
             "membership_status": "Mitgliederstatus",
             "joined_on": "Eintrittsdatum",
             "left_on": "Austrittsdatum",
-            "current_charge": "Aktuelle Charge",
+            "current_charge": "Charge",
+            "association_type": "Verein",
             "directory_visibility": "Sichtbarkeit",
             "vulgar_name": "Vulgo",
-            "short_bio": "Kurzbeschreibung",
+            "profile_photo": "Profilfoto",
+            "phone_number": "Telefonnummer",
         }
         widgets = {
             "joined_on": forms.DateInput(attrs={"type": "date"}),
             "left_on": forms.DateInput(attrs={"type": "date"}),
-            "short_bio": forms.Textarea(attrs={"rows": 4}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -61,6 +67,7 @@ class MemberProfileAdminForm(forms.ModelForm):
         self.fields["last_name"].initial = user.last_name
         self.fields["email"].initial = user.email
         self.fields["is_active"].initial = user.is_active
+        self.fields["member_roles"].initial = self.instance.member_roles
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
@@ -76,6 +83,7 @@ class MemberProfileAdminForm(forms.ModelForm):
         user.last_name = self.cleaned_data["last_name"].strip()
         user.email = self.cleaned_data["email"]
         user.is_active = self.cleaned_data["is_active"]
+        profile.member_roles = self.cleaned_data["member_roles"]
 
         if commit:
             user.save()

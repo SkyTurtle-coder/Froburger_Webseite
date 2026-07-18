@@ -5,10 +5,17 @@
 {% block card_class %} auth-card-wide{% endblock %}
 
 {% block content %}
-  <article class="section-panel">
+  <section class="section-panel section-panel-hero">
     <p class="tile-eyebrow">{{ section_tag }}</p>
+    <h2 class="section-lead">{{ heading }}</h2>
     <p class="dashboard-intro">{{ intro }}</p>
-    <p>{{ body_copy }}</p>
+  </section>
+
+  <article class="section-panel">
+    <p class="portal-note">{{ body_copy }}</p>
+    <div class="inline-actions">
+      <a class="button" href="{{ cta_url }}">{{ cta_label }}</a>
+      <a class="button button-secondary" href="{% url 'accounts:home' %}">Zum Dashboard</a>
+    </div>
   </article>
-  <p class="meta-row"><a href="{{ cta_url }}">{{ cta_label }}</a></p>
 {% endblock %}

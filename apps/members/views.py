@@ -2,13 +2,19 @@ from django.contrib import messages
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
     PermissionRequiredMixin,
+    UserPassesTestMixin,
 )
 from django.db.models import Q
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, TemplateView, UpdateView
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+from django.views.generic import ListView, TemplateView, UpdateView, View
 
 from .forms import MemberProfileAdminForm, MemberProfileSelfForm
 from .models import MemberProfile
+from .services import build_private_file_response, user_can_view_member_profile_photo
 
 
 def get_or_create_member_profile(user):
@@ -44,6 +50,18 @@ class OwnMemberProfileUpdateView(LoginRequiredMixin, UpdateView):
         response = super().form_valid(form)
         messages.success(self.request, "Ihr Profil wurde aktualisiert.")
         return response
+
+
+@method_decorator(never_cache, name="dispatch")
+class MemberProfilePhotoView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        profile = get_object_or_404(MemberProfile.objects.select_related("user"), pk=kwargs["pk"])
+        if not user_can_view_member_profile_photo(request.user, profile):
+            raise Http404
+        try:
+            return build_private_file_response(profile.profile_photo)
+        except FileNotFoundError as exc:
+            raise Http404 from exc
 
 
 class MemberProfileAdminListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
@@ -147,8 +165,7 @@ class GeneralDocumentsView(InternalSectionView):
     cta_url = reverse_lazy("accounts:home")
 
 
-class SensitiveDocumentsView(PermissionRequiredMixin, InternalSectionView):
-    permission_required = "members.view_sensitive_documents"
+class SensitiveDocumentsView(UserPassesTestMixin, InternalSectionView):
     raise_exception = True
     page_title = "Sensible Dokumente | AV Froburger"
     heading = "Sensible Dokumente"
@@ -161,5 +178,6 @@ class SensitiveDocumentsView(PermissionRequiredMixin, InternalSectionView):
     cta_label = "Zurueck zum Dashboard"
     cta_url = reverse_lazy("accounts:home")
 
-    def has_permission(self):
-        return super().has_permission()
+    def test_func(self):
+        profile = get_or_create_member_profile(self.request.user)
+        return profile.has_member_role(MemberProfile.MemberRole.BURSCH)

@@ -2,9 +2,14 @@
 
 {% block title %}Anmeldung | AV Froburger{% endblock %}
 {% block heading %}Anmeldung{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Der interne Bereich ist nur fuer berechtigte Mitglieder verfuegbar. Melden Sie
+    sich mit Ihrer E-Mail-Adresse und Ihrem Passwort an.
+  </p>
+{% endblock %}
 
 {% block content %}
-  <p class="meta-row">Der interne Bereich ist nur fuer berechtigte Mitglieder verfuegbar.</p>
   <form method="post" class="stack">
     {% csrf_token %}
     {{ form.non_field_errors }}
@@ -17,6 +22,8 @@
     {% endfor %}
     <button type="submit" class="button">Anmelden</button>
   </form>
-  <p class="meta-row"><a href="{% url 'accounts:password_reset' %}">Passwort vergessen?</a></p>
-  <p class="meta-row"><a href="mailto:info@avfroburger.ch?subject=Zugang%20Mitgliederbereich">Zugang anfragen</a></p>
+  <div class="inline-actions">
+    <a href="{% url 'accounts:password_reset' %}">Passwort vergessen?</a>
+    <a href="mailto:info@avfroburger.ch?subject=Zugang%20Mitgliederbereich">Zugang anfragen</a>
+  </div>
 {% endblock %}

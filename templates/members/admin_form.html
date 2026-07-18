@@ -2,9 +2,22 @@
 
 {% block title %}Mitgliederprofil verwalten | AV Froburger{% endblock %}
 {% block heading %}Mitgliederprofil verwalten{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Bearbeiten Sie Mitgliedsstatus und ordnen Sie Charge, Rolle sowie Verein zentral zu.
+  </p>
+{% endblock %}
 
 {% block content %}
-  <form method="post" class="stack">
+  {% if form.instance.profile_photo %}
+    <div class="current-photo-card">
+      <p class="detail-label">Aktuelles Profilfoto</p>
+      <div class="member-avatar member-avatar-large">
+        <img src="{% url 'members:profile_photo' form.instance.pk %}" alt="Aktuelles Profilfoto von {{ form.instance.display_name }}">
+      </div>
+    </div>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data" class="stack">
     {% csrf_token %}
     {{ form.non_field_errors }}
     {% for field in form %}

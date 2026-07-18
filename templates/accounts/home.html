@@ -3,68 +3,134 @@
 {% block title %}Mitgliederbereich | AV Froburger{% endblock %}
 {% block heading %}Interner Bereich{% endblock %}
 {% block card_class %} auth-card-wide{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Das Mitgliederportal fuehrt Profilpflege, Verzeichnis und interne Unterlagen in
+    einer geschuetzten Oberflaeche zusammen.
+  </p>
+{% endblock %}
 
 {% block content %}
-  <p class="dashboard-intro">
-    Sie sind als {{ request.user.email }} angemeldet. Waehl den Bereich, den Sie im
-    Mitgliederportal oeffnen moechten.
-  </p>
+  <section class="section-panel section-panel-hero">
+    <div class="member-identity member-identity-featured">
+      <div class="member-avatar member-avatar-large">
+        {% if profile.profile_photo %}
+          <img src="{% url 'members:profile_photo' profile.pk %}" alt="Profilfoto von {{ profile.display_name }}">
+        {% else %}
+          <span>{{ profile.initials }}</span>
+        {% endif %}
+      </div>
+      <div class="member-identity-copy">
+        <p class="tile-eyebrow">Portalstart</p>
+        <h2 class="section-lead">{{ profile.display_name }}</h2>
+        <p class="member-identity-meta">{{ request.user.email }}</p>
+        <p class="dashboard-intro">
+          Waehlen Sie den Bereich, den Sie im Mitgliederportal als Naechstes oeffnen moechten.
+        </p>
+        <div class="pill-row">
+          <span class="status-pill">Status: {{ profile.get_membership_status_display }}</span>
+          <span class="status-pill status-pill-muted">
+            Sichtbarkeit: {{ profile.get_directory_visibility_display }}
+          </span>
+          {% if profile.member_roles_display %}
+            <span class="status-pill status-pill-muted">
+              Rollen: {{ profile.member_roles_display }}
+            </span>
+          {% endif %}
+          {% if profile.association_type %}
+            <span class="status-pill status-pill-muted">
+              Verein: {{ profile.get_association_type_display }}
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section class="tile-grid" aria-label="Interne Bereiche">
     <article class="tile-card">
-      <p class="tile-eyebrow">Mein Zugang</p>
-      <h2>Profil</h2>
-      <p>{{ profile.display_name }}<br>Status: {{ profile.get_membership_status_display }}</p>
-      <a class="button tile-link" href="{% url 'members:me' %}">Profil oeffnen</a>
+      <div class="tile-card-header">
+        <p class="tile-eyebrow">Mein Zugang</p>
+        <h2>Profil</h2>
+      </div>
+      <p>Vulgo, Sichtbarkeit, Profilfoto und Telefonnummer an einem Ort pflegen.</p>
+      <div class="tile-card-footer">
+        <span class="status-pill status-pill-muted">{{ profile.display_name }}</span>
+        <a class="button tile-link" href="{% url 'members:me' %}">Profil oeffnen</a>
+      </div>
     </article>
 
     <article class="tile-card">
-      <p class="tile-eyebrow">Mitglieder</p>
-      <h2>Mitgliederverzeichnis</h2>
+      <div class="tile-card-header">
+        <p class="tile-eyebrow">Mitglieder</p>
+        <h2>Mitgliederverzeichnis</h2>
+      </div>
       <p>Aktive Mitglieder, Alt-Froburger und interne Sichtbarkeiten im geschuetzten Verzeichnis.</p>
-      <a class="button tile-link" href="{% url 'members:directory' %}">Verzeichnis oeffnen</a>
+      <div class="tile-card-footer">
+        <span class="status-pill status-pill-muted">Interner Kontaktbereich</span>
+        <a class="button tile-link" href="{% url 'members:directory' %}">Verzeichnis oeffnen</a>
+      </div>
     </article>
 
     <article class="tile-card">
-      <p class="tile-eyebrow">Archiv</p>
-      <h2>Medien</h2>
+      <div class="tile-card-header">
+        <p class="tile-eyebrow">Archiv</p>
+        <h2>Medien</h2>
+      </div>
       <p>Interne Bilder und spaetere Medienablaeufe fuer die Verbindung.</p>
-      <a class="button tile-link" href="{% url 'members:media' %}">Medienbereich oeffnen</a>
+      <div class="tile-card-footer">
+        <span class="status-pill status-pill-muted">Bild- und Archivbereich</span>
+        <a class="button tile-link" href="{% url 'members:media' %}">Medienbereich oeffnen</a>
+      </div>
     </article>
 
     <article class="tile-card">
-      <p class="tile-eyebrow">Unterlagen</p>
-      <h2>Allgemeine Dokumente</h2>
+      <div class="tile-card-header">
+        <p class="tile-eyebrow">Unterlagen</p>
+        <h2>Allgemeine Dokumente</h2>
+      </div>
       <p>Interne Unterlagen fuer Mitglieder, die nicht als besonders sensibel eingestuft sind.</p>
-      <a class="button tile-link" href="{% url 'members:documents' %}">Dokumente oeffnen</a>
+      <div class="tile-card-footer">
+        <span class="status-pill status-pill-muted">Interne Arbeitsunterlagen</span>
+        <a class="button tile-link" href="{% url 'members:documents' %}">Dokumente oeffnen</a>
+      </div>
     </article>
 
     <article class="tile-card{% if not can_view_sensitive_documents %} tile-card-locked{% endif %}">
-      <p class="tile-eyebrow">Vertraulich</p>
-      <h2>Sensible Dokumente</h2>
+      <div class="tile-card-header">
+        <p class="tile-eyebrow">Vertraulich</p>
+        <h2>Sensible Dokumente</h2>
+      </div>
       <p>
         {% if can_view_sensitive_documents %}
-        Geschuetzter Bereich fuer vertrauliche Unterlagen mit erweiterten Berechtigungen.
+        Geschuetzter Bereich fuer vertrauliche Unterlagen mit freigeschalteter Bursch-Rolle.
         {% else %}
-        Dieser Bereich ist nur fuer besonders berechtigte Rollen freigeschaltet.
+        Dieser Bereich ist nur fuer Mitglieder mit der Rolle Bursch freigeschaltet.
         {% endif %}
       </p>
       {% if can_view_sensitive_documents %}
-      <a class="button tile-link" href="{% url 'members:documents_sensitive' %}">Bereich oeffnen</a>
+      <div class="tile-card-footer">
+        <span class="status-pill">Rolle: Bursch</span>
+        <a class="button tile-link" href="{% url 'members:documents_sensitive' %}">Bereich oeffnen</a>
+      </div>
       {% else %}
-      <span class="tile-lock-note">Zugriff derzeit nicht freigeschaltet</span>
+      <div class="tile-card-footer">
+        <span class="tile-lock-note">Zugriff derzeit nicht freigeschaltet</span>
+      </div>
       {% endif %}
     </article>
   </section>
 
-  <div class="stack">
+  <div class="support-grid">
     <div class="meta-panel">
       <h2>Sicherheit</h2>
+      <p>Aktualisieren Sie Ihr Passwort regelmaessig und pruefen Sie Ihre hinterlegten Angaben.</p>
       <p><a href="{% url 'accounts:password_change' %}">Passwort aendern</a></p>
     </div>
     {% if can_invite or can_manage_members %}
     <div class="meta-panel">
       <h2>Verwaltung</h2>
+      <p>Administrationsfunktionen fuer Einladungen und Profile bleiben gesammelt erreichbar.</p>
       {% if can_invite %}
       <p><a href="{% url 'accounts:invitation_create' %}">Mitglied einladen</a></p>
       {% endif %}
@@ -74,8 +140,10 @@
     </div>
     {% endif %}
   </div>
-  <form method="post" action="{% url 'accounts:logout' %}">
-    {% csrf_token %}
-    <button type="submit" class="button">Abmelden</button>
-  </form>
+  <div class="inline-actions">
+    <form method="post" action="{% url 'accounts:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="button button-secondary">Abmelden</button>
+    </form>
+  </div>
 {% endblock %}

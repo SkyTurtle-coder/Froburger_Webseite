@@ -2,6 +2,11 @@
 
 {% block title %}Einladung erstellen | AV Froburger{% endblock %}
 {% block heading %}Einladung erstellen{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Neue Zugaenge werden weiterhin kontrolliert per Einladung freigeschaltet.
+  </p>
+{% endblock %}
 
 {% block content %}
   <form method="post" class="stack">
@@ -16,4 +21,5 @@
     {% endfor %}
     <button type="submit" class="button">Einladung versenden</button>
   </form>
+  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum Dashboard</a></p>
 {% endblock %}

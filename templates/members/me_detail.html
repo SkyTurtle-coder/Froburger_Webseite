@@ -2,38 +2,79 @@
 
 {% block title %}Mein Profil | AV Froburger{% endblock %}
 {% block heading %}Mein Profil{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Ihr Profil steuert, wie Sie intern sichtbar sind und welche Grunddaten im Portal erscheinen.
+  </p>
+{% endblock %}
 
 {% block content %}
-  <dl class="data-list">
-    <div>
-      <dt>Name</dt>
-      <dd>{{ profile.full_name|default:request.user.email }}</dd>
+  <section class="section-panel section-panel-hero">
+    <div class="member-identity member-identity-featured">
+      <div class="member-avatar member-avatar-large">
+        {% if profile.profile_photo %}
+          <img src="{% url 'members:profile_photo' profile.pk %}" alt="Profilfoto von {{ profile.display_name }}">
+        {% else %}
+          <span>{{ profile.initials }}</span>
+        {% endif %}
+      </div>
+      <div class="member-identity-copy">
+        <p class="tile-eyebrow">Persoenliche Angaben</p>
+        <h2 class="section-lead">{{ profile.display_name }}</h2>
+        <p class="member-identity-meta">{{ request.user.email }}</p>
+        <div class="pill-row">
+          <span class="status-pill">Status: {{ profile.get_membership_status_display }}</span>
+          <span class="status-pill status-pill-muted">
+            Sichtbarkeit: {{ profile.get_directory_visibility_display }}
+          </span>
+          {% if profile.member_roles_display %}
+            <span class="status-pill status-pill-muted">
+              Rollen: {{ profile.member_roles_display }}
+            </span>
+          {% endif %}
+          {% if profile.association_type %}
+            <span class="status-pill status-pill-muted">
+              Verein: {{ profile.get_association_type_display }}
+            </span>
+          {% endif %}
+        </div>
+      </div>
     </div>
-    <div>
-      <dt>E-Mail</dt>
-      <dd>{{ request.user.email }}</dd>
-    </div>
-    <div>
-      <dt>Vulgo</dt>
-      <dd>{{ profile.vulgar_name|default:"-" }}</dd>
-    </div>
-    <div>
-      <dt>Status</dt>
-      <dd>{{ profile.get_membership_status_display }}</dd>
-    </div>
-    <div>
-      <dt>Sichtbarkeit</dt>
-      <dd>{{ profile.get_directory_visibility_display }}</dd>
-    </div>
-    <div>
-      <dt>Aktuelle Charge</dt>
-      <dd>{{ profile.current_charge|default:"-" }}</dd>
-    </div>
-    <div>
-      <dt>Kurzbeschreibung</dt>
-      <dd>{{ profile.short_bio|default:"-" }}</dd>
-    </div>
-  </dl>
-  <p class="meta-row"><a href="{% url 'members:me_edit' %}">Profil bearbeiten</a></p>
-  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum Mitgliederbereich</a></p>
+  </section>
+
+  <div class="detail-grid">
+    <article class="detail-item">
+      <p class="detail-label">Name</p>
+      <p class="detail-value">{{ profile.full_name|default:"-" }}</p>
+    </article>
+    <article class="detail-item">
+      <p class="detail-label">E-Mail</p>
+      <p class="detail-value">{{ request.user.email }}</p>
+    </article>
+    <article class="detail-item">
+      <p class="detail-label">Vulgo</p>
+      <p class="detail-value">{{ profile.vulgar_name|default:"-" }}</p>
+    </article>
+    <article class="detail-item">
+      <p class="detail-label">Telefonnummer</p>
+      <p class="detail-value">{{ profile.phone_number|default:"-" }}</p>
+    </article>
+    <article class="detail-item">
+      <p class="detail-label">Charge</p>
+      <p class="detail-value">{{ profile.get_current_charge_display|default:"-" }}</p>
+    </article>
+    <article class="detail-item">
+      <p class="detail-label">Rollen</p>
+      <p class="detail-value">{{ profile.member_roles_display|default:"-" }}</p>
+    </article>
+    <article class="detail-item">
+      <p class="detail-label">Verein</p>
+      <p class="detail-value">{{ profile.get_association_type_display|default:"-" }}</p>
+    </article>
+  </div>
+
+  <div class="inline-actions">
+    <a class="button" href="{% url 'members:me_edit' %}">Profil bearbeiten</a>
+    <a class="button button-secondary" href="{% url 'accounts:home' %}">Zurueck zum Dashboard</a>
+  </div>
 {% endblock %}

@@ -3,23 +3,72 @@
 {% block title %}Mitgliederverzeichnis | AV Froburger{% endblock %}
 {% block heading %}Mitgliederverzeichnis{% endblock %}
 {% block card_class %} auth-card-wide{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Das interne Verzeichnis respektiert die im Profil hinterlegte Sichtbarkeit jedes Mitglieds.
+  </p>
+{% endblock %}
 
 {% block content %}
-  <p class="dashboard-intro">
-    Das interne Verzeichnis zeigt Mitgliederprofile gemaess ihrer hinterlegten Sichtbarkeit.
-  </p>
+  <section class="section-panel section-panel-hero">
+    <p class="tile-eyebrow">Mitglieder</p>
+    <h2 class="section-lead">Kontakte, Sichtbarkeit und Charge</h2>
+    <p class="dashboard-intro">
+      Angezeigt werden nur die Profile, die fuer Sie gemaess den hinterlegten Freigaben sichtbar sind.
+    </p>
+  </section>
+
+  {% if profiles %}
   <ul class="admin-list">
     {% for profile in profiles %}
       <li>
-        <strong>{{ profile.display_name }}</strong><br>
-        {{ profile.user.email }}<br>
-        Status: {{ profile.get_membership_status_display }}<br>
-        {% if profile.current_charge %}Charge: {{ profile.current_charge }}<br>{% endif %}
-        Sichtbarkeit: {{ profile.get_directory_visibility_display }}
+        <div class="member-identity member-identity-list">
+          <div class="member-avatar">
+            {% if profile.profile_photo %}
+              <img src="{% url 'members:profile_photo' profile.pk %}" alt="Profilfoto von {{ profile.display_name }}">
+            {% else %}
+              <span>{{ profile.initials }}</span>
+            {% endif %}
+          </div>
+          <div class="member-identity-copy">
+            <div class="list-card-top">
+              <div>
+                <h2 class="list-card-title">{{ profile.display_name }}</h2>
+                <p class="list-card-email">{{ profile.user.email }}</p>
+              </div>
+              <div class="pill-row">
+                <span class="status-pill">{{ profile.get_membership_status_display }}</span>
+                <span class="status-pill status-pill-muted">
+                  {{ profile.get_directory_visibility_display }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <dl class="list-card-grid">
+          <div>
+            <dt>Telefon</dt>
+            <dd>{{ profile.phone_number|default:"-" }}</dd>
+          </div>
+          <div>
+            <dt>Charge</dt>
+            <dd>{{ profile.get_current_charge_display|default:"-" }}</dd>
+          </div>
+          <div>
+            <dt>Rollen</dt>
+            <dd>{{ profile.member_roles_display|default:"-" }}</dd>
+          </div>
+          <div>
+            <dt>Verein</dt>
+            <dd>{{ profile.get_association_type_display|default:"-" }}</dd>
+          </div>
+        </dl>
       </li>
-    {% empty %}
-      <li>Es sind noch keine sichtbaren Mitgliederprofile vorhanden.</li>
     {% endfor %}
   </ul>
-  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum internen Bereich</a></p>
+  {% else %}
+  <div class="empty-state">Es sind noch keine sichtbaren Mitgliederprofile vorhanden.</div>
+  {% endif %}
+
+  <p class="meta-row"><a href="{% url 'accounts:home' %}">Zurueck zum Dashboard</a></p>
 {% endblock %}

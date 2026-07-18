@@ -2,10 +2,17 @@
 
 {% block title %}Einladung annehmen | AV Froburger{% endblock %}
 {% block heading %}Einladung annehmen{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Mit einem gueltigen Einladungslink aktivieren Sie Ihr Konto und setzen Ihr erstes Passwort.
+  </p>
+{% endblock %}
 
 {% block content %}
   {% if invalid_invitation %}
-    <p>Diese Einladung ist ungueltig oder abgelaufen.</p>
+    <div class="section-panel">
+      <p class="portal-note">Diese Einladung ist ungueltig oder abgelaufen.</p>
+    </div>
   {% else %}
     <form method="post" class="stack">
       {% csrf_token %}
@@ -14,8 +21,8 @@
         <div class="form-row">
           <label for="{{ field.id_for_label }}">{{ field.label }}</label>
           {{ field }}
-          {{ field.errors }}
-        </div>
+        {{ field.errors }}
+      </div>
       {% endfor %}
       <button type="submit" class="button">Konto aktivieren</button>
     </form>
