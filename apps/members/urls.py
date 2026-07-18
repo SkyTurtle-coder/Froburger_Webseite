@@ -1,5 +1,10 @@
 from django.urls import path
 
+from apps.documents.views import (
+    DocumentDownloadView,
+    MemberDocumentListView,
+    SensitiveDocumentListView,
+)
 from apps.events.views import (
     MemberEventDetailView,
     MemberEventFeedView,
@@ -8,7 +13,6 @@ from apps.events.views import (
 )
 
 from .views import (
-    GeneralDocumentsView,
     MediaHubView,
     MemberDirectoryView,
     MemberProfileAdminListView,
@@ -16,7 +20,6 @@ from .views import (
     MemberProfilePhotoView,
     OwnMemberProfileUpdateView,
     OwnMemberProfileView,
-    SensitiveDocumentsView,
 )
 
 app_name = "members"
@@ -29,10 +32,11 @@ urlpatterns = [
     path("events/<slug:slug>.ics", MemberEventIcsView.as_view(), name="event_ics"),
     path("media/", MediaHubView.as_view(), name="media"),
     path("profile-images/<int:pk>/", MemberProfilePhotoView.as_view(), name="profile_photo"),
-    path("documents/", GeneralDocumentsView.as_view(), name="documents"),
+    path("documents/", MemberDocumentListView.as_view(), name="documents"),
+    path("documents/<int:pk>/download/", DocumentDownloadView.as_view(), name="document_download"),
     path(
         "documents/sensitive/",
-        SensitiveDocumentsView.as_view(),
+        SensitiveDocumentListView.as_view(),
         name="documents_sensitive",
     ),
     path("me/", OwnMemberProfileView.as_view(), name="me"),

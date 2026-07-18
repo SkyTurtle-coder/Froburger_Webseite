@@ -15,6 +15,13 @@ ROLE_PERMISSION_MAP = {
         "events.restore_event_revision",
         "events.view_eventrevision",
     ],
+    "document_verantwortlich": [
+        "documents.view_document",
+        "documents.add_document",
+        "documents.change_document",
+        "documents.view_documentversion",
+        "documents.manage_publication_documents",
+    ],
     "web_aktuar": [
         "content.view_layoutpreset",
         "content.view_page",
@@ -62,6 +69,11 @@ ROLE_PERMISSION_MAP = {
         "events.preview_event",
         "events.restore_event_revision",
         "events.view_eventrevision",
+        "documents.view_document",
+        "documents.add_document",
+        "documents.change_document",
+        "documents.view_documentversion",
+        "documents.manage_publication_documents",
     ],
     "member_admin": [
         "accounts.add_accountinvitation",
@@ -125,6 +137,12 @@ ROLE_PERMISSION_MAP = {
         "events.preview_event",
         "events.restore_event_revision",
         "events.view_eventrevision",
+        "documents.view_document",
+        "documents.add_document",
+        "documents.change_document",
+        "documents.view_documentversion",
+        "documents.manage_publication_documents",
+        "documents.manage_sensitive_documents",
     ],
     "system_admin": [
         "accounts.add_accountinvitation",
@@ -181,6 +199,12 @@ ROLE_PERMISSION_MAP = {
         "events.preview_event",
         "events.restore_event_revision",
         "events.view_eventrevision",
+        "documents.view_document",
+        "documents.add_document",
+        "documents.change_document",
+        "documents.view_documentversion",
+        "documents.manage_publication_documents",
+        "documents.manage_sensitive_documents",
     ],
 }
 

@@ -223,7 +223,7 @@ def test_dashboard_shows_requested_internal_tiles(client):
     assert "Mitgliederverzeichnis" in content
     assert "Medien" in content
     assert "Veranstaltungen" in content
-    assert "Allgemeine Dokumente" in content
+    assert "Dokumente" in content
     assert "Sensible Dokumente" in content
     assert "Web-X CMS" not in content
     assert "Rolle Bursch" in content
@@ -326,6 +326,25 @@ def test_sensitive_documents_are_available_with_bursch_role(client):
 
     assert response.status_code == 200
     assert "Besonders geschuetzte Unterlagen" in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_sensitive_documents_are_available_with_permission(client):
+    privileged_user = User.objects.create_user(
+        email="member-permission@example.invalid",
+        password="Secret1234!",
+    )
+    privileged_user.user_permissions.add(
+        Permission.objects.get(
+            content_type__app_label="members",
+            codename="view_sensitive_documents",
+        )
+    )
+    client.force_login(privileged_user)
+
+    response = client.get(reverse("members:documents_sensitive"))
+
+    assert response.status_code == 200
 
 
 @pytest.mark.django_db

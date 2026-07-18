@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import redirect_to_login
@@ -13,6 +15,7 @@ from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
 from apps.audit.models import AuditLogEntry
 from apps.audit.services import record_audit_event
+from apps.documents.models import Document
 from apps.events.models import Event
 from apps.media_library.models import MediaAsset
 
@@ -162,16 +165,22 @@ class CmsAccessMixin(LoginRequiredMixin, PermissionRequiredMixin):
 
 
 class CmsDashboardView(CmsAccessMixin, TemplateView):
-    permission_required = "content.view_post"
+    permission_required = ()
     template_name = "cms/dashboard.html"
     cms_section = "dashboard"
     page_title = "CMS Dashboard"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        editable_documents = Document.objects.editable_by(self.request.user)
         homepage = Page.objects.filter(page_key="homepage").first()
         context.update(
             self.get_cms_context(
+                post_access=self.request.user.has_perm("content.view_post"),
+                media_access=self.request.user.has_perm("media_library.view_mediaasset"),
+                carousel_access=self.request.user.has_perm("content.view_carousel"),
+                page_access=self.request.user.has_perm("content.view_page"),
+                homepage_access=self.request.user.has_perm("content.change_page"),
                 draft_posts=Post.objects.filter(status=PublishableStatus.DRAFT).count(),
                 review_posts=Post.objects.filter(status=PublishableStatus.REVIEW).count(),
                 scheduled_posts=Post.objects.filter(status=PublishableStatus.SCHEDULED).count(),
@@ -202,6 +211,22 @@ class CmsDashboardView(CmsAccessMixin, TemplateView):
                     "-updated_at",
                     "-created_at",
                 )[:5],
+                document_access=self.request.user.has_perm("documents.view_document"),
+                draft_documents=editable_documents.filter(status=Document.Status.DRAFT).count(),
+                published_documents=editable_documents.filter(status=Document.Status.PUBLISHED).count(),
+                archived_documents=editable_documents.filter(status=Document.Status.ARCHIVED).count(),
+                documents_without_category=editable_documents.filter(category__isnull=True).count(),
+                documents_expiring_soon=editable_documents.filter(
+                    status=Document.Status.PUBLISHED,
+                    valid_until__isnull=False,
+                    valid_until__lte=timezone.now() + timedelta(days=30),
+                    valid_until__gte=timezone.now(),
+                ).count(),
+                recent_documents=editable_documents.select_related(
+                    "category",
+                    "current_version",
+                    "last_edited_by",
+                ).order_by("-updated_at", "-created_at")[:5],
                 homepage=homepage,
             )
         )

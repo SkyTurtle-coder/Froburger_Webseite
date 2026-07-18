@@ -1,0 +1,93 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block heading %}{{ heading }}{% endblock %}
+{% block card_class %} auth-card-wide{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Nur Dokumente, die fuer Ihr Konto serverseitig freigegeben sind, erscheinen in dieser Liste.
+  </p>
+{% endblock %}
+
+{% block content %}
+  <section class="section-panel section-panel-hero">
+    <div class="member-identity-copy">
+      <p class="tile-eyebrow">{{ document_area_tag }}</p>
+      <h2 class="section-lead">{{ heading }}</h2>
+      <p class="dashboard-intro">{{ intro }}</p>
+      <div class="button-row" style="justify-content:flex-start;margin-top:16px">
+        <a class="button button-secondary" href="{% url 'accounts:home' %}">Zurueck zum Dashboard</a>
+        {% if can_view_sensitive_documents and not is_sensitive_area %}
+          <a class="button" href="{{ sensitive_area_url }}">Sensible Dokumente</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-panel">
+    <form method="get" class="cms-form-grid">
+      <div class="cms-field">
+        <label for="id_q">Suche</label>
+        <input id="id_q" type="search" name="q" value="{{ query }}" placeholder="Titel, Beschreibung oder Dateiname">
+      </div>
+      <div class="cms-field">
+        <label for="id_category">Kategorie</label>
+        <select id="id_category" name="category">
+          <option value="">Alle</option>
+          <option value="none"{% if category_filter == "none" %} selected{% endif %}>Ohne Kategorie</option>
+          {% for category in categories %}
+            <option value="{{ category.slug }}"{% if category_filter == category.slug %} selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="cms-field">
+        <label for="id_type">Dateityp</label>
+        <select id="id_type" name="type">
+          <option value="">Alle</option>
+          {% for filetype in available_filetypes %}
+            <option value="{{ filetype }}"{% if filetype_filter == filetype %} selected{% endif %}>{{ filetype|upper }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="inline-actions">
+        <button type="submit" class="button">Filtern</button>
+        <a class="button button-secondary" href="{% if is_sensitive_area %}{% url 'members:documents_sensitive' %}{% else %}{% url 'members:documents' %}{% endif %}">Zuruecksetzen</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="tile-grid" aria-label="{{ heading }}">
+    {% for document in documents %}
+      <article class="tile-card">
+        <div class="tile-card-header">
+          <p class="tile-eyebrow">{{ document.category.name|default:"Ohne Kategorie" }}</p>
+          <h2>{{ document.title }}</h2>
+        </div>
+        <p>{{ document.description|default:"Keine Beschreibung hinterlegt." }}</p>
+        <div class="pill-row">
+          <span class="status-pill status-pill-muted">{{ document.current_version.original_filename }}</span>
+          <span class="status-pill status-pill-muted">{{ document.current_version.file_size|filesizeformat }}</span>
+          <span class="status-pill status-pill-muted">Version {{ document.current_version_number }}</span>
+        </div>
+        <div class="tile-card-footer">
+          <span class="status-pill status-pill-muted">{{ document.published_at|date:"d.m.Y" }}</span>
+          <a class="button tile-link" href="{% url 'members:document_download' document.pk %}">Herunterladen</a>
+        </div>
+      </article>
+    {% empty %}
+      <div class="empty-state">Fuer diese Filter sind zurzeit keine Dokumente sichtbar.</div>
+    {% endfor %}
+  </section>
+
+  {% if is_paginated %}
+    <div class="inline-actions" style="margin-top:24px">
+      {% if page_obj.has_previous %}
+        <a class="button button-secondary" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter|urlencode }}{% endif %}{% if filetype_filter %}&type={{ filetype_filter|urlencode }}{% endif %}">Vorherige Seite</a>
+      {% endif %}
+      <span class="status-pill status-pill-muted">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a class="button button-secondary" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter|urlencode }}{% endif %}{% if filetype_filter %}&type={{ filetype_filter|urlencode }}{% endif %}">Naechste Seite</a>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}

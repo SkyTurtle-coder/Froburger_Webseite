@@ -5,24 +5,42 @@
   <div>
     <p class="cms-kicker">Web-X CMS</p>
     <h1>Redaktion und Startseite im selben Arbeitsbereich</h1>
-    <p>Bearbeite Beitraege, Medien, Karussells und die Startseite direkt ohne Django-Admin-Oberflaeche.</p>
+    <p>Bearbeite Inhalte, Veranstaltungen und geschuetzte Unterlagen direkt ohne Django-Admin-Oberflaeche.</p>
   </div>
   <div class="cms-actions">
-    <a class="cms-button" href="{% url 'cms:post_create' %}">Neuer Beitrag</a>
-    <a class="cms-button cms-button-secondary" href="{% url 'cms:homepage_edit' %}">Startseite bearbeiten</a>
+    {% if post_access %}
+      <a class="cms-button" href="{% url 'cms:post_create' %}">Neuer Beitrag</a>
+    {% elif event_access %}
+      <a class="cms-button" href="{% url 'cms:event_create' %}">Neue Veranstaltung</a>
+    {% elif document_access %}
+      <a class="cms-button" href="{% url 'cms:document_create' %}">Neues Dokument</a>
+    {% endif %}
+    {% if homepage_access %}
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:homepage_edit' %}">Startseite bearbeiten</a>
+    {% endif %}
   </div>
 </section>
 
+{% if post_access or media_access or carousel_access or homepage_access %}
 <section class="cms-stat-grid">
-  <article class="cms-stat-card"><span>Entwuerfe</span><strong>{{ draft_posts }}</strong></article>
-  <article class="cms-stat-card"><span>Zur Pruefung</span><strong>{{ review_posts }}</strong></article>
-  <article class="cms-stat-card"><span>Geplant</span><strong>{{ scheduled_posts }}</strong></article>
-  <article class="cms-stat-card"><span>Veroeffentlicht</span><strong>{{ published_posts }}</strong></article>
-  <article class="cms-stat-card"><span>Startseiten-Pins</span><strong>{{ pinned_posts }}</strong></article>
-  <article class="cms-stat-card"><span>Medien</span><strong>{{ media_assets }}</strong></article>
-  <article class="cms-stat-card"><span>Karussells</span><strong>{{ carousels }}</strong></article>
-  <article class="cms-stat-card"><span>Homepage</span><strong>{% if homepage %}bereit{% else %}noch leer{% endif %}</strong></article>
+  {% if post_access %}
+    <article class="cms-stat-card"><span>Entwuerfe</span><strong>{{ draft_posts }}</strong></article>
+    <article class="cms-stat-card"><span>Zur Pruefung</span><strong>{{ review_posts }}</strong></article>
+    <article class="cms-stat-card"><span>Geplant</span><strong>{{ scheduled_posts }}</strong></article>
+    <article class="cms-stat-card"><span>Veroeffentlicht</span><strong>{{ published_posts }}</strong></article>
+    <article class="cms-stat-card"><span>Startseiten-Pins</span><strong>{{ pinned_posts }}</strong></article>
+  {% endif %}
+  {% if media_access %}
+    <article class="cms-stat-card"><span>Medien</span><strong>{{ media_assets }}</strong></article>
+  {% endif %}
+  {% if carousel_access %}
+    <article class="cms-stat-card"><span>Karussells</span><strong>{{ carousels }}</strong></article>
+  {% endif %}
+  {% if homepage_access %}
+    <article class="cms-stat-card"><span>Homepage</span><strong>{% if homepage %}bereit{% else %}noch leer{% endif %}</strong></article>
+  {% endif %}
 </section>
+{% endif %}
 
 {% if event_access %}
 <section class="cms-stat-grid">
@@ -33,7 +51,19 @@
 </section>
 {% endif %}
 
+{% if document_access %}
+<section class="cms-stat-grid">
+  <article class="cms-stat-card"><span>Dokument-Entwuerfe</span><strong>{{ draft_documents }}</strong></article>
+  <article class="cms-stat-card"><span>Veroeffentlicht</span><strong>{{ published_documents }}</strong></article>
+  <article class="cms-stat-card"><span>Archiviert</span><strong>{{ archived_documents }}</strong></article>
+  <article class="cms-stat-card"><span>Ohne Kategorie</span><strong>{{ documents_without_category }}</strong></article>
+  <article class="cms-stat-card"><span>Laufen bald ab</span><strong>{{ documents_expiring_soon }}</strong></article>
+</section>
+{% endif %}
+
+{% if post_access or media_access %}
 <section class="cms-grid-two">
+  {% if post_access %}
   <article class="cms-panel">
     <div class="cms-panel-head">
       <div>
@@ -47,7 +77,7 @@
         <article class="cms-list-card">
           <div>
             <h3>{{ post.title }}</h3>
-            <p>{{ post.get_status_display }} · {{ post.get_visibility_display }}</p>
+            <p>{{ post.get_status_display }} / {{ post.get_visibility_display }}</p>
           </div>
           <a class="cms-text-link" href="{% url 'cms:post_edit' post.pk %}">Bearbeiten</a>
         </article>
@@ -56,7 +86,9 @@
       {% endfor %}
     </div>
   </article>
+  {% endif %}
 
+  {% if media_access %}
   <article class="cms-panel">
     <div class="cms-panel-head">
       <div>
@@ -70,7 +102,7 @@
         <article class="cms-list-card">
           <div>
             <h3>{{ asset.title }}</h3>
-            <p>{{ asset.get_visibility_display }} · {{ asset.get_status_display }}</p>
+            <p>{{ asset.get_visibility_display }} / {{ asset.get_status_display }}</p>
           </div>
           <a class="cms-text-link" href="{% url 'cms:media_edit' asset.pk %}">Bearbeiten</a>
         </article>
@@ -79,7 +111,9 @@
       {% endfor %}
     </div>
   </article>
+  {% endif %}
 </section>
+{% endif %}
 
 {% if event_access %}
 <section class="cms-panel">
@@ -95,7 +129,7 @@
       <article class="cms-list-card">
         <div>
           <h3>{{ event.title }}</h3>
-          <p>{{ event.get_status_display }} · {{ event.start_at|date:"d.m.Y H:i" }}</p>
+          <p>{{ event.get_status_display }} / {{ event.start_at|date:"d.m.Y H:i" }}</p>
         </div>
         <a class="cms-text-link" href="{% url 'cms:event_edit' event.pk %}">Bearbeiten</a>
       </article>
@@ -106,6 +140,32 @@
 </section>
 {% endif %}
 
+{% if document_access %}
+<section class="cms-panel">
+  <div class="cms-panel-head">
+    <div>
+      <p class="cms-kicker">Geschuetzte Unterlagen</p>
+      <h2>Dokumente</h2>
+    </div>
+    <a class="cms-text-link" href="{% url 'cms:document_list' %}">Alle Dokumente</a>
+  </div>
+  <div class="cms-list">
+    {% for document in recent_documents %}
+      <article class="cms-list-card">
+        <div>
+          <h3>{{ document.title }}</h3>
+          <p>{{ document.get_status_display }} / {{ document.get_visibility_display }}</p>
+        </div>
+        <a class="cms-text-link" href="{% url 'cms:document_edit' document.pk %}">Bearbeiten</a>
+      </article>
+    {% empty %}
+      <p class="cms-empty">Noch keine Dokumente vorhanden.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if carousel_access %}
 <section class="cms-panel">
   <div class="cms-panel-head">
     <div>
@@ -128,4 +188,5 @@
     {% endfor %}
   </div>
 </section>
+{% endif %}
 {% endblock %}

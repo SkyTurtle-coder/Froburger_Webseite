@@ -1,0 +1,108 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Dokumente</p>
+    <h1>Private Unterlagen sicher verwalten</h1>
+    <p>Versionierte Dokumente bleiben nach Kategorie, Sichtbarkeit und Ablaufdatum sauber nachvollziehbar.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button" href="{% url 'cms:document_create' %}">Neues Dokument</a>
+  </div>
+</section>
+
+<section class="cms-panel">
+  <form method="get" class="cms-form-grid">
+    <div class="cms-field">
+      <label for="id_q">Suche</label>
+      <input id="id_q" type="search" name="q" value="{{ query }}" placeholder="Titel, Beschreibung oder Dateiname">
+    </div>
+    <div class="cms-field">
+      <label for="id_status">Status</label>
+      <select id="id_status" name="status">
+        <option value="">Alle</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}"{% if status_filter == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="cms-field">
+      <label for="id_visibility">Sichtbarkeit</label>
+      <select id="id_visibility" name="visibility">
+        <option value="">Alle</option>
+        {% for value, label in visibility_choices %}
+          <option value="{{ value }}"{% if visibility_filter == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="cms-field">
+      <label for="id_category">Kategorie</label>
+      <select id="id_category" name="category">
+        <option value="">Alle</option>
+        <option value="none"{% if category_filter == "none" %} selected{% endif %}>Ohne Kategorie</option>
+        {% for category in categories %}
+          <option value="{{ category.slug }}"{% if category_filter == category.slug %} selected{% endif %}>{{ category.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="cms-toolbar">
+      <button class="cms-button" type="submit">Filtern</button>
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:document_list' %}">Zuruecksetzen</a>
+    </div>
+  </form>
+</section>
+
+<section class="cms-card-grid">
+  {% for document in documents %}
+    <article class="cms-card">
+      <div class="cms-card-top">
+        <div>
+          <p class="cms-status">{{ document.get_status_display }} / {{ document.get_visibility_display }}</p>
+          <h2>{{ document.title }}</h2>
+        </div>
+      </div>
+      <p>{{ document.description|default:"Keine Beschreibung hinterlegt." }}</p>
+      <dl class="cms-meta-list">
+        <div><dt>Kategorie</dt><dd>{{ document.category.name|default:"-" }}</dd></div>
+        <div><dt>Version</dt><dd>{{ document.current_version_number }}</dd></div>
+        <div><dt>Datei</dt><dd>{% if document.current_version %}{{ document.current_version.original_filename }}{% else %}-{% endif %}</dd></div>
+        <div><dt>Gueltig bis</dt><dd>{{ document.valid_until|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+      </dl>
+      <div class="cms-inline-actions">
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:document_edit' document.pk %}">Bearbeiten</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:document_versions' document.pk %}">Versionen</a>
+        {% if document.current_version %}
+          <a class="cms-button cms-button-secondary" href="{% url 'members:document_download' document.pk %}">Download testen</a>
+        {% endif %}
+      </div>
+      {% if perms.documents.manage_publication_documents and document.status != "archived" %}
+        <div class="cms-inline-actions">
+          <form method="post" action="{% url 'cms:document_archive' document.pk %}">
+            {% csrf_token %}
+            <button class="cms-button cms-button-secondary" type="submit">Archivieren</button>
+          </form>
+        </div>
+      {% endif %}
+    </article>
+  {% empty %}
+    <article class="cms-panel">
+      <p class="cms-empty">Noch keine Dokumente fuer diesen Filter vorhanden.</p>
+    </article>
+  {% endfor %}
+</section>
+
+{% if is_paginated %}
+<section class="cms-panel">
+  <div class="cms-inline-actions">
+    {% if page_obj.has_previous %}
+      <a class="cms-button cms-button-secondary" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if visibility_filter %}&visibility={{ visibility_filter|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter|urlencode }}{% endif %}">Vorherige Seite</a>
+    {% endif %}
+    <span>Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a class="cms-button cms-button-secondary" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if visibility_filter %}&visibility={{ visibility_filter|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter|urlencode }}{% endif %}">Naechste Seite</a>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

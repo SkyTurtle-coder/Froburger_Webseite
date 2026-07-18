@@ -17,12 +17,27 @@
       </a>
       <nav class="cms-nav" aria-label="CMS Navigation">
         <a href="{% url 'cms:dashboard' %}"{% if cms_section == 'dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+        {% if perms.events.view_event %}
         <a href="{% url 'cms:event_list' %}"{% if cms_section == 'events' %} aria-current="page"{% endif %}>Veranstaltungen</a>
+        {% endif %}
+        {% if perms.documents.view_document %}
+        <a href="{% url 'cms:document_list' %}"{% if cms_section == 'documents' %} aria-current="page"{% endif %}>Dokumente</a>
+        {% endif %}
+        {% if perms.content.view_post %}
         <a href="{% url 'cms:post_list' %}"{% if cms_section == 'posts' %} aria-current="page"{% endif %}>Beitraege</a>
+        {% endif %}
+        {% if perms.content.view_page %}
         <a href="{% url 'cms:page_list' %}"{% if cms_section == 'pages' %} aria-current="page"{% endif %}>Seiten</a>
+        {% endif %}
+        {% if perms.media_library.view_mediaasset %}
         <a href="{% url 'cms:media_list' %}"{% if cms_section == 'media' %} aria-current="page"{% endif %}>Medien</a>
+        {% endif %}
+        {% if perms.content.view_carousel %}
         <a href="{% url 'cms:carousel_list' %}"{% if cms_section == 'carousels' %} aria-current="page"{% endif %}>Karussells</a>
+        {% endif %}
+        {% if perms.content.change_page %}
         <a href="{% url 'cms:homepage_edit' %}"{% if cms_section == 'homepage' %} aria-current="page"{% endif %}>Startseite</a>
+        {% endif %}
       </nav>
       <div class="cms-meta">
         <a href="{% url 'accounts:home' %}">Zurueck zum internen Bereich</a>

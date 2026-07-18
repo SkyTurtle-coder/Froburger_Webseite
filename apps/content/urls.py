@@ -1,5 +1,13 @@
 from django.urls import path
 
+from apps.documents.views import (
+    CmsDocumentArchiveView,
+    CmsDocumentCreateView,
+    CmsDocumentListView,
+    CmsDocumentUpdateView,
+    CmsDocumentVersionActivateView,
+    CmsDocumentVersionListView,
+)
 from apps.events.views import (
     CmsEventArchiveView,
     CmsEventCancelView,
@@ -55,6 +63,24 @@ app_name = "cms"
 
 urlpatterns = [
     path("", CmsDashboardView.as_view(), name="dashboard"),
+    path("dokumente/", CmsDocumentListView.as_view(), name="document_list"),
+    path("dokumente/neu/", CmsDocumentCreateView.as_view(), name="document_create"),
+    path("dokumente/<int:pk>/bearbeiten/", CmsDocumentUpdateView.as_view(), name="document_edit"),
+    path(
+        "dokumente/<int:pk>/versionen/",
+        CmsDocumentVersionListView.as_view(),
+        name="document_versions",
+    ),
+    path(
+        "dokumente/<int:pk>/versionen/<int:version_id>/aktivieren/",
+        CmsDocumentVersionActivateView.as_view(),
+        name="document_version_activate",
+    ),
+    path(
+        "dokumente/<int:pk>/archivieren/",
+        CmsDocumentArchiveView.as_view(),
+        name="document_archive",
+    ),
     path("veranstaltungen/", CmsEventListView.as_view(), name="event_list"),
     path("veranstaltungen/neu/", CmsEventCreateView.as_view(), name="event_create"),
     path("veranstaltungen/<int:pk>/bearbeiten/", CmsEventUpdateView.as_view(), name="event_edit"),

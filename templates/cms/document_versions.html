@@ -1,0 +1,41 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Versionen</p>
+    <h1>{{ document.title }}</h1>
+    <p>Jede hochgeladene Datei bleibt mit Aenderungsnotiz, Hash und hochladender Person nachvollziehbar.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button cms-button-secondary" href="{% url 'cms:document_edit' document.pk %}">Zum Dokument</a>
+    <a class="cms-button cms-button-secondary" href="{% url 'cms:document_list' %}">Zur Liste</a>
+  </div>
+</section>
+
+<section class="cms-panel">
+  <div class="cms-list">
+    {% for version in versions %}
+      <article class="cms-list-card">
+        <div>
+          <h3>Version {{ version.version_number }}{% if document.current_version_id == version.pk %} (aktuell){% endif %}</h3>
+          <p>{{ version.original_filename }} / {{ version.mime_type }} / {{ version.file_size|filesizeformat }}</p>
+          <p>Hochgeladen: {{ version.created_at|date:"d.m.Y H:i" }}{% if version.uploaded_by %} / {{ version.uploaded_by.email }}{% endif %}</p>
+          {% if version.change_note %}
+            <p>{{ version.change_note }}</p>
+          {% endif %}
+          <p>SHA-256: {{ version.checksum }}</p>
+        </div>
+        {% if can_activate_versions and document.current_version_id != version.pk %}
+          <form method="post" action="{% url 'cms:document_version_activate' document.pk version.pk %}">
+            {% csrf_token %}
+            <button class="cms-button cms-button-secondary" type="submit">Als aktuell setzen</button>
+          </form>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="cms-empty">Noch keine Versionen vorhanden.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Dokumenteneditor</p>
+    <h1>{% if document %}{{ document.title }}{% else %}Neues Dokument{% endif %}</h1>
+    <p>Metadaten, Sichtbarkeit und Dateiversionen bleiben in einem geschuetzten Workflow gebuendelt.</p>
+  </div>
+  <div class="cms-actions">
+    {% if document %}
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:document_versions' document.pk %}">Versionen</a>
+    {% endif %}
+    <a class="cms-button cms-button-secondary" href="{% url 'cms:document_list' %}">Zur Liste</a>
+  </div>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="cms-editor">
+  {% csrf_token %}
+  {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+  {% if form.non_field_errors %}
+    <div class="cms-form-errors">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <section class="cms-panel">
+    <div class="cms-toolbar">
+      <button class="cms-button" type="submit" name="workflow_action" value="save">Speichern</button>
+      {% if perms.documents.manage_publication_documents %}
+        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="publish">Veroeffentlichen</button>
+        {% if document %}
+          <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="archive">Archivieren</button>
+        {% endif %}
+      {% endif %}
+    </div>
+    <div class="cms-form-grid">
+      {% for field in form.visible_fields %}
+        {% include "cms/_field.html" with field=field %}
+      {% endfor %}
+    </div>
+  </section>
+</form>
+{% endblock %}
