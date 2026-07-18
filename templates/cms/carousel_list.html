@@ -1,0 +1,37 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Karussells</p>
+    <h1>Wiederverwendbare Bildstrecken</h1>
+    <p>Karussells koennen auf der Startseite oder in Beitraegen referenziert werden.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button" href="{% url 'cms:carousel_create' %}">Neues Karussell</a>
+  </div>
+</section>
+
+<section class="cms-card-grid">
+  {% for carousel in carousels %}
+    <article class="cms-card">
+      <h2>{{ carousel.name }}</h2>
+      <p>{{ carousel.title|default:"Ohne Titel" }}</p>
+      <dl class="cms-meta-list">
+        <div><dt>Slides</dt><dd>{{ carousel.item_total }}</dd></div>
+        <div><dt>Sichtbarkeit</dt><dd>{{ carousel.get_visibility_display }}</dd></div>
+        <div><dt>Aktiv</dt><dd>{% if carousel.is_active %}Ja{% else %}Nein{% endif %}</dd></div>
+      </dl>
+      <div class="cms-inline-actions">
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_edit' carousel.pk %}">Bearbeiten</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_preview' carousel.pk %}">Vorschau</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_revisions' carousel.pk %}">Revisionen</a>
+      </div>
+    </article>
+  {% empty %}
+    <article class="cms-panel">
+      <p class="cms-empty">Noch keine Karussells vorhanden.</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Karusselleditor</p>
+    <h1>{% if carousel %}{{ carousel.name }}{% else %}Neues Karussell{% endif %}</h1>
+    <p>Slides werden separat gepflegt und spaeter auf Seiten oder in Beitraegen referenziert.</p>
+  </div>
+  <div class="cms-actions">
+    {% if carousel %}
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_preview' carousel.pk %}">Vorschau</a>
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_revisions' carousel.pk %}">Revisionen</a>
+    {% endif %}
+    <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_list' %}">Zur Liste</a>
+  </div>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="cms-editor">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="cms-form-errors">{{ form.non_field_errors }}</div>
+  {% endif %}
+  <section class="cms-panel">
+    <div class="cms-toolbar">
+      <button class="cms-button" type="submit">Speichern</button>
+    </div>
+    <div class="cms-form-grid">
+      {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+      {% for field in form.visible_fields %}
+        {% include "cms/_field.html" with field=field %}
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="cms-panel">
+    <div class="cms-panel-head">
+      <div>
+        <p class="cms-kicker">Slides</p>
+        <h2>Einzelne Karussell-Elemente</h2>
+      </div>
+    </div>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+      <div class="cms-form-errors">{{ formset.non_form_errors }}</div>
+    {% endif %}
+    <div class="cms-stack">
+      {% for item_form in formset.forms %}
+        <article class="cms-subpanel">
+          {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+          {% if item_form.non_field_errors %}
+            <div class="cms-form-errors">{{ item_form.non_field_errors }}</div>
+          {% endif %}
+          <div class="cms-form-grid">
+            {% for field in item_form.visible_fields %}
+              {% include "cms/_field.html" with field=field %}
+            {% endfor %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+</form>
+{% endblock %}

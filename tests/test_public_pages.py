@@ -1,5 +1,9 @@
 import pytest
 from django.urls import reverse
+from django.utils import timezone
+
+from apps.content.models import LayoutPreset, Post, PublishableStatus, Visibility
+from apps.media_library.models import MediaAsset
 
 
 @pytest.mark.parametrize(
@@ -71,3 +75,68 @@ def test_public_support_endpoints_are_available(client):
     calendar_content = calendar.content.decode()
     assert "BEGIN:VCALENDAR" in calendar_content
     assert "PRODID:-//AV Froburger//Anlasskalender//DE" in calendar_content
+
+
+@pytest.fixture
+def published_post(settings, tmp_path, user_factory, image_upload_factory):
+    settings.MEDIA_ROOT = tmp_path / "test-media"
+    author = user_factory()
+    hero = MediaAsset(
+        title="Hero",
+        file=image_upload_factory(filename="hero.png"),
+        alt_text="Titelbild",
+        uploaded_by=author,
+        status=MediaAsset.PublicationStatus.PUBLISHED,
+        visibility=MediaAsset.Visibility.PUBLIC,
+    )
+    hero.save()
+    post_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.POST, key="standard_article")
+    return Post.objects.create(
+        title="Oeffentlicher CMS-Beitrag",
+        slug="oeffentlicher-cms-beitrag",
+        teaser="Dieser Beitrag kommt aus dem Web-X CMS.",
+        layout_preset=post_layout,
+        hero_image=hero,
+        status=PublishableStatus.PUBLISHED,
+        visibility=Visibility.PUBLIC,
+        published_at=timezone.now(),
+        created_by=author,
+        last_edited_by=author,
+    )
+
+
+@pytest.mark.django_db
+def test_news_list_and_detail_render_published_cms_posts(client, published_post):
+    list_response = client.get(reverse("core:news"))
+    detail_response = client.get(reverse("core:news_detail", args=[published_post.slug]))
+
+    assert list_response.status_code == 200
+    assert published_post.title in list_response.content.decode()
+    assert detail_response.status_code == 200
+    assert published_post.teaser in detail_response.content.decode()
+
+
+@pytest.mark.django_db
+def test_news_detail_returns_404_for_unknown_slug(client):
+    response = client.get(reverse("core:news_detail", args=["unbekannt"]))
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_homepage_falls_back_without_cms_page(client):
+    response = client.get(reverse("core:home"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Verbunden in Tradition." in content
+    assert "Spargelfahrt 2026" in content
+
+
+@pytest.mark.django_db
+def test_sitemap_includes_public_post_detail_urls(client, published_post):
+    response = client.get(reverse("core:sitemap_xml"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert f"<loc>http://testserver/aktuelles/{published_post.slug}/</loc>" in content

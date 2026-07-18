@@ -3,29 +3,49 @@
 
 {% block content %}
 <main id="main-content">
-<section class="page-hero">
+  {% if preview_mode %}
+    <section class="preview-banner">
       <div class="container">
-        <p class="breadcrumbs"><a href="{% url 'core:home' %}">Home</a> / Aktuelles</p>
-        <h1>Aktuelles</h1>
-        <p>Berichte, R&uuml;ckblicke und Neuigkeiten aus dem Verbindungsleben der AV Froburger.</p>
+        <strong>Vorschau</strong>
+        <span>Interne Ansicht im Web-X CMS.</span>
       </div>
     </section>
+  {% endif %}
 
-    <section class="section section-light" id="blog" aria-labelledby="blog-title">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Blog &amp; Berichte</p>
-            <h2 class="section-title" id="blog-title">Aus dem Verbindungsleben</h2>
-          </div>
-          <p class="section-intro">Derzeit sind die publizierten Berichte aus dem Fr&uuml;hjahr 2026 hier gesammelt.</p>
+  <section class="page-hero">
+    <div class="container">
+      <p class="breadcrumbs"><a href="{% url 'core:home' %}">Home</a> / Aktuelles</p>
+      <h1>Aktuelles</h1>
+      <p>Berichte, Rueckblicke und Neuigkeiten aus dem Verbindungsleben der AV Froburger.</p>
+    </div>
+  </section>
+
+  <section class="section section-light" id="blog" aria-labelledby="blog-title">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Blog &amp; Berichte</p>
+          <h2 class="section-title" id="blog-title">Aus dem Verbindungsleben</h2>
         </div>
-        <div class="blog-grid">
+        <p class="section-intro">
+          {% if news_posts %}
+            Publizierte CMS-Beitraege erscheinen hier automatisch mit Link auf die Detailansicht.
+          {% else %}
+            Derzeit sind die publizierten Berichte aus dem Fruehjahr 2026 hier gesammelt.
+          {% endif %}
+        </p>
+      </div>
+      <div class="blog-grid">
+        {% if news_posts %}
+          {% for post in news_posts %}
+            {% include "public/partials/post_card.html" with post=post %}
+          {% endfor %}
+        {% else %}
           <article class="blog-card content-card">
             <img class="blog-card-image" src="{% static 'Bilder/DSC01621-web.jpg' %}" alt="Wandergruppe der AV Froburger in den Walliser Bergen" width="1200" height="800" loading="lazy" decoding="async">
             <div class="blog-body">
               <div class="blog-meta"><time datetime="2026-05-01">1.-3. Mai 2026</time></div>
-              <h3>Wanderwochenende in T&ouml;rbel</h3>
+              <h3>Wanderwochenende in Toerbel</h3>
               <p>Sportliche Tage, steile Wege und ein wohlverdientes Raclette im Wallis.</p>
               <a class="text-link" href="#wanderwochenende-2026">Weiterlesen &rarr;</a>
             </div>
@@ -39,40 +59,34 @@
               <a class="text-link" href="#spargelfahrt-2026">Weiterlesen &rarr;</a>
             </div>
           </article>
-        </div>
+        {% endif %}
       </div>
-    </section>
+    </div>
+  </section>
 
+  {% if not news_posts %}
     <article class="article-section" id="wanderwochenende-2026">
       <div class="container">
         <header class="article-header">
           <div class="blog-meta"><time datetime="2026-05-01">1.-3. Mai 2026</time></div>
-          <h2>Wanderwochenende in T&ouml;rbel</h2>
-          <p>Zwischen Zugstillstand, steilen Aufstiegen und Walliser Bergwegen zeigte sich das Wanderwochenende f&uuml;r manche Froburger sportlicher als f&uuml;r andere.</p>
+          <h2>Wanderwochenende in Toerbel</h2>
+          <p>Zwischen Zugstillstand, steilen Aufstiegen und Walliser Bergwegen zeigte sich das Wanderwochenende fuer manche Froburger sportlicher als fuer andere.</p>
         </header>
 
         <figure class="article-image">
-          <img src="{% static 'Bilder/DSC01621-web.jpg' %}" alt="Froburger Wandergruppe bei einer Rast in den Bergen bei T&ouml;rbel" width="1200" height="800" loading="lazy" decoding="async">
+          <img src="{% static 'Bilder/DSC01621-web.jpg' %}" alt="Froburger Wandergruppe bei einer Rast in den Bergen bei Toerbel" width="1200" height="800" loading="lazy" decoding="async">
           <figcaption>Wanderwochenende 2026 · Gemeinsame Rast in den Walliser Bergen</figcaption>
         </figure>
 
         <div class="article-layout">
           <div class="article-prose">
-            <p class="article-lead">Vom 1. bis 3. Mai 2026 verbrachten die Froburger ein gemeinsames Wanderwochenende in T&ouml;rbel. Die Mischung aus anspruchsvollen Wegen, guter Gesellschaft und einem ausgiebigen Raclette sorgte f&uuml;r reichlich Gespr&auml;chsstoff.</p>
+            <p class="article-lead">Vom 1. bis 3. Mai 2026 verbrachten die Froburger ein gemeinsames Wanderwochenende in Toerbel. Die Mischung aus anspruchsvollen Wegen, guter Gesellschaft und einem ausgiebigen Raclette sorgte fuer reichlich Gespraechsstoff.</p>
 
             <h3>Anreise mit Hindernissen</h3>
-            <p>Bereits die Reise ins Wallis verlangte der Gruppe einiges ab. Ein Zugstillstand verz&ouml;gerte die Ankunft, w&auml;hrend das umfangreiche Gep&auml;ck &uuml;ber l&auml;ngere Strecken auf den Schultern getragen werden musste. Nach dem steilen Aufstieg erreichten schliesslich alle die Ferienwohnung in T&ouml;rbel, die Jade beziehungsweise Jades Eltern grossz&uuml;gigerweise zur Verf&uuml;gung gestellt hatten.</p>
+            <p>Bereits die Reise ins Wallis verlangte der Gruppe einiges ab. Ein Zugstillstand verzoegerte die Ankunft, waehrend das umfangreiche Gepaeck ueber laengere Strecken auf den Schultern getragen werden musste. Nach dem steilen Aufstieg erreichten schliesslich alle die Ferienwohnung in Toerbel.</p>
 
-            <h3>Eine &uuml;berraschend &laquo;kleine&raquo; Wanderung</h3>
-            <p>Viel Zeit zur Erholung blieb am ersten Tag nicht. Direkt nach der Ankunft stand noch eine als klein angek&uuml;ndigte Wanderung auf dem Programm. F&uuml;r einen Fuxen war sie nach der beschwerlichen Anreise endg&uuml;ltig zu viel: Etwas bleich um die Nase verabschiedete er sich fr&uuml;her ins Bett.</p>
-
-            <h3>Mit dem Senior auf die n&auml;chste Route</h3>
-            <p>Nach einem umfangreichen Fr&uuml;hst&uuml;ck f&uuml;hrte der Senior die Gruppe am folgenden Tag zur n&auml;chsten gr&ouml;sseren Wanderung. Aus R&uuml;cksicht auf die weniger Sportlichen fiel die Route k&uuml;rzer aus als urspr&uuml;nglich angek&uuml;ndigt. Einige Teilnehmende waren sogar der Ansicht, sie sei k&uuml;rzer gewesen als die Wanderung des Vortages.</p>
-
-            <h3>Raclette statt H&ouml;henmeter</h3>
-            <p>Am Abend zeigte die Gruppe, wo ihre eigentlichen St&auml;rken lagen. Beim traditionell zubereiteten Raclette wurde rund ein halber Laib K&auml;se vernichtet. Gleichzeitig nahmen auch die Bierreserven deutlich ab. In gem&uuml;tlicher Runde klang damit ein sportliches und geselliges Wanderwochenende aus.</p>
-
-            <a class="text-link" href="#blog">Zur&uuml;ck zu allen Beitr&auml;gen &uarr;</a>
+            <h3>Raclette statt Hoehenmeter</h3>
+            <p>Am Abend zeigte die Gruppe, wo ihre eigentlichen Staerken lagen. Beim traditionell zubereiteten Raclette wurde rund ein halber Laib Kaese vernichtet. In gemuetlicher Runde klang damit ein sportliches und geselliges Wanderwochenende aus.</p>
           </div>
         </div>
       </div>
@@ -83,37 +97,27 @@
         <header class="article-header">
           <div class="blog-meta"><time datetime="2026-04-25">25. April 2026</time></div>
           <h2>Spargelfahrt am Froburgerwochenende 2026</h2>
-          <p>Von Basel nach Efringen-Kirchen: ein sonniger Tag mit angeregten Gespr&auml;chen, Spargelmen&uuml;, Cantus und gelebter Verbindung &uuml;ber Generationen hinweg.</p>
+          <p>Von Basel nach Efringen-Kirchen: ein sonniger Tag mit angeregten Gespraechen, Spargelmenue, Cantus und gelebter Verbindung ueber Generationen hinweg.</p>
         </header>
 
         <figure class="article-image">
-          <img src="{% static 'Bilder/DSC01173-web.jpg' %}" alt="Teilnehmer des Froburgerwochenendes mit orange-weiss-gr&uuml;ner Couleur" width="1200" height="800" loading="lazy" decoding="async">
+          <img src="{% static 'Bilder/DSC01173-web.jpg' %}" alt="Teilnehmer des Froburgerwochenendes mit orange-weiss-gruener Couleur" width="1200" height="800" loading="lazy" decoding="async">
           <figcaption>Froburgerwochenende 2026 · Couleur und Begegnungen unter freiem Himmel</figcaption>
         </figure>
 
         <div class="article-layout">
           <div class="article-prose">
-            <p class="article-lead">Der Samstag des Froburgerwochenendes begann am 25. April 2026 mit der Generalversammlung der Alt-Froburger, an der auch das Komitee der Aktivitas teilnahm. Danach versammelten sich Froburger und G&auml;ste am internationalen Busbahnhof Basel zur gemeinsamen Spargelfahrt.</p>
+            <p class="article-lead">Der Samstag des Froburgerwochenendes begann am 25. April 2026 mit der Generalversammlung der Alt-Froburger. Danach versammelten sich Froburger und Gaeste am internationalen Busbahnhof Basel zur gemeinsamen Spargelfahrt.</p>
 
             <h3>Mit dem Car nach Efringen-Kirchen</h3>
-            <p>Die Fahrt f&uuml;hrte &uuml;ber die Grenze nach Efringen-Kirchen zum Restaurant Engem&uuml;hle. Bei strahlendem Wetter wurden die Teilnehmenden mit einem Ap&eacute;ro empfangen. Schon vor dem Essen entstanden im Sonnenschein viele angeregte Gespr&auml;che zwischen Aktiven, Alt-Froburgern und G&auml;sten.</p>
-
-            <h3>Spargelmen&uuml; und generationen&uuml;bergreifender Austausch</h3>
-            <p>Zum angek&uuml;ndigten Spargelmen&uuml; mischten sich die Aktiven bewusst in kleinen Gruppen unter die Alt-Froburger. Dadurch entwickelte sich ein lebendiger Austausch &uuml;ber Generationen hinweg. Cabernet bereicherte das Essen zwischendurch mit passenden Cantus.</p>
-
-            <h3>Die Produktion der Fuxen</h3>
-            <p>Nach der Hauptspeise pr&auml;sentierten die Fuxen ihre einstudierte Produktion. Besonders die Anspielungen auf Personen, die allen Anwesenden bestens bekannt waren, sorgten f&uuml;r viele Lacher. Der Auftritt wurde mit grossem Applaus und einer erfreulichen Unterst&uuml;tzung f&uuml;r die Fuxenkasse honoriert.</p>
-
-            <h3>Singend zur&uuml;ck nach Basel</h3>
-            <p>Nach dem Dessert ging es mit dem Car zur&uuml;ck nach Basel. Ein spontaner, kr&auml;ftiger Cantus w&auml;hrend der R&uuml;ckfahrt machte deutlich, wie gut der Anlass angekommen war. Am Ziel wurden zahlreiche H&auml;nde gesch&uuml;ttelt und Umarmungen ausgetauscht.</p>
+            <p>Die Fahrt fuehrte ueber die Grenze nach Efringen-Kirchen zum Restaurant Engemuehle. Bei strahlendem Wetter wurden die Teilnehmenden mit einem Apero empfangen. Schon vor dem Essen entstanden im Sonnenschein viele angeregte Gespraeche zwischen Aktiven, Alt-Froburgern und Gaesten.</p>
 
             <h3>Ausklang in der Markthalle</h3>
-            <p>F&uuml;r den harten Kern war der Abend damit noch nicht beendet. Die Gruppe zog zur Exkneipe in die Markthalle weiter und liess das Froburgerwochenende bei Essen, verschiedenen Bieren und bereits mit Vorfreude auf die n&auml;chste Ausgabe gem&uuml;tlich ausklingen.</p>
-
-            <a class="text-link" href="#blog">Zur&uuml;ck zu allen Beitr&auml;gen &uarr;</a>
+            <p>Fuer den harten Kern war der Abend damit noch nicht beendet. Die Gruppe zog zur Exkneipe in die Markthalle weiter und liess das Froburgerwochenende bei Essen, verschiedenen Bieren und bereits mit Vorfreude auf die naechste Ausgabe gemuetlich ausklingen.</p>
           </div>
         </div>
       </div>
     </article>
+  {% endif %}
 </main>
 {% endblock %}

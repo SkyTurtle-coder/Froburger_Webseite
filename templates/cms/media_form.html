@@ -1,0 +1,43 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Medium</p>
+    <h1>{% if asset %}{{ asset.title }}{% else %}Neues Medium{% endif %}</h1>
+    <p>Alt-Text, Sichtbarkeit und Dateiformat werden serverseitig geprueft.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button cms-button-secondary" href="{% url 'cms:media_list' %}">Zur Bibliothek</a>
+  </div>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="cms-editor">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="cms-form-errors">{{ form.non_field_errors }}</div>
+  {% endif %}
+  <section class="cms-grid-two">
+    <article class="cms-panel">
+      <div class="cms-form-grid">
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+        {% for field in form.visible_fields %}
+          {% include "cms/_field.html" with field=field %}
+        {% endfor %}
+      </div>
+      <div class="cms-toolbar">
+        <button class="cms-button" type="submit">Speichern</button>
+      </div>
+    </article>
+
+    <article class="cms-panel">
+      <p class="cms-kicker">Vorschau</p>
+      {% if asset and asset.file %}
+        <img class="cms-preview-image" src="{{ asset.file.url }}" alt="{{ asset.alt_text|default:asset.title }}">
+      {% else %}
+        <p class="cms-empty">Nach dem ersten Speichern erscheint hier die Bildvorschau.</p>
+      {% endif %}
+    </article>
+  </section>
+</form>
+{% endblock %}

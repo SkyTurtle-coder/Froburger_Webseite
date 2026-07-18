@@ -1,0 +1,20 @@
+{% load static %}
+<article class="blog-card content-card">
+  {% if post.hero_image %}
+    <img class="blog-card-image" src="{{ post.hero_image.file.url }}" alt="{{ post.hero_image.alt_text|default:post.title }}" width="1200" height="800" loading="lazy" decoding="async">
+  {% else %}
+    <img class="blog-card-image" src="{% static 'Bilder/DSC01621-web.jpg' %}" alt="{{ post.title }}" width="1200" height="800" loading="lazy" decoding="async">
+  {% endif %}
+  <div class="blog-body">
+    <div class="blog-meta">
+      {% if post.event_date %}
+        <time datetime="{{ post.event_date|date:'Y-m-d' }}">{{ post.event_date|date:"j. F Y" }}</time>
+      {% elif post.published_at %}
+        <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"j. F Y" }}</time>
+      {% endif %}
+    </div>
+    <h3>{{ post.title }}</h3>
+    <p>{{ post.teaser }}</p>
+    <a class="text-link" href="{% url 'core:news_detail' post.slug %}">Weiterlesen &rarr;</a>
+  </div>
+</article>

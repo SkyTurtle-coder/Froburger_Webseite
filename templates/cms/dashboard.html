@@ -1,0 +1,97 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Web-X CMS</p>
+    <h1>Redaktion und Startseite im selben Arbeitsbereich</h1>
+    <p>Bearbeite Beitraege, Medien, Karussells und die Startseite direkt ohne Django-Admin-Oberflaeche.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button" href="{% url 'cms:post_create' %}">Neuer Beitrag</a>
+    <a class="cms-button cms-button-secondary" href="{% url 'cms:homepage_edit' %}">Startseite bearbeiten</a>
+  </div>
+</section>
+
+<section class="cms-stat-grid">
+  <article class="cms-stat-card"><span>Entwuerfe</span><strong>{{ draft_posts }}</strong></article>
+  <article class="cms-stat-card"><span>Zur Pruefung</span><strong>{{ review_posts }}</strong></article>
+  <article class="cms-stat-card"><span>Geplant</span><strong>{{ scheduled_posts }}</strong></article>
+  <article class="cms-stat-card"><span>Veroeffentlicht</span><strong>{{ published_posts }}</strong></article>
+  <article class="cms-stat-card"><span>Startseiten-Pins</span><strong>{{ pinned_posts }}</strong></article>
+  <article class="cms-stat-card"><span>Medien</span><strong>{{ media_assets }}</strong></article>
+  <article class="cms-stat-card"><span>Karussells</span><strong>{{ carousels }}</strong></article>
+  <article class="cms-stat-card"><span>Homepage</span><strong>{% if homepage %}bereit{% else %}noch leer{% endif %}</strong></article>
+</section>
+
+<section class="cms-grid-two">
+  <article class="cms-panel">
+    <div class="cms-panel-head">
+      <div>
+        <p class="cms-kicker">Zuletzt bearbeitet</p>
+        <h2>Beitraege</h2>
+      </div>
+      <a class="cms-text-link" href="{% url 'cms:post_list' %}">Alle Beitraege</a>
+    </div>
+    <div class="cms-list">
+      {% for post in recent_posts %}
+        <article class="cms-list-card">
+          <div>
+            <h3>{{ post.title }}</h3>
+            <p>{{ post.get_status_display }} · {{ post.get_visibility_display }}</p>
+          </div>
+          <a class="cms-text-link" href="{% url 'cms:post_edit' post.pk %}">Bearbeiten</a>
+        </article>
+      {% empty %}
+        <p class="cms-empty">Noch keine Beitraege vorhanden.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="cms-panel">
+    <div class="cms-panel-head">
+      <div>
+        <p class="cms-kicker">Zuletzt hochgeladen</p>
+        <h2>Medien</h2>
+      </div>
+      <a class="cms-text-link" href="{% url 'cms:media_list' %}">Medienbibliothek</a>
+    </div>
+    <div class="cms-list">
+      {% for asset in recent_media %}
+        <article class="cms-list-card">
+          <div>
+            <h3>{{ asset.title }}</h3>
+            <p>{{ asset.get_visibility_display }} · {{ asset.get_status_display }}</p>
+          </div>
+          <a class="cms-text-link" href="{% url 'cms:media_edit' asset.pk %}">Bearbeiten</a>
+        </article>
+      {% empty %}
+        <p class="cms-empty">Noch keine Medien vorhanden.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="cms-panel">
+  <div class="cms-panel-head">
+    <div>
+      <p class="cms-kicker">Wiederverwendbare Inhalte</p>
+      <h2>Karussells</h2>
+    </div>
+    <a class="cms-text-link" href="{% url 'cms:carousel_list' %}">Zu allen Karussells</a>
+  </div>
+  <div class="cms-list">
+    {% for carousel in recent_carousels %}
+      <article class="cms-list-card">
+        <div>
+          <h3>{{ carousel.name }}</h3>
+          <p>{{ carousel.usage_context|default:"Ohne Verwendungszweck" }}</p>
+        </div>
+        <a class="cms-text-link" href="{% url 'cms:carousel_edit' carousel.pk %}">Bearbeiten</a>
+      </article>
+    {% empty %}
+      <p class="cms-empty">Noch keine Karussells vorhanden.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

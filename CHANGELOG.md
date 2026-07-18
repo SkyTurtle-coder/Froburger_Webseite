@@ -12,6 +12,14 @@
 - Admin-Registrierungen fuer die neue Content- und Media-Basis hinzugefuegt.
 - Neue Tests fuer CMS-Modelle, Layout-Seeding, Medienvalidierung, Publikationslogik, Pin-Limit, Revisions-Snapshots und Rollen-Bootstrap ergaenzt.
 
+### Web-X CMS Interface
+- Redaktionelle CMS-Oberflaeche unter `/cms/` mit Dashboard, Listen und Editoren fuer Beitraege, Medien, Karussells und die Homepage umgesetzt.
+- Interne Preview-, Publish-, Schedule-, Withdraw-, Archive- und Restore-Workflows fuer Beitraege und die Homepage hinzugefuegt.
+- Revisionslisten und Restore-Ansichten fuer Beitraege, Startseite und Karussells umgesetzt.
+- Home und `Aktuelles` minimal-invasiv an die neuen CMS-Datenmodelle angebunden, inklusive Detailroute `/aktuelles/<slug>/` und Sitemap-Eintraegen fuer publizierte Posts.
+- Startseitenkarussell, angepinnte Beitraege und Homepage-Fallbacks in die oeffentlichen Templates integriert.
+- Zugriffstests fuer CMS-Routen, Preview-Schutz, Media-Upload-Regeln, Restore-Flow und Public-News-Integration hinzugefuegt.
+
 ### Documentation
 - `README.md` auf den Django- und CMS-Stand umgestellt.
 - Neue Web-X-CMS-Dokumente fuer Ist-Stand, Architektur, Workflows, Security, Guide und Testing hinzugefuegt.

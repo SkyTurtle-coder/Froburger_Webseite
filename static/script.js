@@ -132,6 +132,45 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  document.querySelectorAll("[data-carousel]").forEach((carousel) => {
+    const slides = Array.from(carousel.querySelectorAll("[data-carousel-slide]"));
+    const previousButton = carousel.querySelector("[data-carousel-prev]");
+    const nextButton = carousel.querySelector("[data-carousel-next]");
+    let currentIndex = slides.findIndex((slide) => !slide.hasAttribute("hidden"));
+
+    if (slides.length <= 1) {
+      return;
+    }
+
+    if (currentIndex < 0) {
+      currentIndex = 0;
+    }
+
+    const showSlide = (index) => {
+      slides.forEach((slide, slideIndex) => {
+        const isActive = slideIndex === index;
+        slide.toggleAttribute("hidden", !isActive);
+        slide.classList.toggle("is-active", isActive);
+      });
+      currentIndex = index;
+    };
+
+    previousButton?.addEventListener("click", () => {
+      const nextIndex = currentIndex === 0 ? slides.length - 1 : currentIndex - 1;
+      showSlide(nextIndex);
+    });
+
+    nextButton?.addEventListener("click", () => {
+      const nextIndex = currentIndex === slides.length - 1 ? 0 : currentIndex + 1;
+      showSlide(nextIndex);
+    });
+
+    window.setInterval(() => {
+      const nextIndex = currentIndex === slides.length - 1 ? 0 : currentIndex + 1;
+      showSlide(nextIndex);
+    }, 7000);
+  });
+
   const escapeIcs = (value = "") =>
     value
       .replace(/\\/g, "\\\\")

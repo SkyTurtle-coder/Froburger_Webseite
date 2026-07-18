@@ -1,0 +1,39 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">{% if revision %}Revision {{ revision.revision_number }}{% else %}Vorschau{% endif %}</p>
+    <h1>{{ carousel.title|default:carousel.name }}</h1>
+    <p>{{ carousel.description|default:"Karussellvorschau im Redaktionsbereich." }}</p>
+  </div>
+  <div class="cms-actions">
+    {% if carousel.pk %}
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_edit' carousel.pk %}">Zur Bearbeitung</a>
+    {% else %}
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_list' %}">Zur Liste</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="cms-carousel-preview">
+  {% for item in carousel.preview_items %}
+    <article class="cms-carousel-slide">
+      {% if item.image %}
+        <img src="{{ item.image.file.url }}" alt="{{ item.image.alt_text|default:item.heading|default:'Karussellbild' }}">
+      {% endif %}
+      <div class="cms-carousel-copy">
+        <h2>{{ item.heading|default:"Ohne Ueberschrift" }}</h2>
+        <p>{{ item.body|default:"-" }}</p>
+        {% if item.link_url and item.link_label %}
+          <a class="cms-text-link" href="{{ item.link_url }}">{{ item.link_label }}</a>
+        {% endif %}
+      </div>
+    </article>
+  {% empty %}
+    <article class="cms-panel">
+      <p class="cms-empty">Keine aktiven Slides vorhanden.</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

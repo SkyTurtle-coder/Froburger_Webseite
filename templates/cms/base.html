@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page_title }} | Web-X CMS</title>
+  <link rel="icon" href="{% static 'Zirkel.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/cms.css' %}">
+</head>
+<body class="cms-body">
+  <header class="cms-header">
+    <div class="cms-header-inner">
+      <a class="cms-brand" href="{% url 'cms:dashboard' %}">
+        <span class="cms-brand-mark">CMS</span>
+        <span>Web-X Redaktion</span>
+      </a>
+      <nav class="cms-nav" aria-label="CMS Navigation">
+        <a href="{% url 'cms:dashboard' %}"{% if cms_section == 'dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+        <a href="{% url 'cms:post_list' %}"{% if cms_section == 'posts' %} aria-current="page"{% endif %}>Beitraege</a>
+        <a href="{% url 'cms:media_list' %}"{% if cms_section == 'media' %} aria-current="page"{% endif %}>Medien</a>
+        <a href="{% url 'cms:carousel_list' %}"{% if cms_section == 'carousels' %} aria-current="page"{% endif %}>Karussells</a>
+        <a href="{% url 'cms:homepage_edit' %}"{% if cms_section == 'homepage' %} aria-current="page"{% endif %}>Startseite</a>
+      </nav>
+      <div class="cms-meta">
+        <a href="{% url 'accounts:home' %}">Mitgliederbereich</a>
+        <a href="{% url 'core:home' %}">Website</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="cms-main">
+    {% if messages %}
+      <section class="cms-messages" aria-label="Hinweise">
+        {% for message in messages %}
+          <div class="cms-message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </section>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

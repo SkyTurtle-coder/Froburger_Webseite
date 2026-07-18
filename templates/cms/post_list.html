@@ -1,0 +1,69 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Beitraege</p>
+    <h1>Redaktionelle Inhalte verwalten</h1>
+    <p>Entwuerfe, geplante Inhalte und publizierte Rueckblicke bleiben mit Revisionen nachvollziehbar.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button" href="{% url 'cms:post_create' %}">Neuer Beitrag</a>
+  </div>
+</section>
+
+<section class="cms-filter-row">
+  <a href="{% url 'cms:post_list' %}"{% if not status_filter %} aria-current="page"{% endif %}>Alle</a>
+  {% for value, label in status_choices %}
+    <a href="{% url 'cms:post_list' %}?status={{ value }}"{% if status_filter == value %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</section>
+
+<section class="cms-card-grid">
+  {% for post in posts %}
+    <article class="cms-card">
+      <div class="cms-card-top">
+        <div>
+          <p class="cms-status">{{ post.get_status_display }} · {{ post.get_visibility_display }}</p>
+          <h2>{{ post.title }}</h2>
+        </div>
+        {% if post.hero_image %}
+          <img class="cms-thumb" src="{{ post.hero_image.file.url }}" alt="{{ post.hero_image.alt_text|default:post.title }}">
+        {% endif %}
+      </div>
+      <p>{{ post.teaser }}</p>
+      <dl class="cms-meta-list">
+        <div><dt>Layout</dt><dd>{{ post.layout_preset.name }}</dd></div>
+        <div><dt>Version</dt><dd>{{ post.version_number }}</dd></div>
+        <div><dt>Aktualisiert</dt><dd>{{ post.updated_at|date:"d.m.Y H:i" }}</dd></div>
+        <div><dt>Pin</dt><dd>{% if post.is_homepage_pinned %}Ja{% else %}Nein{% endif %}</dd></div>
+      </dl>
+      <div class="cms-inline-actions">
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:post_edit' post.pk %}">Bearbeiten</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:post_preview' post.pk %}">Vorschau</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:post_revisions' post.pk %}">Revisionen</a>
+      </div>
+      {% if perms.content.publish_post %}
+        <div class="cms-inline-actions">
+          <form method="post" action="{% url 'cms:post_publish' post.pk %}">
+            {% csrf_token %}
+            <button class="cms-button" type="submit">Veroeffentlichen</button>
+          </form>
+          <form method="post" action="{% url 'cms:post_withdraw' post.pk %}">
+            {% csrf_token %}
+            <button class="cms-button cms-button-secondary" type="submit">Zurueckziehen</button>
+          </form>
+          <form method="post" action="{% url 'cms:post_archive' post.pk %}">
+            {% csrf_token %}
+            <button class="cms-button cms-button-secondary" type="submit">Archivieren</button>
+          </form>
+        </div>
+      {% endif %}
+    </article>
+  {% empty %}
+    <article class="cms-panel">
+      <p class="cms-empty">Noch keine Beitraege vorhanden.</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

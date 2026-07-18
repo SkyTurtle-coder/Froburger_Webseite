@@ -1,0 +1,29 @@
+<section class="home-carousel" data-carousel>
+  {% for item in homepage_carousel_items %}
+    <article
+      class="home-carousel-slide{% if forloop.first %} is-active{% endif %}"
+      data-carousel-slide
+      {% if not forloop.first %}hidden{% endif %}
+      style="background-image: linear-gradient(110deg, rgba(7, 25, 11, 0.74) 0%, rgba(7, 25, 11, 0.34) 52%, rgba(7, 25, 11, 0.6) 100%), url('{{ item.image.file.url }}');"
+    >
+      <div class="hero-panel">
+        <p class="eyebrow light">{{ homepage_carousel_section.eyebrow|default:"Startseite" }}</p>
+        <h1>{{ item.heading|default:"Verbunden in Tradition." }}</h1>
+        {% if item.body %}
+          <p class="motto">{{ item.body }}</p>
+        {% endif %}
+        {% if item.link_url and item.link_label %}
+          <div class="button-row">
+            <a class="btn btn-primary" href="{{ item.link_url }}">{{ item.link_label }}</a>
+          </div>
+        {% endif %}
+      </div>
+    </article>
+  {% endfor %}
+  {% if homepage_carousel_items|length > 1 %}
+    <div class="home-carousel-controls">
+      <button class="carousel-control" type="button" data-carousel-prev aria-label="Vorheriges Slide">&larr;</button>
+      <button class="carousel-control" type="button" data-carousel-next aria-label="Naechstes Slide">&rarr;</button>
+    </div>
+  {% endif %}
+</section>

@@ -1,0 +1,37 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Medienbibliothek</p>
+    <h1>Bilder verwalten</h1>
+    <p>Nur JPEG, PNG und WebP. Oeffentliche Inhalte duerfen nur auf passende Medien referenzieren.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button" href="{% url 'cms:media_create' %}">Medium hochladen</a>
+  </div>
+</section>
+
+<section class="cms-card-grid">
+  {% for asset in assets %}
+    <article class="cms-card">
+      {% if asset.file %}
+        <img class="cms-card-image" src="{{ asset.file.url }}" alt="{{ asset.alt_text|default:asset.title }}">
+      {% endif %}
+      <h2>{{ asset.title }}</h2>
+      <p>{{ asset.get_visibility_display }} · {{ asset.get_status_display }}</p>
+      <dl class="cms-meta-list">
+        <div><dt>MIME</dt><dd>{{ asset.mime_type|default:"-" }}</dd></div>
+        <div><dt>Groesse</dt><dd>{{ asset.width }} × {{ asset.height }}</dd></div>
+      </dl>
+      <div class="cms-inline-actions">
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:media_edit' asset.pk %}">Bearbeiten</a>
+      </div>
+    </article>
+  {% empty %}
+    <article class="cms-panel">
+      <p class="cms-empty">Noch keine Medien vorhanden.</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

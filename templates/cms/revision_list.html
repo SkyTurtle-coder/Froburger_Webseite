@@ -1,0 +1,59 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Revisionen</p>
+    <h1>{{ object_label }}: {{ object_name }}</h1>
+    <p>Jede Wiederherstellung erzeugt eine neue Revision und ueberschreibt den Verlauf nicht.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button cms-button-secondary" href="{{ back_url }}">Zurueck</a>
+  </div>
+</section>
+
+<section class="cms-stack">
+  {% for revision in revisions %}
+    <article class="cms-panel">
+      <div class="cms-panel-head">
+        <div>
+          <p class="cms-kicker">Revision {{ revision.revision_number }}</p>
+          <h2>{{ revision.created_at|date:"d.m.Y H:i" }}</h2>
+        </div>
+        <div class="cms-inline-actions">
+          {% if cms_section == "posts" %}
+            <a class="cms-button cms-button-secondary" href="{% url 'cms:post_revision_preview' revision.post_id revision.pk %}">Vorschau</a>
+            <form method="post" action="{% url 'cms:post_revision_restore' revision.post_id revision.pk %}">
+              {% csrf_token %}
+              <button class="cms-button" type="submit">Wiederherstellen</button>
+            </form>
+          {% elif cms_section == "homepage" %}
+            <a class="cms-button cms-button-secondary" href="{% url 'cms:homepage_revision_preview' revision.pk %}">Vorschau</a>
+            <form method="post" action="{% url 'cms:homepage_revision_restore' revision.pk %}">
+              {% csrf_token %}
+              <button class="cms-button" type="submit">Wiederherstellen</button>
+            </form>
+          {% elif cms_section == "carousels" %}
+            <a class="cms-button cms-button-secondary" href="{% url 'cms:carousel_revision_preview' revision.carousel_id revision.pk %}">Vorschau</a>
+            <form method="post" action="{% url 'cms:carousel_revision_restore' revision.carousel_id revision.pk %}">
+              {% csrf_token %}
+              <button class="cms-button" type="submit">Wiederherstellen</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+      <dl class="cms-meta-list">
+        {% if revision.status %}
+          <div><dt>Status</dt><dd>{{ revision.get_status_display }}</dd></div>
+        {% endif %}
+        <div><dt>Bearbeitet von</dt><dd>{% if revision.created_by %}{{ revision.created_by.email }}{% else %}-{% endif %}</dd></div>
+        <div><dt>Aenderungsgrund</dt><dd>{{ revision.reason|default:"-" }}</dd></div>
+      </dl>
+    </article>
+  {% empty %}
+    <article class="cms-panel">
+      <p class="cms-empty">Noch keine Revisionen vorhanden.</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -1018,6 +1018,102 @@ p {
   position: relative;
 }
 
+.preview-banner {
+  background: #fff3df;
+  border-bottom: 1px solid rgba(199, 92, 11, 0.18);
+  color: var(--dark-green);
+  padding: 15px 0;
+}
+
+.preview-banner .container {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.preview-banner strong {
+  color: var(--orange-dark);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-carousel {
+  position: relative;
+}
+
+.home-carousel-slide {
+  align-items: center;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  display: flex;
+  min-height: max(500px, 85vh);
+  overflow: hidden;
+  padding: 80px var(--space-4);
+}
+
+.home-carousel-slide[hidden] {
+  display: none;
+}
+
+.home-carousel-controls {
+  bottom: 26px;
+  display: flex;
+  gap: 10px;
+  position: absolute;
+  right: 26px;
+  z-index: 2;
+}
+
+.carousel-control {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 999px;
+  color: var(--white);
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  width: 44px;
+}
+
+.carousel-control:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.article-feature-card {
+  margin: 26px 0;
+  overflow: hidden;
+}
+
+.article-feature-card .blog-card-image {
+  margin-bottom: 0;
+}
+
+.article-feature-card .blog-body {
+  padding: 24px;
+}
+
+.article-prose blockquote {
+  border-left: 3px solid var(--orange);
+  color: var(--dark-green);
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  line-height: 1.35;
+  margin: 30px 0;
+  padding-left: 20px;
+}
+
+.article-prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 34px 0;
+}
+
 .page-hero {
   align-items: center;
   background:
@@ -2435,6 +2531,10 @@ p {
     padding-block: 42px;
   }
 
+  .home-carousel-slide {
+    padding: 60px 20px;
+  }
+
   .hero-panel::before {
     display: none;
   }
@@ -2549,6 +2649,11 @@ p {
 
 @media (max-width: 560px) {
   .home-hero {
+    min-height: 650px;
+    padding-inline: var(--space-3);
+  }
+
+  .home-carousel-slide {
     min-height: 650px;
     padding-inline: var(--space-3);
   }
