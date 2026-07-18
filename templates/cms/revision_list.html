@@ -39,6 +39,12 @@
               {% csrf_token %}
               <button class="cms-button" type="submit">Wiederherstellen</button>
             </form>
+          {% elif cms_section == "events" %}
+            <a class="cms-button cms-button-secondary" href="{% url 'cms:event_revision_preview' revision.event_id revision.pk %}">Vorschau</a>
+            <form method="post" action="{% url 'cms:event_revision_restore' revision.event_id revision.pk %}">
+              {% csrf_token %}
+              <button class="cms-button" type="submit">Wiederherstellen</button>
+            </form>
           {% endif %}
         </div>
       </div>

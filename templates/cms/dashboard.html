@@ -24,6 +24,15 @@
   <article class="cms-stat-card"><span>Homepage</span><strong>{% if homepage %}bereit{% else %}noch leer{% endif %}</strong></article>
 </section>
 
+{% if event_access %}
+<section class="cms-stat-grid">
+  <article class="cms-stat-card"><span>Event-Entwuerfe</span><strong>{{ draft_events }}</strong></article>
+  <article class="cms-stat-card"><span>Event-Review</span><strong>{{ review_events }}</strong></article>
+  <article class="cms-stat-card"><span>Geplante Events</span><strong>{{ scheduled_events }}</strong></article>
+  <article class="cms-stat-card"><span>Sichtbare Events</span><strong>{{ published_events_count }}</strong></article>
+</section>
+{% endif %}
+
 <section class="cms-grid-two">
   <article class="cms-panel">
     <div class="cms-panel-head">
@@ -71,6 +80,31 @@
     </div>
   </article>
 </section>
+
+{% if event_access %}
+<section class="cms-panel">
+  <div class="cms-panel-head">
+    <div>
+      <p class="cms-kicker">Anstehende Redaktion</p>
+      <h2>Veranstaltungen</h2>
+    </div>
+    <a class="cms-text-link" href="{% url 'cms:event_list' %}">Alle Veranstaltungen</a>
+  </div>
+  <div class="cms-list">
+    {% for event in recent_events %}
+      <article class="cms-list-card">
+        <div>
+          <h3>{{ event.title }}</h3>
+          <p>{{ event.get_status_display }} · {{ event.start_at|date:"d.m.Y H:i" }}</p>
+        </div>
+        <a class="cms-text-link" href="{% url 'cms:event_edit' event.pk %}">Bearbeiten</a>
+      </article>
+    {% empty %}
+      <p class="cms-empty">Noch keine Veranstaltungen vorhanden.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 <section class="cms-panel">
   <div class="cms-panel-head">

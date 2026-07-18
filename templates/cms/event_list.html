@@ -1,0 +1,80 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Veranstaltungen</p>
+    <h1>Veranstaltungen redaktionell steuern</h1>
+    <p>Oeffentliche und interne Anlaesse bleiben mit Status, Sichtbarkeit und Revisionen nachvollziehbar.</p>
+  </div>
+  <div class="cms-actions">
+    <a class="cms-button" href="{% url 'cms:event_create' %}">Neue Veranstaltung</a>
+  </div>
+</section>
+
+<section class="cms-filter-row">
+  <a href="{% url 'cms:event_list' %}"{% if not status_filter and not category_filter %} aria-current="page"{% endif %}>Alle</a>
+  {% for value, label in status_choices %}
+    <a href="{% url 'cms:event_list' %}?status={{ value }}"{% if status_filter == value and not category_filter %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+  {% for category in categories %}
+    <a href="{% url 'cms:event_list' %}?category={{ category.slug }}"{% if category_filter == category.slug %} aria-current="page"{% endif %}>{{ category.name }}</a>
+  {% endfor %}
+</section>
+
+<section class="cms-card-grid">
+  {% for event in events %}
+    <article class="cms-card">
+      <div class="cms-card-top">
+        <div>
+          <p class="cms-status">{{ event.get_status_display }} · {{ event.get_visibility_display }}</p>
+          <h2>{{ event.title }}</h2>
+        </div>
+        {% if event.hero_image %}
+          <img class="cms-thumb" src="{{ event.hero_image.file.url }}" alt="{{ event.hero_image.alt_text|default:event.title }}">
+        {% endif %}
+      </div>
+      <p>{{ event.short_description }}</p>
+      <dl class="cms-meta-list">
+        <div><dt>Beginn</dt><dd>{{ event.start_at|date:"d.m.Y H:i" }}</dd></div>
+        <div><dt>Ende</dt><dd>{{ event.end_at|date:"d.m.Y H:i" }}</dd></div>
+        <div><dt>Kategorie</dt><dd>{{ event.category.name|default:"-" }}</dd></div>
+        <div><dt>Version</dt><dd>{{ event.version_number }}</dd></div>
+      </dl>
+      <div class="cms-inline-actions">
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:event_edit' event.pk %}">Bearbeiten</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:event_preview' event.pk %}">Vorschau</a>
+        <a class="cms-button cms-button-secondary" href="{% url 'cms:event_revisions' event.pk %}">Revisionen</a>
+      </div>
+      <div class="cms-inline-actions">
+        {% if perms.events.publish_event %}
+          <form method="post" action="{% url 'cms:event_publish' event.pk %}">
+            {% csrf_token %}
+            <button class="cms-button" type="submit">Veroeffentlichen</button>
+          </form>
+          <form method="post" action="{% url 'cms:event_withdraw' event.pk %}">
+            {% csrf_token %}
+            <button class="cms-button cms-button-secondary" type="submit">Zurueckziehen</button>
+          </form>
+        {% endif %}
+        {% if perms.events.cancel_event %}
+          <form method="post" action="{% url 'cms:event_cancel' event.pk %}">
+            {% csrf_token %}
+            <button class="cms-button cms-button-secondary" type="submit">Absagen</button>
+          </form>
+        {% endif %}
+        {% if perms.events.archive_event %}
+          <form method="post" action="{% url 'cms:event_archive' event.pk %}">
+            {% csrf_token %}
+            <button class="cms-button cms-button-secondary" type="submit">Archivieren</button>
+          </form>
+        {% endif %}
+      </div>
+    </article>
+  {% empty %}
+    <article class="cms-panel">
+      <p class="cms-empty">Noch keine Veranstaltungen vorhanden.</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

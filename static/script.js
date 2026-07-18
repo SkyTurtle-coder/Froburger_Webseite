@@ -188,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
-  document.querySelectorAll(".calendar-btn").forEach((button) => {
+  document.querySelectorAll('.calendar-btn[data-client-ics="true"]').forEach((button) => {
     button.addEventListener("click", () => {
       const { title = "anlass", start = "", end = "", location = "", description = "" } = button.dataset;
       const ics = [
@@ -253,31 +253,64 @@ document.addEventListener("DOMContentLoaded", () => {
       "Dezember"
     ];
     const weekdayNames = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+    const parseCalendarTimestamp = (value = "") => {
+      if (!value || value.length < 8) {
+        return null;
+      }
+
+      const year = Number(value.slice(0, 4));
+      const month = Number(value.slice(4, 6));
+      const day = Number(value.slice(6, 8));
+      const hour = Number(value.slice(9, 11) || 0);
+      const minute = Number(value.slice(11, 13) || 0);
+      const second = Number(value.slice(13, 15) || 0);
+
+      if (!year || !month || !day) {
+        return null;
+      }
+
+      return new Date(year, month - 1, day, hour, minute, second);
+    };
+
     const calendarEvents = Array.from(document.querySelectorAll(".calendar-event"))
-      .map((event, index) => {
+      .flatMap((event, index) => {
         const dateElement = event.querySelector(".calendar-date");
         const title = event.querySelector(".calendar-copy h3")?.textContent?.trim() || `Anlass ${index + 1}`;
         const summary = event.querySelector(".calendar-copy p")?.textContent?.trim() || "";
         const metaLines = Array.from(event.querySelectorAll(".calendar-meta span")).map((entry) => entry.textContent.trim());
         const button = event.querySelector(".calendar-btn");
-        const isoDate = dateElement?.getAttribute("datetime") || button?.dataset.start?.slice(0, 4) + "-" + button?.dataset.start?.slice(4, 6) + "-" + button?.dataset.start?.slice(6, 8);
+        const startValue = button?.dataset.start || "";
+        const endValue = button?.dataset.end || startValue;
+        const startDateTime = parseCalendarTimestamp(startValue);
+        const endDateTime = parseCalendarTimestamp(endValue) || startDateTime;
+        const isoDate = dateElement?.getAttribute("datetime") || (startValue ? `${startValue.slice(0, 4)}-${startValue.slice(4, 6)}-${startValue.slice(6, 8)}` : "");
 
         if (!isoDate) {
-          return null;
+          return [];
         }
 
         const [year, month, day] = isoDate.split("-").map(Number);
+        const rangeStart = startDateTime || new Date(year, month - 1, day);
+        const rangeEnd = endDateTime || rangeStart;
+        const current = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
+        const last = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate());
+        const renderedDays = [];
 
-        return {
-          day,
-          isoDate,
-          location: metaLines[1] || button?.dataset.location || "",
-          month,
-          summary,
-          time: metaLines[0] || "",
-          title,
-          year
-        };
+        while (current <= last) {
+          renderedDays.push({
+            day: current.getDate(),
+            isoDate: `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}-${String(current.getDate()).padStart(2, "0")}`,
+            location: metaLines[1] || button?.dataset.location || "",
+            month: current.getMonth() + 1,
+            summary,
+            time: metaLines[0] || "",
+            title,
+            year: current.getFullYear()
+          });
+          current.setDate(current.getDate() + 1);
+        }
+
+        return renderedDays;
       })
       .filter(Boolean);
 

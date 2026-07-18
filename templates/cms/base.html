@@ -17,6 +17,7 @@
       </a>
       <nav class="cms-nav" aria-label="CMS Navigation">
         <a href="{% url 'cms:dashboard' %}"{% if cms_section == 'dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+        <a href="{% url 'cms:event_list' %}"{% if cms_section == 'events' %} aria-current="page"{% endif %}>Veranstaltungen</a>
         <a href="{% url 'cms:post_list' %}"{% if cms_section == 'posts' %} aria-current="page"{% endif %}>Beitraege</a>
         <a href="{% url 'cms:page_list' %}"{% if cms_section == 'pages' %} aria-current="page"{% endif %}>Seiten</a>
         <a href="{% url 'cms:media_list' %}"{% if cms_section == 'media' %} aria-current="page"{% endif %}>Medien</a>

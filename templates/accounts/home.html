@@ -84,6 +84,18 @@
       </div>
     </article>
 
+    <article class="tile-card">
+      <div class="tile-card-header">
+        <p class="tile-eyebrow">Kalender</p>
+        <h2>Veranstaltungen</h2>
+      </div>
+      <p>Kommende Anlaesse, interne Termine und den geschuetzten Kalender im Mitgliederbereich oeffnen.</p>
+      <div class="tile-card-footer">
+        <span class="status-pill status-pill-muted">Semesterprogramm und interne Termine</span>
+        <a class="button tile-link" href="{% url 'members:events' %}">Veranstaltungen oeffnen</a>
+      </div>
+    </article>
+
     {% if can_access_cms %}
     <article class="tile-card">
       <div class="tile-card-header">

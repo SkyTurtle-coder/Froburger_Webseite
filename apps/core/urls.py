@@ -1,9 +1,15 @@
 from django.urls import path
 from django.views.generic import RedirectView
 
+from apps.events.views import (
+    PublicEventDetailView,
+    PublicEventFeedView,
+    PublicEventIcsView,
+    PublicEventListView,
+)
+
 from .views import (
     AboutPageView,
-    EventsPageView,
     HomePageView,
     ImprintPageView,
     JoinPageView,
@@ -13,7 +19,6 @@ from .views import (
     PrivacyPageView,
     healthcheck,
     intern_entry,
-    legacy_calendar_feed,
     robots_txt,
     sitemap_xml,
 )
@@ -24,7 +29,7 @@ urlpatterns = [
     path("health/", healthcheck, name="healthcheck"),
     path("robots.txt", robots_txt, name="robots_txt"),
     path("sitemap.xml", sitemap_xml, name="sitemap_xml"),
-    path("kalender.ics", legacy_calendar_feed, name="calendar_ics"),
+    path("kalender.ics", PublicEventFeedView.as_view(), name="calendar_ics"),
     path("index.html", RedirectView.as_view(pattern_name="core:home", permanent=True)),
     path("aktuelles.html", RedirectView.as_view(pattern_name="core:news", permanent=True)),
     path("anlaesse.html", RedirectView.as_view(pattern_name="core:events", permanent=True)),
@@ -46,7 +51,9 @@ urlpatterns = [
     path("", HomePageView.as_view(), name="home"),
     path("aktuelles/", NewsPageView.as_view(), name="news"),
     path("aktuelles/<slug:slug>/", NewsDetailView.as_view(), name="news_detail"),
-    path("anlaesse/", EventsPageView.as_view(), name="events"),
+    path("anlaesse/", PublicEventListView.as_view(), name="events"),
+    path("anlaesse/<slug:slug>/", PublicEventDetailView.as_view(), name="event_detail"),
+    path("anlaesse/<slug:slug>.ics", PublicEventIcsView.as_view(), name="event_ics"),
     path("mitglieder/", MembersPageView.as_view(), name="members"),
     path("mitglied-werden/", JoinPageView.as_view(), name="join"),
     path("ueber-uns/", AboutPageView.as_view(), name="about"),

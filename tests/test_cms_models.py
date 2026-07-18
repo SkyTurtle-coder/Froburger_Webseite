@@ -281,6 +281,7 @@ def test_carousel_revision_snapshots_include_items(
 def test_bootstrap_roles_assigns_web_aktuar_cms_permissions():
     call_command("bootstrap_roles")
 
+    event_verantwortlich = Group.objects.get(name="event_verantwortlich")
     web_aktuar = Group.objects.get(name="web_aktuar")
     member_admin = Group.objects.get(name="member_admin")
 
@@ -291,6 +292,14 @@ def test_bootstrap_roles_assigns_web_aktuar_cms_permissions():
     assert web_aktuar.permissions.filter(
         content_type__app_label="media_library",
         codename="publish_mediaasset",
+    ).exists()
+    assert web_aktuar.permissions.filter(
+        content_type__app_label="events",
+        codename="publish_event",
+    ).exists()
+    assert event_verantwortlich.permissions.filter(
+        content_type__app_label="events",
+        codename="schedule_event",
     ).exists()
     assert not member_admin.permissions.filter(
         content_type__app_label="content",

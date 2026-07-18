@@ -1,5 +1,19 @@
 from django.urls import path
 
+from apps.events.views import (
+    CmsEventArchiveView,
+    CmsEventCancelView,
+    CmsEventCreateView,
+    CmsEventListView,
+    CmsEventPreviewView,
+    CmsEventPublishView,
+    CmsEventRevisionListView,
+    CmsEventRevisionPreviewView,
+    CmsEventRevisionRestoreView,
+    CmsEventUpdateView,
+    CmsEventWithdrawView,
+)
+
 from .views import (
     CarouselCreateView,
     CarouselListView,
@@ -41,6 +55,45 @@ app_name = "cms"
 
 urlpatterns = [
     path("", CmsDashboardView.as_view(), name="dashboard"),
+    path("veranstaltungen/", CmsEventListView.as_view(), name="event_list"),
+    path("veranstaltungen/neu/", CmsEventCreateView.as_view(), name="event_create"),
+    path("veranstaltungen/<int:pk>/bearbeiten/", CmsEventUpdateView.as_view(), name="event_edit"),
+    path("veranstaltungen/<int:pk>/vorschau/", CmsEventPreviewView.as_view(), name="event_preview"),
+    path(
+        "veranstaltungen/<int:pk>/veroeffentlichen/",
+        CmsEventPublishView.as_view(),
+        name="event_publish",
+    ),
+    path(
+        "veranstaltungen/<int:pk>/zurueckziehen/",
+        CmsEventWithdrawView.as_view(),
+        name="event_withdraw",
+    ),
+    path(
+        "veranstaltungen/<int:pk>/absagen/",
+        CmsEventCancelView.as_view(),
+        name="event_cancel",
+    ),
+    path(
+        "veranstaltungen/<int:pk>/archivieren/",
+        CmsEventArchiveView.as_view(),
+        name="event_archive",
+    ),
+    path(
+        "veranstaltungen/<int:pk>/versionen/",
+        CmsEventRevisionListView.as_view(),
+        name="event_revisions",
+    ),
+    path(
+        "veranstaltungen/<int:pk>/versionen/<int:revision_id>/vorschau/",
+        CmsEventRevisionPreviewView.as_view(),
+        name="event_revision_preview",
+    ),
+    path(
+        "veranstaltungen/<int:pk>/versionen/<int:revision_id>/wiederherstellen/",
+        CmsEventRevisionRestoreView.as_view(),
+        name="event_revision_restore",
+    ),
     path("beitraege/", PostListView.as_view(), name="post_list"),
     path("beitraege/neu/", PostCreateView.as_view(), name="post_create"),
     path("beitraege/<int:pk>/bearbeiten/", PostUpdateView.as_view(), name="post_edit"),

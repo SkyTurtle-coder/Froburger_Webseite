@@ -1,0 +1,53 @@
+{% extends "cms/base.html" %}
+
+{% block content %}
+<section class="cms-panel cms-hero">
+  <div>
+    <p class="cms-kicker">Veranstaltungseditor</p>
+    <h1>{% if event %}{{ event.title }}{% else %}Neue Veranstaltung{% endif %}</h1>
+    <p>Veranstaltungen speichern, planen, veroeffentlichen, absagen und spaeter revisionssicher wiederherstellen.</p>
+  </div>
+  <div class="cms-actions">
+    {% if event %}
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:event_preview' event.pk %}">Gespeicherte Vorschau</a>
+      <a class="cms-button cms-button-secondary" href="{% url 'cms:event_revisions' event.pk %}">Revisionen</a>
+    {% endif %}
+    <a class="cms-button cms-button-secondary" href="{% url 'cms:event_list' %}">Zur Liste</a>
+  </div>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="cms-editor">
+  {% csrf_token %}
+  {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+  {% if form.non_field_errors %}
+    <div class="cms-form-errors">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <section class="cms-panel">
+    <div class="cms-toolbar">
+      <button class="cms-button" type="submit" name="workflow_action" value="save">Speichern</button>
+      {% if perms.events.publish_event %}
+        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="review">Zur Pruefung</button>
+        {% if perms.events.schedule_event %}
+          <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="schedule">Planen</button>
+        {% endif %}
+        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="publish">Veroeffentlichen</button>
+        {% if event %}
+          <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="withdraw">Zurueckziehen</button>
+        {% endif %}
+      {% endif %}
+      {% if perms.events.cancel_event and event %}
+        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="cancel">Absagen</button>
+      {% endif %}
+      {% if perms.events.archive_event and event %}
+        <button class="cms-button cms-button-secondary" type="submit" name="workflow_action" value="archive">Archivieren</button>
+      {% endif %}
+    </div>
+    <div class="cms-form-grid">
+      {% for field in form.visible_fields %}
+        {% include "cms/_field.html" with field=field %}
+      {% endfor %}
+    </div>
+  </section>
+</form>
+{% endblock %}

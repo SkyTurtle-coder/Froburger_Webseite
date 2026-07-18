@@ -1,170 +1,151 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block content %}
 <main id="main-content">
-<section class="page-hero">
-      <div class="container">
-        <p class="breadcrumbs"><a href="{% url 'core:home' %}">Home</a> / Anl&auml;sse</p>
-        <h1>Anl&auml;sse</h1>
-        <p>Semesterprogramm der Aktivitas, gemeinsame Verbindungsanl&auml;sse und regelm&auml;ssige Treffen der Alt-Froburger.</p>
+  <section class="page-hero">
+    <div class="container">
+      <p class="breadcrumbs"><a href="{% url 'core:home' %}">Home</a> / Anl&auml;sse</p>
+      <h1>Anl&auml;sse</h1>
+      <p>Semesterprogramm der Aktivitas, gemeinsame Verbindungsanl&auml;sse und sauber getrennte interne Kalenderausgaben.</p>
+    </div>
+  </section>
+
+  <section class="section section-light" id="termine" aria-labelledby="calendar-title">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Semesterprogramm</p>
+          <h2 class="section-title" id="calendar-title">Kommende Termine</h2>
+        </div>
+        <p class="section-intro">Dynamisch gepflegte Veranstaltungen aus dem Web-X CMS.</p>
       </div>
-    </section>
 
-    <section class="section section-light" id="termine" aria-labelledby="calendar-title">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Semesterprogramm</p>
-            <h2 class="section-title" id="calendar-title">Kommende Termine</h2>
-          </div>
-          <p class="section-intro">September-November 2026</p>
+      {% if categories %}
+        <div class="cms-filter-row">
+          <a href="{% url 'core:events' %}"{% if not category_filter %} aria-current="page"{% endif %}>Alle</a>
+          {% for category in categories %}
+            <a href="{% url 'core:events' %}?category={{ category.slug }}"{% if category_filter == category.slug %} aria-current="page"{% endif %}>{{ category.name }}</a>
+          {% endfor %}
         </div>
+      {% endif %}
 
-        <div class="toolbar view-only">
-          <div class="view-switch" role="group" aria-label="Ansicht w&auml;hlen">
-            <button class="view-btn active" type="button" data-view="list" aria-pressed="true">Liste</button>
-            <button class="view-btn" type="button" data-view="month" aria-pressed="false">Monat</button>
-          </div>
-        </div>
-
-        <div class="calendar-list">
-          <article class="calendar-event">
-            <time class="calendar-date" datetime="2026-09-12"><strong>12</strong><span>Sep 2026</span></time>
-            <div class="calendar-copy">
-              <h3>Wanderung zur Froburg</h3>
-              <p>Gemeinsamer Aufstieg mit anschliessendem Nachtessen.</p>
-            </div>
-            <div class="calendar-meta"><span>10.00 Uhr</span><span>Treffpunkt Bahnhof Olten</span></div>
-            <button class="calendar-btn" type="button" data-title="Wanderung zur Froburg" data-start="20260912T100000" data-end="20260912T180000" data-location="Bahnhof Olten" data-description="Gemeinsame Wanderung der AV Froburger zur Froburg">ICS-Datei</button>
-          </article>
-
-          <article class="calendar-event">
-            <time class="calendar-date" datetime="2026-10-08"><strong>08</strong><span>Okt 2026</span></time>
-            <div class="calendar-copy">
-              <h3>&Ouml;ffentlicher Vortragsabend</h3>
-              <p>Fachreferat mit Diskussion und anschliessendem Ap&eacute;ro.</p>
-            </div>
-            <div class="calendar-meta"><span>18.30 Uhr</span><span>Universit&auml;t Basel</span></div>
-            <button class="calendar-btn" type="button" data-title="Öffentlicher Vortragsabend" data-start="20261008T183000" data-end="20261008T210000" data-location="Universität Basel" data-description="Vortragsabend der AV Froburger mit anschliessendem Ap&eacute;ro">ICS-Datei</button>
-          </article>
-
-          <article class="calendar-event">
-            <time class="calendar-date" datetime="2026-11-21"><strong>21</strong><span>Nov 2026</span></time>
-            <div class="calendar-copy">
-              <h3>Stiftungsfest</h3>
-              <p>Festlicher H&ouml;hepunkt des Verbindungsjahres f&uuml;r Aktivitas und Alt-Froburger.</p>
-            </div>
-            <div class="calendar-meta"><span>18.00 Uhr</span><span>Basel</span></div>
-            <button class="calendar-btn" type="button" data-title="Stiftungsfest AV Froburger" data-start="20261121T180000" data-end="20261122T010000" data-location="Basel" data-description="Stiftungsfest der AV Froburger">ICS-Datei</button>
-          </article>
-        </div>
-
-        <div class="calendar-month" hidden aria-label="Monatsansicht September 2026">
-          <div class="month-heading">
-            <button type="button" aria-label="Vorheriger Monat">&larr;</button>
-            <h3>September 2026</h3>
-            <button type="button" aria-label="N&auml;chster Monat">&rarr;</button>
-          </div>
-          <p class="month-status" aria-live="polite">1 Anlass in diesem Monat.</p>
-          <div class="month-grid">
-            <div class="weekday">Mo</div><div class="weekday">Di</div><div class="weekday">Mi</div><div class="weekday">Do</div><div class="weekday">Fr</div><div class="weekday">Sa</div><div class="weekday">So</div>
-          </div>
-        </div>
-
-        <div class="calendar-subscribe">
-          <div>
-            <h3>Semesterprogramm abonnieren</h3>
-            <p>Abonniere das Semesterprogramm und verpasse keinen Anlass mehr der AV Froburger.</p>
-          </div>
-          <div class="calendar-subscribe-actions">
-            <a class="btn btn-primary" href="{{ calendar_webcal_url }}">Kalender abonnieren</a>
-            <a class="btn btn-outline-dark" href="{% url 'core:calendar_ics' %}" download>ICS-Datei</a>
-          </div>
+      <div class="toolbar view-only">
+        <div class="view-switch" role="group" aria-label="Ansicht w&auml;hlen">
+          <button class="view-btn active" type="button" data-view="list" aria-pressed="true">Liste</button>
+          <button class="view-btn" type="button" data-view="month" aria-pressed="false">Monat</button>
         </div>
       </div>
-    </section>
 
-    <section class="section" id="staemme" aria-labelledby="staemme-title">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Alt-Froburger</p>
-            <h2 class="section-title" id="staemme-title">Regelm&auml;ssige St&auml;mme</h2>
-          </div>
-          <p class="section-intro">Die Alt-Froburger treffen sich regelm&auml;ssig an ihren regionalen St&auml;mmen in Basel, Bern und Luzern.</p>
+      <div class="calendar-list">
+        {% for event in upcoming_events %}
+          <article class="calendar-event">
+            <time class="calendar-date" datetime="{{ event.start_at|date:'Y-m-d' }}">
+              <strong>{{ event.start_at|date:"d" }}</strong>
+              <span>{{ event.start_at|date:"M Y" }}</span>
+            </time>
+            <div class="calendar-copy">
+              <h3><a href="{% url 'core:event_detail' event.slug %}">{{ event.title }}</a></h3>
+              <p>{{ event.short_description }}</p>
+              {% if event.status == "cancelled" %}
+                <p><strong>Abgesagt</strong></p>
+              {% endif %}
+            </div>
+            <div class="calendar-meta">
+              <span>{{ event.start_at|date:"H:i" }} - {{ event.end_at|date:"H:i" }}</span>
+              <span>{{ event.location_name }}</span>
+            </div>
+            <a
+              class="calendar-btn"
+              href="{% url 'core:event_ics' event.slug %}"
+              data-start="{{ event.start_at|date:'Ymd\\THis' }}"
+              data-end="{{ event.end_at|date:'Ymd\\THis' }}"
+              data-location="{{ event.location_name }}"
+              data-description="{{ event.description|striptags }}"
+              download
+            >
+              ICS-Datei
+            </a>
+          </article>
+        {% empty %}
+          <div class="empty-state">Zurzeit sind keine oeffentlichen kommenden Veranstaltungen hinterlegt.</div>
+        {% endfor %}
+      </div>
+
+      <div class="calendar-month" hidden aria-label="Monatsansicht">
+        <div class="month-heading">
+          <button type="button" aria-label="Vorheriger Monat">&larr;</button>
+          <h3>Monatsansicht</h3>
+          <button type="button" aria-label="N&auml;chster Monat">&rarr;</button>
         </div>
-
-        <div class="stamm-grid">
-          <article class="stamm-card">
-            <header>
-              <div class="stamm-heading-copy"><span>Basler St&auml;mme</span><h3>Basel</h3><p>Kanton Basel-Stadt</p></div>
-              <div class="stamm-wappen">
-                <img src="{% static 'Bilder/Wappen_Basel-Stadt_matt.svg.png' %}" alt="Wappen des Kantons Basel-Stadt" width="65" height="76" loading="lazy">
-              </div>
-            </header>
-            <section class="stamm-entry">
-              <h4>Mittwochstamm</h4>
-              <dl>
-                <div><dt>Wann</dt><dd>Jeden Mittwoch um 17.30 s.t.</dd></div>
-                <div><dt>Wo</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Restaurant+Stadtkeller+Marktgasse+11+4051+Basel" target="_blank" rel="noopener">Restaurant Stadtkeller<br>Marktgasse 11<br>4051 Basel &#8599;</a></dd></div>
-              </dl>
-              <p>Infos bei <strong>AF Schnoog</strong></p>
-            </section>
-            <section class="stamm-entry">
-              <h4>Freitagstamm</h4>
-              <dl>
-                <div><dt>Wann</dt><dd>Jeden ersten Freitag im Monat um 18.00 c.t.</dd></div>
-                <div><dt>Wo</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Restaurant+Aeschenplatz+Aeschenplatz+4+4052+Basel" target="_blank" rel="noopener">Restaurant Aeschenplatz<br>Aeschenplatz 4<br>4052 Basel &#8599;</a></dd></div>
-              </dl>
-              <p>Infos bei <strong>AF Cri</strong></p>
-            </section>
-          </article>
-
-          <article class="stamm-card">
-            <header>
-              <div class="stamm-heading-copy"><span>Berner Stamm</span><h3>Bern</h3><p>Kanton Bern</p></div>
-              <div class="stamm-wappen">
-                <img src="{% static 'Bilder/Flag_of_Canton_of_Bern.svg.png' %}" alt="Wappenmotiv des Kantons Bern" width="65" height="76" loading="lazy">
-              </div>
-            </header>
-            <section class="stamm-entry">
-              <h4>Berner Stamm</h4>
-              <dl>
-                <div><dt>Wann</dt><dd>Jeden dritten Donnerstag im Monat um 18.30 c.t.</dd></div>
-                <div><dt>Wo</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Restaurant+Cavallo+Star+Bubenbergplatz+8+3011+Bern" target="_blank" rel="noopener">Restaurant Cavallo Star<br>Bubenbergplatz 8<br>3011 Bern &#8599;</a></dd></div>
-              </dl>
-              <p>Infos bei <strong>AF Repro</strong></p>
-            </section>
-          </article>
-
-          <article class="stamm-card">
-            <header>
-              <div class="stamm-heading-copy"><span>Luzerner St&auml;mme</span><h3>Luzern</h3><p>Kanton Luzern</p></div>
-              <div class="stamm-wappen">
-                <img src="{% static 'Bilder/Wappen_Luzern_matt.svg.png' %}" alt="Wappen des Kantons Luzern" width="65" height="76" loading="lazy">
-              </div>
-            </header>
-            <section class="stamm-entry">
-              <h4>Rabenstamm</h4>
-              <p class="stamm-note">Mit Berchtoldia, Fryburgia, Welfen und Neu-Welfen</p>
-              <dl>
-                <div><dt>Wann</dt><dd>Jeden ersten Mittwoch im Monat um 18.00 c.t.</dd></div>
-                <div><dt>Wo</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Restaurant+Rebstock+St.+Leodegarstrasse+3+6006+Luzern" target="_blank" rel="noopener">Restaurant Rebstock<br>St. Leodegarstrasse 3<br>6006 Luzern &#8599;</a></dd></div>
-              </dl>
-              <p>Infos bei <strong>AF Orakel</strong></p>
-            </section>
-            <section class="stamm-entry">
-              <h4>Mittagstisch</h4>
-              <dl>
-                <div><dt>Wann</dt><dd>Jeweils am Mittwoch nach dem 10. des Monats um 11.45 c.t.</dd></div>
-                <div><dt>Wo</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Restaurant+zur+Ente+Buobenmatt+6003+Luzern" target="_blank" rel="noopener">Restaurant zur Ente<br>Buobenmatt<br>6003 Luzern &#8599;</a></dd></div>
-              </dl>
-              <p>Infos bei <strong>AF Orakel</strong></p>
-            </section>
-          </article>
+        <p class="month-status" aria-live="polite">Keine Anl&auml;sse geladen.</p>
+        <div class="month-grid">
+          <div class="weekday">Mo</div><div class="weekday">Di</div><div class="weekday">Mi</div><div class="weekday">Do</div><div class="weekday">Fr</div><div class="weekday">Sa</div><div class="weekday">So</div>
         </div>
       </div>
-    </section>
+
+      {% if upcoming_events.paginator.num_pages > 1 %}
+        <div class="button-row" style="margin-top:24px">
+          {% if upcoming_events.has_previous %}
+            <a class="btn btn-outline-dark" href="?{% if category_filter %}category={{ category_filter }}&amp;{% endif %}upcoming_page={{ upcoming_events.previous_page_number }}">Fr&uuml;here Seite</a>
+          {% endif %}
+          {% if upcoming_events.has_next %}
+            <a class="btn btn-outline-dark" href="?{% if category_filter %}category={{ category_filter }}&amp;{% endif %}upcoming_page={{ upcoming_events.next_page_number }}">N&auml;chste Seite</a>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="calendar-subscribe">
+        <div>
+          <h3>Semesterprogramm abonnieren</h3>
+          <p>Abonniere das &ouml;ffentliche Semesterprogramm und verpasse keinen Anlass mehr der AV Froburger.</p>
+        </div>
+        <div class="calendar-subscribe-actions">
+          <a class="btn btn-primary" href="{{ calendar_webcal_url }}">Kalender abonnieren</a>
+          <a class="btn btn-outline-dark" href="{% url 'core:calendar_ics' %}" download>ICS-Datei</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="vergangene-anlaesse" aria-labelledby="vergangene-anlaesse-title">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Archiv</p>
+          <h2 class="section-title" id="vergangene-anlaesse-title">Vergangene Veranstaltungen</h2>
+        </div>
+        <p class="section-intro">Bereits durchgef&uuml;hrte oder abgeschlossene Anl&auml;sse aus dem Web-X CMS.</p>
+      </div>
+
+      <div class="blog-grid">
+        {% for event in past_events %}
+          <article class="blog-card content-card">
+            {% if event.hero_image %}
+              <img class="blog-card-image" src="{{ event.hero_image.file.url }}" alt="{{ event.hero_image.alt_text|default:event.title }}" loading="lazy" decoding="async">
+            {% endif %}
+            <div class="blog-body">
+              <p class="eyebrow">{{ event.start_at|date:"d.m.Y" }}</p>
+              <h3>{{ event.title }}</h3>
+              <p>{{ event.short_description }}</p>
+              <a class="text-link" href="{% url 'core:event_detail' event.slug %}">Details ansehen &rarr;</a>
+            </div>
+          </article>
+        {% empty %}
+          <div class="empty-state">Noch keine vergangenen Veranstaltungen vorhanden.</div>
+        {% endfor %}
+      </div>
+
+      {% if past_events.paginator.num_pages > 1 %}
+        <div class="button-row" style="margin-top:24px">
+          {% if past_events.has_previous %}
+            <a class="btn btn-outline-dark" href="?{% if category_filter %}category={{ category_filter }}&amp;{% endif %}past_page={{ past_events.previous_page_number }}">Neuere Seite</a>
+          {% endif %}
+          {% if past_events.has_next %}
+            <a class="btn btn-outline-dark" href="?{% if category_filter %}category={{ category_filter }}&amp;{% endif %}past_page={{ past_events.next_page_number }}">Aeltere Seite</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
 </main>
 {% endblock %}

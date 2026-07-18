@@ -13,6 +13,7 @@ from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
 from apps.audit.models import AuditLogEntry
 from apps.audit.services import record_audit_event
+from apps.events.models import Event
 from apps.media_library.models import MediaAsset
 
 from .forms import (
@@ -185,6 +186,21 @@ class CmsDashboardView(CmsAccessMixin, TemplateView):
                 )[:5],
                 recent_carousels=Carousel.objects.select_related("last_edited_by").order_by(
                     "-updated_at", "-created_at"
+                )[:5],
+                event_access=self.request.user.has_perm("events.view_event"),
+                draft_events=Event.objects.filter(status=Event.Status.DRAFT).count(),
+                review_events=Event.objects.filter(status=Event.Status.REVIEW).count(),
+                scheduled_events=Event.objects.filter(status=Event.Status.SCHEDULED).count(),
+                published_events_count=Event.objects.filter(
+                    status__in=[
+                        Event.Status.PUBLISHED,
+                        Event.Status.CANCELLED,
+                        Event.Status.COMPLETED,
+                    ]
+                ).count(),
+                recent_events=Event.objects.select_related("category", "last_edited_by").order_by(
+                    "-updated_at",
+                    "-created_at",
                 )[:5],
                 homepage=homepage,
             )

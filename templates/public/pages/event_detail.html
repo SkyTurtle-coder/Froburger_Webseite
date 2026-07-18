@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main id="main-content">
+  {% if preview_mode %}
+  <section class="cms-preview-banner" aria-label="Vorschaumodus">
+    <div class="container">
+      <strong>{{ preview_title|default:"Vorschau" }}</strong>
+      <span>Diese Vorschau ist nur intern sichtbar.</span>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="breadcrumbs"><a href="{% url 'core:home' %}">Home</a> / <a href="{% url 'core:events' %}">Anlaesse</a> / {{ event.title }}</p>
+      <h1>{{ event.title }}</h1>
+      <p>{{ event.short_description }}</p>
+      <div class="pill-row">
+        <span class="status-pill">{{ event.get_status_display }}</span>
+        <span class="status-pill status-pill-muted">{{ event.start_at|date:"d.m.Y H:i" }} bis {{ event.end_at|date:"d.m.Y H:i" }}</span>
+        {% if event.category %}
+          <span class="status-pill status-pill-muted">{{ event.category.name }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container recap-grid">
+      <div>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Veranstaltungsdetails</p>
+            <h2 class="section-title">Ort und Ablauf</h2>
+          </div>
+        </div>
+        <p>{{ event.description|linebreaks }}</p>
+        <dl class="cms-meta-list">
+          <div><dt>Beginn</dt><dd>{{ event.start_at|date:"d.m.Y H:i" }}</dd></div>
+          <div><dt>Ende</dt><dd>{{ event.end_at|date:"d.m.Y H:i" }}</dd></div>
+          <div><dt>Ort</dt><dd>{{ event.location_name }}</dd></div>
+          <div><dt>Adresse</dt><dd>{{ event.location_address|default:"-"|linebreaksbr }}</dd></div>
+          {% if event.signup_deadline %}
+            <div><dt>Anmeldefrist</dt><dd>{{ event.signup_deadline|date:"d.m.Y H:i" }}</dd></div>
+          {% endif %}
+          {% if event.max_participants %}
+            <div><dt>Max. Teilnehmer</dt><dd>{{ event.max_participants }}</dd></div>
+          {% endif %}
+        </dl>
+        <div class="button-row" style="justify-content:flex-start;margin-top:24px">
+          <a class="btn btn-outline-dark" href="{{ event_ics_url }}">ICS-Datei</a>
+          {% if event.signup_url %}
+            <a class="btn btn-primary" href="{{ event.signup_url }}">Anmelden</a>
+          {% endif %}
+          {% if event.map_url %}
+            <a class="btn btn-outline-dark" href="{{ event.map_url }}">Karte</a>
+          {% endif %}
+        </div>
+      </div>
+      {% if event.hero_image %}
+      <figure class="recap-image">
+        <img src="{{ event.hero_image.file.url }}" alt="{{ event.hero_image.alt_text|default:event.title }}" loading="lazy" decoding="async">
+      </figure>
+      {% endif %}
+    </div>
+  </section>
+</main>
+{% endblock %}

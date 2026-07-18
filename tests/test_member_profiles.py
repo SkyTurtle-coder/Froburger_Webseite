@@ -222,6 +222,7 @@ def test_dashboard_shows_requested_internal_tiles(client):
     assert "Profil" in content
     assert "Mitgliederverzeichnis" in content
     assert "Medien" in content
+    assert "Veranstaltungen" in content
     assert "Allgemeine Dokumente" in content
     assert "Sensible Dokumente" in content
     assert "Web-X CMS" not in content

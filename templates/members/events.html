@@ -1,0 +1,64 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block heading %}{{ heading }}{% endblock %}
+{% block card_class %} auth-card-wide{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Sichtbare interne und oeffentliche Veranstaltungen bleiben hier gesammelt erreichbar.
+  </p>
+{% endblock %}
+
+{% block content %}
+  <section class="section-panel section-panel-hero">
+    <div class="member-identity-copy">
+      <p class="tile-eyebrow">Kalender</p>
+      <h2 class="section-lead">Interne und oeffentliche Anlaesse</h2>
+      <p class="dashboard-intro">
+        Nur Veranstaltungen, die fuer Ihr Konto freigegeben sind, erscheinen in dieser Liste.
+      </p>
+      <div class="button-row" style="justify-content:flex-start;margin-top:16px">
+        <a class="button" href="{{ internal_feed_url }}">Internen Kalender herunterladen</a>
+        <a class="button button-secondary" href="{% url 'accounts:home' %}">Zurueck zum Dashboard</a>
+      </div>
+    </div>
+  </section>
+
+  {% if categories %}
+    <section class="cms-filter-row">
+      <a href="{% url 'members:events' %}"{% if not category_filter %} aria-current="page"{% endif %}>Alle</a>
+      {% for category in categories %}
+        <a href="{% url 'members:events' %}?category={{ category.slug }}"{% if category_filter == category.slug %} aria-current="page"{% endif %}>{{ category.name }}</a>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  <section class="tile-grid" aria-label="Kommende Veranstaltungen">
+    {% for event in upcoming_events %}
+      <article class="tile-card">
+        <div class="tile-card-header">
+          <p class="tile-eyebrow">{{ event.get_visibility_display }}</p>
+          <h2>{{ event.title }}</h2>
+        </div>
+        <p>{{ event.short_description }}</p>
+        <div class="tile-card-footer">
+          <span class="status-pill status-pill-muted">{{ event.start_at|date:"d.m.Y H:i" }}</span>
+          <a class="button tile-link" href="{% url 'members:event_detail' event.slug %}">Details oeffnen</a>
+        </div>
+      </article>
+    {% empty %}
+      <div class="empty-state">Zurzeit sind keine sichtbaren kommenden Veranstaltungen vorhanden.</div>
+    {% endfor %}
+  </section>
+
+  <section class="support-grid">
+    <div class="meta-panel">
+      <h2>Vergangene Veranstaltungen</h2>
+      {% for event in past_events %}
+        <p><a href="{% url 'members:event_detail' event.slug %}">{{ event.title }}</a> · {{ event.start_at|date:"d.m.Y" }}</p>
+      {% empty %}
+        <p>Noch keine sichtbaren vergangenen Veranstaltungen.</p>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}{{ event.title }} | AV Froburger{% endblock %}
+{% block heading %}{{ event.title }}{% endblock %}
+{% block card_class %} auth-card-wide{% endblock %}
+{% block header_copy %}
+  <p class="form-intro">
+    Interne Veranstaltungsdetails mit geschuetzter Sichtbarkeit.
+  </p>
+{% endblock %}
+
+{% block content %}
+  <section class="section-panel section-panel-hero">
+    <div class="member-identity-copy">
+      <p class="tile-eyebrow">{{ event.get_visibility_display }}</p>
+      <h2 class="section-lead">{{ event.title }}</h2>
+      <p class="dashboard-intro">{{ event.short_description }}</p>
+      <div class="pill-row">
+        <span class="status-pill">{{ event.get_status_display }}</span>
+        <span class="status-pill status-pill-muted">{{ event.start_at|date:"d.m.Y H:i" }} bis {{ event.end_at|date:"d.m.Y H:i" }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="support-grid">
+    <div class="meta-panel">
+      <h2>Beschreibung</h2>
+      <p>{{ event.description|linebreaks }}</p>
+    </div>
+    <div class="meta-panel">
+      <h2>Ort</h2>
+      <p><strong>{{ event.location_name }}</strong></p>
+      <p>{{ event.location_address|default:"Keine Adresse hinterlegt."|linebreaksbr }}</p>
+      <p><a href="{{ event_ics_url }}">ICS-Datei herunterladen</a></p>
+      {% if event.signup_url %}
+        <p><a href="{{ event.signup_url }}">Zur Anmeldung</a></p>
+      {% endif %}
+      {% if event.map_url %}
+        <p><a href="{{ event.map_url }}">Karte oeffnen</a></p>
+      {% endif %}
+      <p><a href="{% url 'members:events' %}">Zurueck zu den Veranstaltungen</a></p>
+    </div>
+  </section>
+{% endblock %}
