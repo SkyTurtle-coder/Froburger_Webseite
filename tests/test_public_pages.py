@@ -168,3 +168,46 @@ def test_about_and_join_pages_render_cms_content_after_import(client):
     assert "Eine Verbindung mit Geschichte und Zukunft" in about_response.content.decode()
     assert join_response.status_code == 200
     assert "Per Mail" in join_response.content.decode()
+
+
+@pytest.mark.django_db
+def test_import_existing_members_page_is_idempotent():
+    call_command("import_existing_members_page")
+    call_command("import_existing_members_page")
+
+    about = Page.objects.get(page_key="members")
+
+    assert Page.objects.filter(page_key="members").count() == 1
+    assert about.sections.count() == 5
+
+
+@pytest.mark.django_db
+def test_imported_members_page_sections_validate_against_layout_presets():
+    call_command("import_existing_members_page")
+
+    page = Page.objects.get(page_key="members")
+    page.full_clean()
+    for section in page.sections.all():
+        section.full_clean()
+
+
+@pytest.mark.django_db
+def test_members_page_renders_cms_content_after_import(client, user_factory):
+    private_user = user_factory(
+        email="intern@example.invalid",
+        first_name="Private",
+        last_name="Member",
+    )
+    private_user.member_profile.phone_number = "+41 79 111 22 33"
+    private_user.member_profile.save(update_fields=["phone_number", "updated_at"])
+    call_command("import_existing_members_page")
+
+    response = client.get(reverse("core:members"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Komitee der Aktivitas" in content
+    assert "Bacchus" in content
+    assert "Parzival" in content
+    assert "intern@example.invalid" not in content
+    assert "+41 79 111 22 33" not in content

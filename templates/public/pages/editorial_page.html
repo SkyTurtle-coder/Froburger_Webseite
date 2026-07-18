@@ -100,6 +100,58 @@
               {% endif %}
             {% endfor %}
           </div>
+        {% elif section.block_type == "people_list" %}
+          {% if section.people_variant == "members" %}
+            <section class="member-group"{% if section.anchor_id %} id="{{ section.anchor_id }}"{% endif %}>
+              <div class="group-heading">
+                <div>
+                  {% if section.eyebrow %}<span>{{ section.eyebrow }}</span>{% endif %}
+                  {% if section.heading %}<h3>{{ section.heading }}</h3>{% endif %}
+                </div>
+                <p>{{ section.people_count }} Mitglieder</p>
+              </div>
+              <div class="{{ section.people_grid_class }}">
+                {% for person in section.public_people %}
+                  <article class="{{ section.people_card_class }}">
+                    <div class="member-photo" aria-hidden="true">
+                      {% if person.image %}
+                        <img src="{{ person.image.file.url }}" alt="{{ person.display_name }}" loading="lazy" decoding="async">
+                      {% else %}
+                        <span>{{ person.initials }}</span>
+                      {% endif %}
+                    </div>
+                    <h3>{{ person.title_line }}</h3>
+                    <p>{{ person.display_name }}</p>
+                    {% if person.short_description %}<p>{{ person.short_description }}</p>{% endif %}
+                  </article>
+                {% endfor %}
+              </div>
+            </section>
+          {% else %}
+            <div class="section-heading">
+              <div>
+                {% if section.eyebrow %}<p class="eyebrow{% if section.people_variant == 'committee-dark' %} light{% endif %}">{{ section.eyebrow }}</p>{% endif %}
+                {% if section.heading %}<h2 class="section-title">{{ section.heading }}</h2>{% endif %}
+              </div>
+            </div>
+            <div class="{{ section.people_grid_class }}">
+              {% for person in section.public_people %}
+                <article class="{{ section.people_card_class }}">
+                  <div class="member-photo" aria-hidden="true">
+                    {% if person.image %}
+                      <img src="{{ person.image.file.url }}" alt="{{ person.display_name }}" loading="lazy" decoding="async">
+                    {% else %}
+                      <span>{{ person.initials }}</span>
+                    {% endif %}
+                  </div>
+                  {% if person.function_title %}<span class="role-title">{{ person.function_title }}</span>{% endif %}
+                  <h3>{{ person.title_line }}</h3>
+                  <p>{{ person.display_name }}</p>
+                  {% if person.short_description %}<p>{{ person.short_description }}</p>{% endif %}
+                </article>
+              {% endfor %}
+            </div>
+          {% endif %}
         {% else %}
           {% if section.eyebrow or section.heading or section.body %}
             <div class="section-heading">

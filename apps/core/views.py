@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.views.generic import TemplateView
 
 from apps.content.models import Page, Post, Visibility
+from apps.members.models import PublicMemberProfile
 
 
 @dataclass(frozen=True)
@@ -182,7 +183,58 @@ def _page_sections(page):
     sections = getattr(page, "preview_sections", None)
     if sections is None:
         sections = page.sections.order_by("position", "pk")
-    return [section for section in sections if getattr(section, "is_active", True)]
+    rendered_sections = [section for section in sections if getattr(section, "is_active", True)]
+    return _attach_people_list_context(rendered_sections)
+
+
+def _attach_people_list_context(sections):
+    group_keys = {
+        section.options.get("group_key", "")
+        for section in sections
+        if getattr(section, "block_type", "") == "people_list"
+    }
+    people_by_group = {
+        group_key: list(PublicMemberProfile.objects.public().filter(group_key=group_key))
+        for group_key in group_keys
+        if group_key
+    }
+    people_variants = {
+        PublicMemberProfile.GroupKey.AKTIVITAS_COMMITTEE: {
+            "variant": "committee",
+            "grid_class": "aktivitas-committee-grid",
+            "card_class": "role-card",
+        },
+        PublicMemberProfile.GroupKey.SALON: {
+            "variant": "members",
+            "grid_class": "members-grid",
+            "card_class": "member-card salon",
+        },
+        PublicMemberProfile.GroupKey.FUXENSTALL: {
+            "variant": "members",
+            "grid_class": "members-grid",
+            "card_class": "member-card fux",
+        },
+        PublicMemberProfile.GroupKey.ALTHERRN_COMMITTEE: {
+            "variant": "committee-dark",
+            "grid_class": "committee-grid",
+            "card_class": "committee-card",
+        },
+    }
+    for section in sections:
+        if getattr(section, "block_type", "") != "people_list":
+            continue
+        group_key = section.options.get("group_key", "")
+        variant = people_variants.get(
+            group_key,
+            {"variant": "members", "grid_class": "members-grid", "card_class": "member-card"},
+        )
+        section.public_people = people_by_group.get(group_key, [])
+        section.people_group_key = group_key
+        section.people_variant = variant["variant"]
+        section.people_grid_class = variant["grid_class"]
+        section.people_card_class = variant["card_class"]
+        section.people_count = len(section.public_people)
+    return sections
 
 
 def _post_blocks(post):
@@ -440,6 +492,23 @@ class EventsPageView(PublicPageView):
 
 class MembersPageView(PublicPageView):
     page = PUBLIC_PAGES["members"]
+
+    def get_template_names(self):
+        if _editorial_page_for_request(self.request.user, "members"):
+            return ["public/pages/editorial_page.html"]
+        return super().get_template_names()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cms_page = _editorial_page_for_request(self.request.user, "members")
+        if cms_page:
+            context.update(
+                build_editorial_page_render_context(
+                    request=self.request,
+                    page_key="members",
+                )
+            )
+        return context
 
 
 class JoinPageView(PublicPageView):

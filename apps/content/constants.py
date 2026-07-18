@@ -22,6 +22,13 @@ BLOCK_TYPE_KEYS = (
     "notice",
 )
 
+PUBLIC_MEMBER_GROUP_KEYS = (
+    "aktivitas_committee",
+    "salon",
+    "fuxenstall",
+    "altherren_committee",
+)
+
 
 @dataclass(frozen=True)
 class LayoutPresetDefinition:
@@ -71,6 +78,7 @@ PAGE_LAYOUT_PRESET_DEFINITIONS = (
             "cta",
             "link_list",
             "document_list",
+            "people_list",
             "notice",
             "divider",
         ),
@@ -330,7 +338,7 @@ BLOCK_OPTION_SCHEMA = {
     "document_list": {"columns": (1, 2)},
     "event_list": {"limit": (3, 5, 10)},
     "post_list": {"limit": (3, 5, 10)},
-    "people_list": {"columns": (2, 3, 4)},
+    "people_list": {"columns": (2, 3, 4), "group_key": PUBLIC_MEMBER_GROUP_KEYS},
     "timeline": {"layout": ("vertical",)},
     "notice": {"tone": ("default", "warning", "success")},
 }

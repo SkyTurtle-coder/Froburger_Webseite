@@ -2,6 +2,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from apps.media_library.models import MediaAsset
+
 from .storage import private_member_photo_storage
 
 
@@ -124,3 +126,77 @@ class MemberProfile(models.Model):
 
     def __str__(self):
         return self.display_name
+
+
+class PublicMemberProfileQuerySet(models.QuerySet):
+    def public(self):
+        return self.filter(is_active=True, is_publicly_approved=True).select_related("image")
+
+
+class PublicMemberProfile(models.Model):
+    class GroupKey(models.TextChoices):
+        AKTIVITAS_COMMITTEE = "aktivitas_committee", "Komitee der Aktivitas"
+        SALON = "salon", "Salon"
+        FUXENSTALL = "fuxenstall", "Fuxenstall"
+        ALTHERRN_COMMITTEE = "altherren_committee", "Komitee der Alt-Froburger"
+
+    external_key = models.SlugField("Externer Schluessel", max_length=120, unique=True)
+    display_name = models.CharField("Oeffentlicher Anzeigename", max_length=160)
+    vulgar_name = models.CharField("Oeffentliches Vulgo", max_length=120, blank=True)
+    function_title = models.CharField("Funktion", max_length=160, blank=True)
+    short_description = models.TextField("Kurzbeschreibung", blank=True)
+    image = models.ForeignKey(
+        MediaAsset,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="public_member_profiles",
+    )
+    group_key = models.CharField("Gruppierung", max_length=40, choices=GroupKey.choices)
+    sort_order = models.PositiveIntegerField("Sortierung", default=0)
+    is_active = models.BooleanField("Aktiv", default=True)
+    is_publicly_approved = models.BooleanField("Oeffentlich freigegeben", default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = PublicMemberProfileQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["group_key", "sort_order", "display_name", "pk"]
+        verbose_name = "Oeffentliches Mitglied"
+        verbose_name_plural = "Oeffentliche Mitglieder"
+
+    def clean(self):
+        super().clean()
+        if (
+            self.image_id
+            and (
+                self.image.status != MediaAsset.PublicationStatus.PUBLISHED
+                or self.image.visibility != MediaAsset.Visibility.PUBLIC
+            )
+        ):
+            raise ValidationError(
+                {
+                    "image": (
+                        "Oeffentliche Personen duerfen nur publizierte "
+                        "oeffentliche Bilder nutzen."
+                    )
+                }
+            )
+
+    @property
+    def initials(self):
+        base = self.vulgar_name or self.display_name
+        parts = [part for part in base.replace("(", " ").replace(")", " ").split() if part]
+        if len(parts) >= 2:
+            return f"{parts[0][0]}{parts[1][0]}".upper()
+        return base[:2].upper()
+
+    @property
+    def title_line(self):
+        if self.vulgar_name and self.display_name:
+            return f"{self.vulgar_name}"
+        return self.display_name
+
+    def __str__(self):
+        return self.title_line

@@ -9,6 +9,7 @@ from django.utils import timezone
 from apps.media_library.models import MediaAsset
 
 from .constants import BLOCK_OPTION_SCHEMA, BLOCK_TYPE_KEYS, get_layout_preset_definition
+from .validators import validate_internal_or_absolute_url
 
 
 class PublishableQuerySet(models.QuerySet):
@@ -357,7 +358,12 @@ class Post(PublishableModel):
     event_date = models.DateField("Anlassdatum", null=True, blank=True)
     event_location = models.CharField("Ort", max_length=200, blank=True)
     cta_label = models.CharField("Call-to-Action Label", max_length=80, blank=True)
-    cta_url = models.URLField("Call-to-Action URL", blank=True)
+    cta_url = models.CharField(
+        "Call-to-Action URL",
+        max_length=500,
+        blank=True,
+        validators=[validate_internal_or_absolute_url],
+    )
     categories = models.JSONField("Kategorien", default=list, blank=True)
     meta_title = models.CharField("Meta-Titel", max_length=200, blank=True)
     meta_description = models.CharField("Meta-Beschreibung", max_length=255, blank=True)
@@ -498,7 +504,12 @@ class StructuredBlockBase(TimestampedModel):
         blank=True,
         related_name="+",
     )
-    link_url = models.URLField("Link-URL", blank=True)
+    link_url = models.CharField(
+        "Link-URL",
+        max_length=500,
+        blank=True,
+        validators=[validate_internal_or_absolute_url],
+    )
     link_label = models.CharField("Link-Label", max_length=80, blank=True)
     options = models.JSONField("Darstellungsoptionen", default=dict, blank=True)
 
@@ -611,7 +622,12 @@ class CarouselItem(TimestampedModel):
     is_active = models.BooleanField("Aktiv", default=True)
     heading = models.CharField("Ueberschrift", max_length=200, blank=True)
     body = models.TextField("Text", blank=True)
-    link_url = models.URLField("Link-URL", blank=True)
+    link_url = models.CharField(
+        "Link-URL",
+        max_length=500,
+        blank=True,
+        validators=[validate_internal_or_absolute_url],
+    )
     link_label = models.CharField("Link-Label", max_length=80, blank=True)
     starts_at = models.DateTimeField("Startzeitpunkt", null=True, blank=True)
     ends_at = models.DateTimeField("Endzeitpunkt", null=True, blank=True)

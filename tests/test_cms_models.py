@@ -225,6 +225,55 @@ def test_page_section_validates_layout_compatibility(
         invalid.full_clean()
 
 
+def test_cta_blocks_allow_relative_and_contact_links(user_factory):
+    user = user_factory()
+    page_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.PAGE, key="standard_page")
+    cta_layout = LayoutPreset.objects.get(scope=LayoutPreset.Scope.BLOCK, key="cta_primary")
+    page = Page.objects.create(
+        title="Mitmachen",
+        slug="mitmachen",
+        page_key="mitmachen",
+        layout_preset=page_layout,
+        status=PublishableStatus.DRAFT,
+        created_by=user,
+    )
+
+    relative_cta = PageSection(
+        page=page,
+        block_type=PageSection.BlockType.CTA,
+        layout_preset=cta_layout,
+        heading="Mehr erfahren",
+        link_label="Mitglied werden",
+        link_url="/mitglied-werden/",
+        options={},
+    )
+    relative_cta.full_clean()
+
+    mailto_cta = PageSection(
+        page=page,
+        block_type=PageSection.BlockType.CTA,
+        layout_preset=cta_layout,
+        heading="Kontakt",
+        link_label="E-Mail senden",
+        link_url="mailto:info@example.invalid",
+        options={},
+    )
+    mailto_cta.full_clean()
+
+    invalid_cta = PageSection(
+        page=page,
+        block_type=PageSection.BlockType.CTA,
+        layout_preset=cta_layout,
+        heading="Ungueltig",
+        link_label="Fehler",
+        link_url="mitglied-werden",
+        options={},
+    )
+
+    with pytest.raises(ValidationError):
+        invalid_cta.full_clean()
+
+
 def test_post_revision_snapshots_include_blocks(
     settings, tmp_path, user_factory, image_upload_factory
 ):
