@@ -2,67 +2,112 @@
 
 Stand: 2026-07-18
 
-## 1. Ausgangslage
+## 1. Branch und Ausgangslage
 
-Das Repository war bereits von einem statischen Prototypen auf eine Django-Basis umgestellt, aber die fachlichen CMS-Bausteine waren nur teilweise produktiv nutzbar. Offen waren vor allem strukturierte Events, private Dokumente, die oeffentliche Mitgliederseite sowie Browser-Abdeckung fuer kritische Redaktionswege.
+- Arbeitsbranch: `feature/simplify-web-x-cms`
+- Basis: `feature/web-x-block-cms`
 
-## 2. Finaler Funktionsstand im Branch
+Ausgangslage war ein technisch funktionierendes, aber fuer den Web-X zu komplexes Post-CMS mit
+Block-Formsets, zu vielen Entscheidungen und sichtbaren internen Feldern.
 
-Der Branch `feature/web-x-block-cms` liefert jetzt einen zusammenhaengenden Django-Stand mit:
+## 2. Umgesetzter neuer Beitragsworkflow
 
-- oeffentlichen Seiten ueber Django-Templates und CMS-gebundene Inhalte
-- internem Mitgliederbereich mit Rollen- und Berechtigungsmodell
-- Web-X CMS fuer Startseite, News, Seiten, Karussells, Veranstaltungen und Dokumente
-- geschuetzten Mitglieder-Profilbildern unter privatem Storage
-- geschuetzten Dokumentversionen mit serverseitig authorisierten Downloads
-- strukturierter oeffentlicher Mitgliederseite auf Basis freigegebener Personenprojektionen
-- Import-Commands fuer bestehende Inhalte von `about`, `join` und `members`
-- Browser-E2E fuer Veranstaltungen, Dokumente und die oeffentliche Mitgliederseite
+Der vereinfachte Ablauf ist jetzt:
 
-## 3. Sicherheits- und Berechtigungsstand
+1. `Neuen Beitrag erstellen`
+2. eines von drei Layouts waehlen
+3. Datum, Titel, Kurzbeschreibung und Beitrag erfassen
+4. Entwurf speichern, Vorschau pruefen, sofort veroeffentlichen oder planen
 
-Folgende sicherheitskritischen Punkte sind im Branch umgesetzt:
+Versteckt oder automatisch verwaltet werden:
 
-- serverseitige CMS-Permissions statt rein versteckter Navigation
-- separate oeffentliche Datenprojektion via `members.PublicMemberProfile`
-- Sichtbarkeitsfilter fuer Events und Dokumente pro Benutzer, Gruppe oder Rolle
-- private Dateiauslieferung fuer Profilbilder und Dokumente
-- serverseitige Link-Validierung fuer relative Pfade, `mailto:` und `tel:`
-- Revisions- und Preview-Routen bleiben intern
+- Slug
+- Autor
+- SEO-Titel
+- Meta-Beschreibung
+- Layoutschluessel
+- Pin-Prioritaet
+- Revisionsgrund
+- Review-Status in der normalen Beitragsoberflaeche
 
-## 4. Qualitaetssicherung
+## 3. Drei aktive Layouts
 
-Verifiziert wurden am 2026-07-18:
+Fuer neue Beitraege stehen genau drei Layouts zur Verfuegung:
+
+- `Klassisch`
+- `Fokus`
+- `Magazin`
+
+Jedes Layout hat:
+
+- eine visuelle HTML/CSS-Karte
+- eine klare Beschreibung
+- dieselben vier Inhaltsfelder
+
+## 4. Rich-Text und Sicherheit
+
+Verwendeter Editor:
+
+- lokal gehostetes Trix
+
+Serverseitige Sanitization:
+
+- `nh3`
+
+Absicherung:
+
+- erlaubte Tags und Attribute werden serverseitig gewhitelistet
+- `script`, `iframe`, Event-Handler und `javascript:`-Links werden entfernt
+- Vorschau-, Publish-, Restore- und Startseitenrechte bleiben serverseitig geprueft
+
+## 5. Startseitenmarkierung
+
+Die Beitragsliste erlaubt direktes Hervorheben fuer die Startseite.
+
+Regeln:
+
+- genau ein aktueller, sichtbarer Startseitenbeitrag
+- optional ein zusaetzlicher zukuenftiger geplanter Startseitenbeitrag
+- beim Wechsel werden alte Markierungen serverseitig entfernt
+- Audit-Eintraege und Revisionen bleiben aktiv
+
+## 6. Migration bestehender Beitraege
+
+- neues Feld `Post.body_html`
+- Migration `apps/content/migrations/0005_post_body_html.py`
+- bisherige `review`-Beitraege werden sicher nach `draft` ueberfuehrt
+- bestehende `PostBlock`-Inhalte werden nach `body_html` uebertragen
+- Altbeitraege bleiben bearbeitbar und werden beim naechsten Speichern auf den vereinfachten Editor uebernommen
+
+## 7. Verifikation
+
+Verifiziert am 2026-07-18:
 
 - `git diff --check`
 - `uv run ruff check .`
 - `uv run python manage.py check`
 - `uv run python manage.py makemigrations --check`
 - `uv run python manage.py migrate`
-- `uv run pytest -q` mit `97 passed`
+- `uv run pytest -q` -> `110 passed`
 - `uv run coverage run -m pytest`
-- `uv run coverage report` mit `82%`
-- `uv run pytest tests/e2e -q` mit `3 passed`
+- `uv run coverage report` -> `69%`
+- `uv run pytest tests/e2e -q` -> `5 passed`
 - `uv run python manage.py check --deploy --settings=config.settings.production`
 
-Verbleibende erwartete Deploy-Warnungen:
+Verbleibende lokale Deploy-Warnungen:
 
-- `security.W005` fuer `SECURE_HSTS_INCLUDE_SUBDOMAINS`
-- `security.W021` fuer `SECURE_HSTS_PRELOAD`
+- `security.W005`
+- `security.W009`
+- `security.W021`
 
-## 5. Verbleibende reale Restpunkte
+## 8. Offene Einschraenkungen
 
-Im Codebestand selbst bleiben vor allem externe oder infra-abhaengige Punkte offen:
+- keine direkte Bildauswahl aus der Medienbibliothek innerhalb des neuen Post-Rich-Text-Editors
+- Seiten, Veranstaltungen und Dokumente verwenden weiterhin eigene, fachlich detailliertere Editoren
+- lokaler Acceptance-Stand nutzt SQLite, Zielarchitektur bleibt PostgreSQL
+- produktiver Secret-Key und echte HSTS-Freigabe bleiben infra-abhaengig
 
-- verifizierte Rechts- und Hosting-Fakten fuer `impressum` und `datenschutz`
-- produktive Reverse-Proxy-Konfiguration fuer private Medien und Downloads
-- CI-Pipeline fuer die lokalen Quality-Gates
-- spaetere Zusatzautomation fuer Accessibility- und Performance-Pruefungen
+## 9. Push- und PR-Status
 
-## 6. Branch- und Review-Status
-
-- Arbeitsbranch: `feature/web-x-block-cms`
-- PR-Draft: `docs/PR_WEB_X_CMS_DRAFT.md`
-- bewusst nicht committed: `--check`, `server_start`, `uv.lock`
-
-Aus technischer Sicht ist der Branch fuer Push und anschliessende externe Review vorbereitet.
+- Push-Status: noch nicht ausgefuehrt in diesem Lauf
+- PR-Status: Draft unter `docs/PR_WEB_X_CMS_DRAFT.md`

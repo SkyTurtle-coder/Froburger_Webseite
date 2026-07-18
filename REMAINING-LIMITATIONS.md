@@ -2,23 +2,24 @@
 
 Stand: Samstag, 18. Juli 2026
 
-## Blockierend fuer oeffentlichen Release
+## Noch offen im vereinfachten Post-CMS
 
-- `impressum` ist absichtlich noch nicht rechtsverbindlich vollstaendig, weil verantwortliche Vertretung und vollstaendige Postanschrift im Projekt nicht verifiziert vorliegen.
-- `datenschutz` ist absichtlich noch nicht abschliessend, weil endgueltige Angaben zu Hosting, Auftragsverarbeitung und Drittanbietern noch nicht verifiziert sind.
+- direkte Bildauswahl aus der bestehenden Medienbibliothek innerhalb des neuen Post-Rich-Text-Editors ist noch nicht integriert
+- der vereinfachte Zwei-Schritt-Workflow gilt fuer Beitraege; Seiten, Veranstaltungen und Dokumente haben weiterhin eigene, fachlich differenzierte Editoren
 
 ## Produktionsrelevant offen
 
-- Reverse-Proxy-Auslieferung fuer private Medien und Dokument-Downloads ist vorbereitet, aber noch nicht an eine echte Zielinfrastruktur gebunden.
-- `SECURE_HSTS_INCLUDE_SUBDOMAINS` und `SECURE_HSTS_PRELOAD` bleiben bewusst erst fuer die spaetere echte HTTPS-Freigabe aktivierbar.
-- Produktionspfade, Service-User und Zertifikatspfade bleiben env-spezifisch offen.
+- `impressum` und `datenschutz` enthalten weiterhin sichtbare `TODO`-Platzhalter fuer nicht verifizierte Rechts- und Hosting-Fakten
+- fuer Production bleibt ein eigener starker Secret-Key zwingend noetig
+- `SECURE_HSTS_INCLUDE_SUBDOMAINS` und `SECURE_HSTS_PRELOAD` bleiben bewusst erst fuer die spaetere echte HTTPS-Freigabe aktivierbar
+- produktive Reverse-Proxy-Auslieferung fuer private Medien und Dokumente bleibt infra-abhaengig
 
 ## Prozess- und Tooling-Luecken
 
-- Eine CI-Pipeline fuer `ruff`, Django-Checks und pytest ist noch nicht eingerichtet.
-- Fuer Accessibility und Performance fehlen weiterhin instrumentierte Tool-Laeufe wie Axe oder Lighthouse in der lokalen Toolchain.
+- keine CI-Pipeline fuer `ruff`, Django-Checks, pytest und Browser-E2E
+- keine automatische Accessibility- oder Lighthouse-Pruefung in der lokalen Standardtoolchain
 
 ## Nicht blockierend
 
-- Die lokale Testbaseline laeuft weiterhin auf SQLite, obwohl die Zielarchitektur PostgreSQL vorsieht.
-- Browser-E2E fuer die kritischsten Redaktionswege ist vorhanden; breitere Cross-Browser-Matrix und Performance-Messungen sind aber noch nicht Teil der Standardchecks.
+- lokale Akzeptanzpruefung laeuft weiterhin auf SQLite, Zielarchitektur bleibt PostgreSQL
+- Altbeitraege werden erst beim naechsten Speichern vollstaendig auf die neue `body_html`-Fuehrung umgestellt

@@ -6,7 +6,6 @@ Stand: 2026-07-18
 
 Das Web-X CMS deckt aktuell folgende Bereiche ab:
 
-- Dashboard
 - Beitraege
 - Seiten
 - Startseite
@@ -15,101 +14,139 @@ Das Web-X CMS deckt aktuell folgende Bereiche ab:
 - Veranstaltungen
 - Dokumente
 
-## Rollen
+Fuer normale Mitglieder ist das CMS nicht sichtbar. Der Arbeitsbereich ist fuer `web_aktuar`,
+`president` und `system_admin` freigeschaltet.
 
-- `web_aktuar`: operative CMS-Bearbeitung fuer Inhalte, Veranstaltungen und Publikationsdokumente
-- `event_verantwortlich`: Event-Fokus ohne allgemeine CMS-Basis
-- `document_verantwortlich`: Dokument-Fokus ohne allgemeine CMS-Basis
-- `president` und `system_admin`: enthalten die CMS-Rechte ebenfalls
-- normale Mitglieder: kein CMS-Zugriff
+## 1. Neuen Beitrag erstellen
 
-## Dashboard
+1. Im Mitgliederbereich anmelden.
+2. `CMS oeffnen` waehlen.
+3. `Neuen Beitrag erstellen` anklicken.
+4. Eines von drei Layouts waehlen:
+   - `Klassisch`
+   - `Fokus`
+   - `Magazin`
+5. `Weiter` anklicken.
 
-`/cms/` zeigt die Redaktion in einem Arbeitsbereich:
+## 2. Layout auswaehlen
 
-- aktuelle Kennzahlen fuer Posts, Events, Dokumente und Medien
-- direkte Einstiege in Editor-Listen
-- Ruecklink in den internen Mitgliederbereich
+Neue Beitraege starten immer mit einer Layoutauswahl.
 
-## Seiten
+- `Klassisch`: ruhiger Aufbau fuer normale Vereinsbeitraege
+- `Fokus`: grosse Ueberschrift fuer wichtige Mitteilungen
+- `Magazin`: moderner Aufbau fuer Rueckblicke und laengere Geschichten
 
-Workflow:
+Fuer neue Beitraege werden im normalen Web-X-Ablauf nur diese drei Layouts angezeigt.
 
-1. `/cms/seiten/` oeffnen
-2. bestehende CMS-Seite waehlen
-3. Titel, Meta-Angaben und Inhaltsbloecke bearbeiten
-4. speichern
-5. gespeicherte Vorschau pruefen
-6. veroeffentlichen, zurueckziehen oder archivieren
-7. Revisionen bei Bedarf wiederherstellen
+## 3. Text erfassen
 
-Aktuell angebundene oeffentliche Seiten:
+Danach sind nur vier Felder wichtig:
 
-- `about`
-- `join`
-- `members`
+- `Datum`
+- `Titel`
+- `Kurzbeschreibung`
+- `Beitrag`
 
-## Veranstaltungen
+Technische Felder wie Slug, SEO, Autor, Layoutschluessel oder Pin-Prioritaet muessen nicht
+mehr manuell gepflegt werden.
 
-Der Event-Editor ist unter `/cms/veranstaltungen/` erreichbar.
+## 4. Text formatieren
 
-- Status: Entwurf, Review, geplant, veroeffentlicht, abgesagt, abgeschlossen, archiviert
-- Sichtbarkeit: oeffentlich, Mitglieder, ausgewaehlte Gruppen, ausgewaehlte Benutzer
-- Vorschau und Revisionen sind intern verfuegbar
-- oeffentliche Anlaesse erscheinen unter `/anlaesse/`
-- interne und gruppenbezogene Anlaesse erscheinen unter `/members/events/`
-- ICS-Einzeldownloads und Feed-Endpunkte bleiben serverseitig sichtbarkeitsgefiltert
+Der Feldbereich `Beitrag` ist ein visueller Rich-Text-Editor.
 
-Mehr Details: `docs/EVENTS_CMS.md`
+Erlaubt sind:
 
-## Dokumente
+- Absatz
+- Zwischenueberschrift
+- fett
+- kursiv
+- Aufzaehlung
+- nummerierte Liste
+- Link
+- Zitat
+- Rueckgaengig und Wiederholen
 
-Der Dokument-Editor ist unter `/cms/dokumente/` erreichbar.
+Nicht moeglich sind freie Schriftfarben, Tabellen, Skripte oder rohe HTML-Eingaben als
+normaler Bearbeitungsmodus.
 
-- private Dateien bleiben unter geschuetztem Storage
-- neue Uploads erzeugen Versionen
-- `publish` setzt das Dokument fuer den freigegebenen Empfaengerkreis sichtbar
-- `archive` nimmt das Dokument aus der aktiven Sicht
-- der Mitgliederbereich zeigt nur serverseitig freigegebene Dokumente
+## 5. Entwurf speichern
 
-Mehr Details: `docs/PRIVATE_DOCUMENTS.md`
+`Entwurf speichern` speichert den aktuellen Stand, ohne etwas zu veroeffentlichen.
 
-## Oeffentliche Mitgliederseite
+Dabei werden automatisch gesetzt:
 
-Die bestehende Mitgliederseite wurde auf eine strukturierte CMS-Seite migriert:
+- Autor = aktueller Benutzer
+- SEO-Titel = Titel, falls leer
+- Meta-Beschreibung = Kurzbeschreibung, falls leer
+- Slug aus dem Titel
 
-- `Page.page_key = members`
-- `people_list`-Bloecke fuer Aktivitas, Salon, Fuxenstall und Altherrenschaft
-- oeffentliche Personendaten liegen in `members.PublicMemberProfile`
-- private Benutzerfelder aus dem Mitgliederbereich werden dort nicht ausgespielt
+## 6. Vorschau
 
-Mehr Details: `docs/MEMBERS_PUBLIC_PAGE.md`
+`Vorschau` zeigt den Beitrag im echten oeffentlichen Design.
 
-## Import-Commands
+- die Vorschau ist nur intern sichtbar
+- Suchmaschinen sollen sie nicht indexieren
+- die Vorschau ist hilfreich vor `Jetzt veroeffentlichen`
 
-Vorhandene statische Inhalte werden mit idempotenten Commands in die CMS-Modelle uebernommen:
+## 7. Sofort veroeffentlichen
 
-```text
-uv run python manage.py import_existing_public_pages
-uv run python manage.py import_existing_members_page
-```
+`Jetzt veroeffentlichen` schaltet den Beitrag sofort frei.
 
-Option:
+Der Review-Schritt wurde aus der normalen Beitragsoberflaeche entfernt. Fuer Beitraege gibt es
+im vereinfachten Ablauf nur noch:
 
-- `--dry-run`
+- `Entwurf`
+- `Geplant`
+- `Veroeffentlicht`
+- `Archiviert`
 
-## Link-Regeln
+## 8. Veroeffentlichung planen
 
-CMS-Links duerfen folgende Formen haben:
+Falls ein Beitrag spaeter erscheinen soll:
 
-- absolute `http://`- und `https://`-URLs
-- site-relative Pfade wie `/mitglied-werden/`
-- `mailto:`-Links
-- `tel:`-Links
+1. Bereich `Veroeffentlichung planen` aufklappen.
+2. Datum und Uhrzeit eingeben.
+3. `Veroeffentlichung planen` anklicken.
 
-## Tests
+Die Zeitzone ist `Europe/Zurich`.
 
-- serverseitige View- und Berechtigungstests
-- Browser-E2E fuer Events, Dokumente und die Mitgliederseite
+## 9. Beitrag auf der Startseite hervorheben
 
-Mehr Details: `docs/BROWSER_E2E_TESTS.md`
+In der Beitragsuebersicht kann pro Beitrag der Stern fuer die Startseite gesetzt werden.
+
+Wichtig:
+
+- es gibt immer nur einen aktuell sichtbaren Startseitenbeitrag
+- zusaetzlich darf genau ein geplanter Startseitenbeitrag fuer spaeter vorgemerkt sein
+- Entwuerfe koennen nicht auf die Startseite
+
+## 10. Layout spaeter aendern
+
+Bei einem bestehenden Beitrag gibt es die Aktion `Layout aendern`.
+
+- der Inhalt bleibt erhalten
+- es werden erneut die drei Layoutkarten angezeigt
+- nach dem Speichern kann die Vorschau sofort geprueft werden
+
+## 11. Beitrag zurueckziehen oder archivieren
+
+Bestehende Beitraege koennen spaeter:
+
+- `Zurueckziehen`
+- `Archivieren`
+
+Archivierte Beitraege sind nicht mehr oeffentlich sichtbar und verlieren eine allfaellige
+Startseitenmarkierung.
+
+## 12. Aeltere Beitraege
+
+Aeltere Block-Beitraege bleiben erhalten.
+
+- beim Oeffnen wird ihr Inhalt in den vereinfachten Editor uebernommen
+- beim naechsten Speichern wird der Beitrag auf die neue Rich-Text-Struktur umgestellt
+- Revisionen bleiben weiterhin verfuegbar
+
+## Weitere Bereiche
+
+Neben den Beitraegen bleiben auch Seiten, Veranstaltungen und Dokumente im CMS verfuegbar.
+Diese Bereiche nutzen weiterhin ihre eigenen, fachlichen Editoren.

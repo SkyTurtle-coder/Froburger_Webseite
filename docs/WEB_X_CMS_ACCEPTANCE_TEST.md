@@ -4,10 +4,11 @@ Stand: 2026-07-18
 
 ## Testumgebung
 
-- lokale Windows-Entwicklung
-- PowerShell
-- Django mit `DATABASE_URL=sqlite:///db.sqlite3`
+- Windows PowerShell
+- `DATABASE_URL=sqlite:///db.sqlite3`
+- Django 5.2
 - Playwright Chromium fuer Browser-E2E
+- Branch: `feature/simplify-web-x-cms`
 
 ## Verifizierte Pflichtlaeufe
 
@@ -16,44 +17,58 @@ Stand: 2026-07-18
 - `uv run python manage.py check`
 - `uv run python manage.py makemigrations --check`
 - `uv run python manage.py migrate`
-- `uv run pytest -q` -> `97 passed`
+- `uv run pytest -q` -> `110 passed`
 - `uv run coverage run -m pytest`
-- `uv run coverage report` -> `82%`
+- `uv run coverage report` -> `69%`
 
 ## Browser-E2E
 
-Automatisierte Browserfluesse:
+Verifiziert am 2026-07-18:
 
-1. Event-CMS
-   - Event erstellen
+- `uv run pytest tests/e2e -q` -> `5 passed`
+
+Abgedeckte Szenarien:
+
+1. vereinfachter Beitragsworkflow
+   - Layout waehlen
+   - vier Felder erfassen
+   - Entwurf speichern
    - Vorschau pruefen
    - veroeffentlichen
-   - oeffentliche Sichtbarkeit und ICS-Download pruefen
-   - interne Sichtbarkeit fuer Mitglieder pruefen
-2. Dokumente
-   - Dokument im CMS erstellen
-   - Sichtbarkeit auf Gruppe begrenzen
-   - erlaubten Download pruefen
-   - verweigerten Direktzugriff pruefen
-3. Oeffentliche Mitgliederseite
-   - importierte Mitgliederseite im CMS bearbeiten
-   - Vorschau und Publish pruefen
-   - oeffentliche Ausspielung pruefen
-   - interne Kontaktdaten auf Nicht-Sichtbarkeit pruefen
+   - Layout auf `Magazin` wechseln
+   - auf der Startseite hervorheben
+2. geplanter Beitragsworkflow
+   - `Fokus` waehlen
+   - zukuenftige Veroeffentlichung planen
+   - oeffentliche Nicht-Sichtbarkeit vor Termin pruefen
+3. CMS-Berechtigungen im Browser
+   - normales Mitglied sieht keine CMS-Kachel
+   - direkter `/cms/`-Zugriff bleibt verboten
+4. Event-CMS
+5. Dokument-CMS
+6. oeffentliche Mitgliederseite
 
 ## Fachlich abgedeckte Bereiche
 
-- CMS-Zugriffsmatrix
-- Preview- und Revisionsschutz
-- Event- und Dokumenten-Workflows
-- serverseitige Sichtbarkeitsfilter fuer Mitglieder- und Downloadbereiche
-- strukturierte Mitgliederseite mit oeffentlicher Personenprojektion
+- vereinfachte Layoutauswahl mit genau drei Post-Layouts
+- automatisches Slug-, SEO- und Autoren-Handling
+- serverseitige Rich-Text-Sanitization
+- vereinfachte Publish- und Schedule-Aktionen ohne Review-Schritt
+- Startseitenmarkierung mit genau einem aktuellen Beitrag
+- Legacy-Kompatibilitaet fuer bestehende Block-Beitraege
+- CMS-Zugriffsschutz und Vorschau-Schutz
 
-## Erwartete Restwarnungen
+## Deploy-Check
 
-Bei `check --deploy --settings=config.settings.production` bleiben bewusst offen:
+Ausgefuehrt:
+
+- `uv run python manage.py check --deploy --settings=config.settings.production`
+
+Verbleibende Warnungen im lokalen Stand:
 
 - `security.W005`
+- `security.W009`
 - `security.W021`
 
-Diese beiden Punkte haengen an der spaeteren, echten HSTS-Freigabe fuer die Produktionsinfrastruktur.
+`security.W009` stammt hier aus dem lokalen Test-Setup mit einem nicht produktiven Secret-Key.
+Fuer Production ist weiterhin ein eigener starker Secret-Key noetig.

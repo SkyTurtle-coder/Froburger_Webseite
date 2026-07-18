@@ -2,67 +2,103 @@
 
 Stand: 2026-07-18
 
-## Zielgruppe
+## Ziel
 
-Der Web-X soll Inhalte ohne HTML-, CSS-, JavaScript- oder Python-Kenntnisse pflegen koennen.
+Das CMS soll fuer den Web-X ohne technische Schulung bedienbar bleiben und trotzdem die
+serverseitigen Sicherheits- und Publikationsregeln beibehalten.
 
-## Ziel-Workflows
+## Beitragsworkflow
 
 ### Neuer Beitrag
 
-1. Im Mitgliederbereich anmelden
-2. Bereich "Redaktion" oeffnen
-3. Beitragstyp und Layout waehlen
-4. Titel, Teaser und Titelbild setzen
-5. kontrollierte Inhaltsbloecke hinzufuegen
-6. Entwurf speichern
-7. Vorschau im echten Seitendesign oeffnen
-8. Beitrag veroeffentlichen oder planen
-9. optional auf Startseite anpinnen
+1. CMS-Dashboard oder Beitragsuebersicht oeffnen
+2. `Neuen Beitrag erstellen` anklicken
+3. eines von drei Layouts waehlen
+4. nur diese vier Felder pflegen:
+   - Datum
+   - Titel
+   - Kurzbeschreibung
+   - Beitrag
+5. `Entwurf speichern`, `Vorschau`, `Jetzt veroeffentlichen` oder `Veroeffentlichung planen`
 
-### Bestehende Seite bearbeiten
+### Automatisch verwaltete Felder
 
-1. Seite im Editor oeffnen
-2. nur freigegebene Inhaltsbereiche sehen
-3. Text, Bilder, CTA und erlaubte Varianten anpassen
+Diese Felder werden fuer den vereinfachten Post-Workflow automatisch gesetzt oder verborgen:
+
+- Slug
+- Autor
+- SEO-Titel
+- Meta-Beschreibung
+- Sichtbarkeit fuer normale News-Beitraege
+- Pin-Prioritaet
+- Layoutschluessel
+- Revisionsgrund
+
+### Rich-Text
+
+Der Editor ist lokal gehostet und serverseitig abgesichert:
+
+- Browser-Editor: Trix
+- serverseitige Bereinigung: `nh3`
+- erlaubte Formate: Absatz, Zwischenueberschrift, fett, kursiv, Listen, Links, Zitat
+
+### Status
+
+Der normale Beitragsstatus fuer den Web-X lautet:
+
+- `Entwurf`
+- `Geplant`
+- `Veroeffentlicht`
+- `Archiviert`
+
+Der fruehere `review`-Status bleibt nicht mehr Teil der normalen Oberflaeche.
+
+### Startseite
+
+Die Beitragsliste erlaubt direktes Hervorheben fuer die Startseite.
+
+- genau ein aktueller Beitrag darf aktiv hervorgehoben sein
+- ein zweiter, zukuenftiger Beitrag darf fuer spaeter vorgemerkt sein
+- beim Wechsel werden alte Markierungen serverseitig entfernt
+
+### Aeltere Beitraege
+
+Blockbasierte Altbeitraege bleiben bearbeitbar.
+
+- beim Oeffnen wird ihr Inhalt als Rich Text vorbereitet
+- beim naechsten Speichern wird `body_html` zur fuehrenden Struktur
+- bestehende Revisionen bleiben erhalten
+
+## Seitenworkflow
+
+Seiten, Startseite und Mitgliederseite bleiben strukturierte CMS-Seiten.
+
+Der Ablauf bleibt dort:
+
+1. Seite oeffnen
+2. erlaubte Inhaltsbereiche anpassen
+3. speichern
 4. Vorschau pruefen
-5. neue Version speichern
-6. veroeffentlichen oder zurueckziehen
+5. veroeffentlichen oder zurueckziehen
 
-### Medienverwaltung
+## Medienworkflow
+
+Medien werden weiterhin separat gepflegt:
 
 1. Bild hochladen
-2. Titel, Alt-Text, Legende und Sichtbarkeit pflegen
-3. Bild in Beitrag, Seite oder Karussell auswaehlen
+2. Titel und Alt-Text setzen
+3. Sichtbarkeit waehlen
+4. spaeter in Seiten, Karussells oder Altbeitraegen verwenden
 
-### Wiederherstellung
+## Veranstaltungen und Dokumente
 
-1. Revisionsliste oeffnen
-2. Zeitpunkte und Aenderungsgrund vergleichen
-3. fruehere Version zur Vorschau laden
-4. bewusst als neue Version wiederherstellen
+Veranstaltungen und Dokumente bleiben eigene Fachbereiche mit eigenen Formularen,
+Vorschauen und Berechtigungen.
 
-## Aktueller Zwischenstand
+## Revisionen
 
-### Bereits umgesetzt
+Revisionen bleiben fuer Beitraege, Seiten und Karussells aktiv.
 
-- die fachlichen Datenmodelle fuer Beitraege, Seiten, Medien, Karussells und Revisionen
-- Layout-Presets fuer Seiten, Beitraege und Blocks
-- CMS-Permissions fuer `web_aktuar`
-
-### Noch nicht umgesetzt
-
-- die eigentliche Web-X-Oberflaeche
-- die Formularfluesse fuer Blockbearbeitung
-- Preview- und Publish-Aktionen
-- Restore-Dialoge
-- Medienbrowser mit Suche und Filterung
-
-## UX-Leitplanken fuer die naechsten Schritte
-
-- nur sprechende Layoutnamen anzeigen, nie technische Templatepfade
-- Blocktypen klar gruppieren: Text, Bild, Galerie, CTA, Listen
-- Pflichtfelder vor dem Publizieren sichtbar markieren
-- fehlende Alt-Texte vor der Publikation blockieren
-- Aktionen sprachlich klar trennen: speichern, Vorschau, publizieren, planen, zurueckziehen
-- mobile Nutzung fuer einfache Korrekturen sicherstellen
+- jeder relevante Speichervorgang erzeugt eine neue Revision
+- fruehere Versionen koennen intern angesehen werden
+- Wiederherstellungen erzeugen wiederum eine neue Revision

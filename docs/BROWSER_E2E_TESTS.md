@@ -4,7 +4,8 @@ Stand: 2026-07-18
 
 ## Ziel
 
-Die Browser-E2E-Suite prueft kritische Redaktions- und Sichtbarkeitsfluesse mit Playwright Chromium.
+Die Browser-E2E-Suite prueft die kritischsten Redaktions- und Sichtbarkeitsablaeufe im
+tatsaechlichen UI.
 
 ## Setup
 
@@ -28,6 +29,8 @@ uv run pytest tests\e2e -q
 
 ## Abgedeckte Szenarien
 
+- vereinfachter Post-Workflow mit Layoutwahl, Entwurf, Vorschau, Publish, Layoutwechsel und Startseitenmarkierung
+- geplanter Post-Workflow mit zukuenftiger Veroeffentlichung und Berechtigungspruefung fuer normale Mitglieder
 - Event-CMS mit Vorschau, Publish, oeffentlicher Sicht und ICS-Download
 - Dokument-CMS mit gruppenbasierter Freigabe, erlaubtem Download und verweigertem Direktzugriff
 - oeffentliche Mitgliederseite mit Import, CMS-Bearbeitung, Publish und Datenschutzpruefung
@@ -36,7 +39,8 @@ uv run pytest tests\e2e -q
 
 - jeder Browserlauf scheitert bei `console.error`
 - jeder Browserlauf scheitert bei `pageerror`
-- Downloads werden explizit erwartet und Dateinamen geprueft
+- erwartete Downloads werden explizit geprueft
+- verbotene CMS-Zugriffe werden ueber die Request-API geprueft, damit die Konsolenpruefung sauber bleibt
 
 ## Dateien
 
