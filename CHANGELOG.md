@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-07-18
+
+### Web-X CMS Foundation
+- Neuen Arbeitsbranch `feature/web-x-block-cms` fuer das strukturierte Web-X-CMS angelegt.
+- `media_library.MediaAsset` mit Uploadvalidierung, Alt-Text-Regeln, Sichtbarkeit, Publikationsstatus und Bildmetadaten eingefuehrt.
+- `content.LayoutPreset`, `Page`, `PageSection`, `Post`, `PostBlock`, `Carousel`, `CarouselItem` sowie Revisionsmodelle fuer Seiten, Beitraege und Karussells eingefuehrt.
+- Seed-Migration fuer kontrollierte Seiten-, Beitrags- und Blocklayouts hinzugefuegt.
+- Queryset-Helfer fuer publizierte und sichtbare Inhalte sowie Homepage-Pinning modelliert.
+- `bootstrap_roles` um echte CMS- und Medienrechte fuer `web_aktuar`, `president` und `system_admin` erweitert.
+- Admin-Registrierungen fuer die neue Content- und Media-Basis hinzugefuegt.
+- Neue Tests fuer CMS-Modelle, Layout-Seeding, Medienvalidierung, Publikationslogik, Pin-Limit, Revisions-Snapshots und Rollen-Bootstrap ergaenzt.
+
+### Documentation
+- `README.md` auf den Django- und CMS-Stand umgestellt.
+- Neue Web-X-CMS-Dokumente fuer Ist-Stand, Architektur, Workflows, Security, Guide und Testing hinzugefuegt.
+- `docs/EXECUTION_PLAN.md`, `docs/MIGRATION_STATUS.md` und `docs/ROLE_PERMISSION_MATRIX.md` auf den neuen CMS-Grundstand aktualisiert.
+
 ## 2026-07-17
 
 ### Documentation

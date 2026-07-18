@@ -41,6 +41,12 @@ This matrix describes the intended target-state permissions. Final implementatio
 - `president` is included as a policy-level role for elevated oversight, not as a technical superuser by default.
 - `system_admin` has technical control and must use stronger security controls, especially 2FA.
 
+## Implemented CMS foundation on 2026-07-18
+
+- `web_aktuar` now carries content and media permissions for the structured CMS foundation.
+- `member_admin` does not inherit these CMS rights automatically.
+- `president` and `system_admin` currently include the same CMS foundation rights plus their broader oversight permissions.
+
 ## Sensitive actions that always require server-side checks
 
 - private document download

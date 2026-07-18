@@ -1,6 +1,6 @@
 # Execution Plan
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Objective
 
@@ -24,8 +24,11 @@ Migrate the static AV Froburger website into a secure Django application with:
 - Phase 2: completed
 - Phase 3: completed
 - Phase 4: completed
-- Phases 5-14: not started
-- Current repository baseline: Django serves the public pages, authentication foundation, member profiles, and role bootstrap; remaining work shifts to protected data handling, CMS, structured content, and operations
+- Phase 5: not started
+- Phase 6: foundation started
+- Phase 7: foundation started
+- Phases 8-14: not started
+- Current repository baseline: Django serves the public pages, authentication foundation, member profiles, and role bootstrap; the structured CMS and media model foundation now exists, but editor UI, public rendering, preview/publish flows, events, documents, and final operations work remain open
 
 ## Consolidated Phase-0 findings
 
@@ -244,7 +247,7 @@ Tasks:
 
 ## Phase 6 - Media library
 
-Status: pending
+Status: in progress
 
 Tasks:
 
@@ -253,9 +256,13 @@ Tasks:
 - alt-text workflow
 - derivative generation where needed
 
+Completed notes:
+
+- `media_library.MediaAsset` added with visibility, publication status, Alt-Text rules, MIME and image-format validation, metadata capture, and custom media permissions
+
 ## Phase 7 - Custom CMS
 
-Status: pending
+Status: in progress
 
 Tasks:
 
@@ -264,6 +271,13 @@ Tasks:
 - preview and publish workflow
 - navigation management
 - versioning and restore
+
+Completed notes:
+
+- structured content foundation added with `LayoutPreset`, `Page`, `PageSection`, `Post`, `PostBlock`, `Carousel`, `CarouselItem`, and revision models
+- seed migration for controlled page, post, and block layouts added
+- `web_aktuar` role bootstrap extended with content and media permissions
+- model tests added for layout seeding, publication querysets, pin limits, block validation, and revision snapshots
 
 ## Phase 8 - News and events
 

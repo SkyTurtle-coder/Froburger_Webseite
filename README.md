@@ -1,114 +1,110 @@
-# Froburger_Webseite
+# Froburger Webseite
 
-Versioniertes GitHub-Repository der statischen Website der AV Froburger.
+Django-Repository fuer die AV-Froburger-Webseite mit oeffentlicher Site, Mitgliederbereich und einer im Aufbau befindlichen Web-X-CMS-Schicht.
 
 ## Projektstatus
 
-- Produktive Ziel-Domain: `https://avfroburger.ch`
-- Technische Basis: reines HTML, CSS und JavaScript
-- Build-System: keines
-- Source of truth: die Dateien im Projektroot
-- Oeffentlicher Release bleibt fachlich blockiert, bis `impressum.html` und `datenschutz.html` verbindlich finalisiert sind
+- Ziel-Domain: `https://avfroburger.ch`
+- Architektur: Django modular monolith
+- Datenbank: PostgreSQL als Ziel, SQLite lokal/testweise moeglich
+- Oeffentliche Seiten: ueber Django-Templates ausgeliefert
+- Mitgliederbereich: Auth, Einladungen, Profile und Verzeichnis vorhanden
+- Web-X-CMS: strukturierte Modell- und Rechtebasis vorhanden, Redaktionsoberflaeche noch offen
+- Oeffentlicher Release bleibt fachlich blockiert, bis `impressum` und `datenschutz` verbindlich finalisiert sind
 
-## Ziel des Repositories
-
-Dieses Repository dient als zentrale, nachvollziehbare Projektbasis fuer:
-
-- inhaltliche Pflege der Website
-- technische Weiterentwicklung ohne CMS oder Framework
-- saubere Versionierung ueber Git und GitHub
-- dokumentierte Deployments und nachvollziehbare Aenderungen
-
-## Seitenuebersicht
-
-| Datei | Zweck |
-| --- | --- |
-| `index.html` | Startseite mit Positionierung, Einstieg und Hero-Bereich |
-| `aktuelles.html` | Berichte, Rueckblicke und Blog-artige Inhalte |
-| `anlaesse.html` | Semesterprogramm, Kalenderansichten und Alt-Froburger-Staemme |
-| `mitglieder.html` | Vorstellung von Aktivitas und Alt-Froburgern |
-| `mitglied-werden.html` | Eintrittsseite mit Kontakt- und Einstiegsinformationen |
-| `ueber-uns.html` | Geschichte, Umfeld und Einordnung der Verbindung |
-| `intern.html` | bewusst deaktivierter Hinweis statt pseudo-gesicherter Bereich |
-| `impressum.html` | rechtliche Pflichtseite |
-| `datenschutz.html` | Datenschutzseite mit noch offenem Finalisierungsbedarf |
-
-## Technischer Zuschnitt
-
-- `styles.css` enthaelt das komplette visuelle System der Website.
-- `script.js` steuert die mobile Navigation, das Dropdown-Verhalten, die Kalenderlogik und die lokale ICS-Erzeugung.
-- `Bilder/` enthaelt die produktiv verwendeten Web-Assets.
-- `kalender.ics`, `robots.txt`, `sitemap.xml` und `Zirkel.svg` gehoeren zum oeffentlichen Auslieferungsumfang.
-- Es gibt keinen Build-Schritt und keine serverseitige Anwendungslogik.
-
-## Repository-Struktur
+## Wichtige Verzeichnisse
 
 ```text
 .
-|-- Bilder/
+|-- apps/
+|   |-- accounts/
+|   |-- audit/
+|   |-- content/
+|   |-- core/
+|   |-- documents/
+|   |-- events/
+|   |-- media_library/
+|   `-- members/
+|-- config/
 |-- docs/
-|-- index.html
-|-- aktuelles.html
-|-- anlaesse.html
-|-- mitglieder.html
-|-- mitglied-werden.html
-|-- ueber-uns.html
-|-- intern.html
-|-- impressum.html
-|-- datenschutz.html
-|-- styles.css
-|-- script.js
-|-- kalender.ics
-|-- robots.txt
-|-- sitemap.xml
-|-- CHANGELOG.md
-|-- DEPLOYMENT.md
-|-- TESTS.md
-|-- FINAL-IMPLEMENTATION-REPORT.md
-`-- README.md
+|-- static/
+|-- templates/
+|-- media/
+|-- private_media/
+|-- tests/
+|-- compose.yaml
+|-- manage.py
+`-- pyproject.toml
 ```
 
-## Lokal arbeiten
+## Lokal starten
 
-1. Repository klonen.
-2. HTML-, CSS- oder JS-Dateien direkt im Projektroot bearbeiten.
-3. `index.html` lokal im Browser oeffnen oder ueber einen einfachen statischen Server ausliefern.
-4. Vor einem Commit Links, Bilder, Kalenderdaten und Metadaten pruefen.
+### Mit SQLite
 
-## Wichtige Arbeitsregeln
+```powershell
+Set-Location "C:\Users\phili\OneDrive - FHNW\PRIVAT\Froburger\Webseite"
+$env:DATABASE_URL='sqlite:///db.sqlite3'
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
+```
 
-- Der Projektroot ist die verbindliche Quelle. Keine parallele Wahrheit in einem zweiten Quellordner pflegen.
-- Lokale Arbeitsartefakte wie `output/`, `reports/`, `Screenshots/`, `.agents/` und `.codex/` gehoeren nicht ins Repository.
-- Fuer produktive Bilder nur optimierte Web-Varianten versionieren, nicht unbenutzte Kamera-Originale.
-- Bei inhaltlichen Aenderungen an oeffentlichen Seiten muessen `lastmod`, Open-Graph-Angaben und gegebenenfalls `sitemap.xml` mitgepflegt werden.
-- Navigation, Footer und rechtliche Links muessen ueber alle oeffentlichen Seiten konsistent bleiben.
+### Mit PostgreSQL via Docker
 
-## Dokumentation im Repository
+```powershell
+docker compose up -d db
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
+```
 
-- [docs/PROJEKTUEBERBLICK.md](docs/PROJEKTUEBERBLICK.md): fachlicher und technischer Aufbau
-- [docs/INHALTSPFLEGE.md](docs/INHALTSPFLEGE.md): Pflegeprozess fuer Inhalte, Bilder und Seiten
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): Deployment-Vorgehen und Checklisten
-- [DEPLOYMENT.md](DEPLOYMENT.md): kompakte Deployment-Zusammenfassung im Root
-- [TESTS.md](TESTS.md): dokumentierte Pruefungen
-- [CHANGELOG.md](CHANGELOG.md): nachvollziehbare Aenderungshistorie
-- [FINAL-IMPLEMENTATION-REPORT.md](FINAL-IMPLEMENTATION-REPORT.md): technischer Abschlussstand der letzten grossen Ueberarbeitung
-- [REMAINING-LIMITATIONS.md](REMAINING-LIMITATIONS.md): offene Einschraenkungen
-- [ROLLBACK.md](ROLLBACK.md): Hinweise fuer Ruecknahmen
+## Qualitaetschecks
 
-## Bekannte Release-Blocker
+```text
+uv run python manage.py check
+uv run python manage.py check --deploy
+uv run python manage.py makemigrations --check
+uv run pytest
+uv run ruff check .
+git diff --check
+```
 
-- `impressum.html` ist nur dann releasefaehig, wenn verantwortliche Vertretung und Postanschrift verbindlich geprueft wurden.
-- `datenschutz.html` ist nur dann releasefaehig, wenn Hosting, Drittanbieter und Fonts rechtlich sauber abgebildet sind.
-- Die Website ist absichtlich rein statisch; es existiert keine serverseitige Authentifizierung fuer einen internen Bereich.
+## Aktueller Funktionsstand
 
-## Git-Workflow
+### Bereits umgesetzt
 
-1. Aenderungen lokal vornehmen.
-2. Sichtpruefung und Dateichecks durchfuehren.
-3. Aenderungen mit klarem Commit-Text committen.
-4. Nach `main` pushen.
-5. Deployment separat und bewusst ausloesen.
+- Custom User und Einladungssystem
+- Django-Templates fuer die oeffentliche Site
+- Mitgliederbereich mit Profilpflege und Verzeichnis
+- Rollen-Bootstrap fuer `member`, `web_aktuar`, `member_admin`, `president`, `system_admin`
+- Audit-Basis fuer Einladungen
+- strukturierte CMS-Grundmodelle fuer Seiten, Beitraege, Medien, Karussells und Revisionen
+- kontrollierte Layout-Presets fuer Seiten, Beitraege und Blocks
+- Medienvalidierung fuer JPEG, PNG und WebP
 
-## Maintainer-Hinweis
+### Noch offen
 
-Wenn kuenftig neue Seiten, neue Medientypen oder ein echtes Deployment-Setup hinzukommen, muss zuerst die Dokumentation in `docs/` aktualisiert werden. Das Repository soll nicht nur Code ablegen, sondern den realen Betriebsstand sauber beschreiben.
+- benutzerfreundliche Web-X-Editor-Oberflaeche
+- Preview-/Publish-/Restore-Flows
+- dynamisches Rendering der oeffentlichen Seiten aus den neuen CMS-Modellen
+- Event- und Dokumentenmodule
+- private Medienauslieferung fuer Mitgliederinhalte
+
+## Wichtige Dokumentation
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md)
+- [docs/MIGRATION_STATUS.md](docs/MIGRATION_STATUS.md)
+- [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md)
+- [docs/WEB_X_CMS_CURRENT_STATE.md](docs/WEB_X_CMS_CURRENT_STATE.md)
+- [docs/WEB_X_CMS_ARCHITECTURE.md](docs/WEB_X_CMS_ARCHITECTURE.md)
+- [docs/WEB_X_EDITOR_WORKFLOWS.md](docs/WEB_X_EDITOR_WORKFLOWS.md)
+- [docs/WEB_X_CMS_SECURITY_REVIEW.md](docs/WEB_X_CMS_SECURITY_REVIEW.md)
+- [docs/WEB_X_CMS_GUIDE.md](docs/WEB_X_CMS_GUIDE.md)
+- [docs/TESTING.md](docs/TESTING.md)
+
+## Sicherheitsregeln
+
+- keine Secrets, `.env`, privaten Schluessel oder echten Mitgliederdaten committen
+- oeffentliche und private Dateien strikt trennen
+- Berechtigungen serverseitig erzwingen
+- keine freie HTML-, CSS- oder JavaScript-Eingabe fuer Web-X
+- rechtliche Platzhalter sichtbar lassen, bis Fakten verifiziert sind
