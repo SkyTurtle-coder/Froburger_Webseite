@@ -73,4 +73,8 @@ Verbleibende Warnungen im lokalen Stand:
 
 ## PR-Status
 
-Technisch reviewbereit. Push und eigentliche PR-Erstellung sind in diesem Lauf noch nicht ausgefuehrt worden.
+Technisch reviewbereit. Der Branch wurde nach `origin/feature/simplify-web-x-cms` gepusht.
+Eine PR wurde in diesem Lauf nicht automatisch erstellt.
+GitHub bietet dafuer folgenden Link an:
+
+- `https://github.com/SkyTurtle-coder/Froburger_Webseite/pull/new/feature/simplify-web-x-cms`

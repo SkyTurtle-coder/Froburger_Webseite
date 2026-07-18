@@ -109,5 +109,5 @@ Verbleibende lokale Deploy-Warnungen:
 
 ## 9. Push- und PR-Status
 
-- Push-Status: noch nicht ausgefuehrt in diesem Lauf
-- PR-Status: Draft unter `docs/PR_WEB_X_CMS_DRAFT.md`
+- Push-Status: Branch nach `origin/feature/simplify-web-x-cms` gepusht
+- PR-Status: Draft unter `docs/PR_WEB_X_CMS_DRAFT.md`, GitHub-Vorschlag vorhanden unter `https://github.com/SkyTurtle-coder/Froburger_Webseite/pull/new/feature/simplify-web-x-cms`
