@@ -186,6 +186,21 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	font-family: var(--avf-font-body, "Inter", sans-serif);
 }
 
+/*
+ * On the "Anlaesse" page, the surrounding Elementor section already carries
+ * the project's zirkel decoration via ".avf-has-zirkel-bg". The regional
+ * gatherings block itself should not paint an opaque warm-white slab over
+ * that background there; only the cards stay solid white. The selector is
+ * intentionally tightly scoped to that decorated context so other uses of
+ * the component can keep their default light surface.
+ */
+.avf-has-zirkel-bg .avf-regional-staemme,
+.avf-has-zirkel-bg .avf-regional-staemme__inner,
+.avf-has-zirkel-bg .avf-regional-staemme__heading {
+	background: transparent;
+	background-color: transparent;
+}
+
 .avf-regional-staemme *,
 .avf-regional-staemme *::before,
 .avf-regional-staemme *::after {
@@ -266,6 +281,12 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	color: var(--avf-text, #202620);
 	overflow: hidden;
 	transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.avf-has-zirkel-bg .avf-regional-stamm-card,
+.avf-has-zirkel-bg [class*="avf-regional-stamm-card"] {
+	background: var(--avf-white, #ffffff) !important;
+	background-color: var(--avf-white, #ffffff) !important;
 }
 
 .avf-regional-staemme__grid > .avf-regional-stamm-card:nth-child(even),

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       AV Froburger Site Styles
  * Description:       Enthält gezielte projektspezifische Layoutkorrekturen.
- * Version:            1.2.1
+ * Version:            1.2.2
  * Requires at least:  6.3
  * Requires PHP:       7.4
  * Author:             AV Froburger
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'AVF_SITE_STYLES_VERSION', '1.2.1' );
+define( 'AVF_SITE_STYLES_VERSION', '1.2.2' );
 define( 'AVF_SITE_STYLES_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AVF_SITE_STYLES_URL', plugin_dir_url( __FILE__ ) );
 

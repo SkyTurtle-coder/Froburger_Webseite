@@ -4,7 +4,7 @@ Tags: elementor, layout, bugfix
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2 or later
 
 Enthaelt gezielte projektspezifische Layoutkorrekturen.
@@ -114,6 +114,12 @@ wiederverwendbaren Klassen und das responsive Kartenlayout.
   automatisch mittig ueber beide Spalten gezogen.
 
 == Changelog ==
+
+= 1.2.2 =
+* Im Zirkelbereich (`.avf-has-zirkel-bg`) den deckenden Hintergrund hinter
+  dem Abschnitt "Regelmaessige regionale Staemme" transparent gemacht, so
+  dass die dekorativen Zirkel wieder durch den hellen Seitenbereich sichtbar
+  bleiben, waehrend die Karten selbst bewusst weiss bleiben.
 
 = 1.2.1 =
 * Kartenstil des statischen Elementor-Abschnitts "Regelmaessige regionale
