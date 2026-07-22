@@ -203,12 +203,14 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 16px;
-	max-width: 760px;
+	width: 100%;
+	max-width: none;
 	margin: 0 0 44px;
 }
 
 .avf-regional-staemme__eyebrow {
 	margin: 0;
+	max-width: 760px;
 	font-size: 12px;
 	font-weight: 700;
 	letter-spacing: 0.16em;
@@ -218,6 +220,7 @@ body.home .elementor[data-elementor-type="wp-page"] {
 
 .avf-regional-staemme__title {
 	margin: 0;
+	max-width: 760px;
 	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
 	font-size: clamp(2.2rem, 4vw, 3.4rem);
 	line-height: 1.08;
@@ -228,6 +231,7 @@ body.home .elementor[data-elementor-type="wp-page"] {
 
 .avf-regional-staemme__intro {
 	margin: 0;
+	width: 100%;
 	max-width: 62ch;
 	font-size: 16px;
 	line-height: 1.7;
@@ -235,49 +239,70 @@ body.home .elementor[data-elementor-type="wp-page"] {
 }
 
 .avf-regional-staemme__grid {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 30px;
-	align-items: stretch;
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 30px !important;
+	align-items: stretch !important;
+	width: 100%;
+	max-width: 100%;
+	margin-top: 12px;
 }
 
-.avf-regional-stamm-card {
+.avf-regional-staemme__grid > .avf-regional-stamm-card,
+.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"] {
 	position: relative;
 	display: flex;
 	flex-direction: column;
 	width: 100%;
+	flex: 1 1 0;
 	min-width: 0;
-	min-height: 100%;
-	padding: 28px;
-	background: var(--avf-white, #ffffff);
-	border: 1px solid rgba(24, 63, 30, 0.08);
-	border-top: 4px solid var(--avf-green, #245c2b);
-	border-radius: 12px;
-	box-shadow: 0 16px 36px rgba(14, 23, 17, 0.08);
+	min-height: 100% !important;
+	padding: 26px 24px !important;
+	background: var(--avf-white, #ffffff) !important;
+	border: 1px solid rgba(24, 63, 30, 0.1) !important;
+	border-top: 4px solid var(--avf-green, #245c2b) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 12px 28px rgba(14, 23, 17, 0.08) !important;
 	color: var(--avf-text, #202620);
+	overflow: hidden;
+	transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
-.avf-regional-stamm-card:nth-child(even) {
+.avf-regional-staemme__grid > .avf-regional-stamm-card:nth-child(even),
+.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:nth-child(even) {
 	border-top-color: var(--avf-orange, #d87836);
 }
 
+.avf-regional-staemme__grid > .avf-regional-stamm-card:hover,
+.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:hover,
+.avf-regional-staemme__grid > .avf-regional-stamm-card:focus-within,
+.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:focus-within {
+	border-color: rgba(24, 63, 30, 0.14) !important;
+	box-shadow: 0 18px 36px rgba(14, 23, 17, 0.11) !important;
+	transform: translateY(-2px);
+}
+
 .avf-regional-stamm-card__header {
-	display: grid;
-	grid-template-columns: 72px minmax(0, 1fr);
-	align-items: center;
-	gap: 18px;
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr) 62px !important;
+	align-items: start !important;
+	gap: 16px !important;
+	width: 100%;
 	margin-bottom: 20px;
+	padding: 0 !important;
 }
 
 .avf-regional-stamm-card__crest {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 72px;
-	height: 72px;
-	padding: 10px;
-	border-radius: 18px;
-	background: linear-gradient(180deg, rgba(247, 245, 239, 0.95) 0%, rgba(247, 245, 239, 0.7) 100%);
+	width: 62px;
+	height: 62px;
+	padding: 8px !important;
+	margin-left: auto;
+	border-radius: 14px;
+	background: linear-gradient(180deg, rgba(247, 245, 239, 0.95) 0%, rgba(247, 245, 239, 0.72) 100%);
+	border: 1px solid rgba(24, 63, 30, 0.08);
 }
 
 .avf-regional-stamm-card__crest img,
@@ -291,18 +316,20 @@ body.home .elementor[data-elementor-type="wp-page"] {
 .avf-regional-stamm-card__title {
 	margin: 0;
 	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
-	font-size: clamp(1.75rem, 2vw, 2.15rem);
-	line-height: 1.12;
+	font-size: clamp(1.8rem, 2.3vw, 2rem);
+	line-height: 1.08;
 	font-weight: 600;
 	color: var(--avf-green-dark, #183f1e);
+	text-wrap: balance;
 }
 
 .avf-regional-stamm-card__details,
 .avf-regional-stamm-card__contact {
 	margin: 0;
 	font-size: 15px;
-	line-height: 1.7;
+	line-height: 1.65;
 	color: var(--avf-text, #202620);
+	overflow-wrap: anywhere;
 }
 
 .avf-regional-stamm-card__details {
@@ -340,11 +367,16 @@ body.home .elementor[data-elementor-type="wp-page"] {
 		padding: 64px 20px;
 	}
 
-	.avf-regional-staemme__grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+	.avf-regional-staemme__inner {
+		padding: 0 !important;
 	}
 
-	.avf-regional-staemme__grid > .avf-regional-stamm-card:last-child:nth-child(odd) {
+	.avf-regional-staemme__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+
+	.avf-regional-staemme__grid > .avf-regional-stamm-card:last-child:nth-child(odd),
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:last-child:nth-child(odd) {
 		grid-column: 1 / -1;
 		max-width: min(100%, 420px);
 		justify-self: center;
@@ -362,29 +394,45 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	}
 
 	.avf-regional-staemme__grid {
-		grid-template-columns: minmax(0, 1fr);
-		gap: 22px;
+		grid-template-columns: minmax(0, 1fr) !important;
+		gap: 22px !important;
 	}
 
-	.avf-regional-staemme__grid > .avf-regional-stamm-card:last-child:nth-child(odd) {
+	.avf-regional-staemme__grid > .avf-regional-stamm-card:last-child:nth-child(odd),
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:last-child:nth-child(odd) {
 		grid-column: auto;
 		max-width: none;
 		justify-self: stretch;
 	}
 
-	.avf-regional-stamm-card {
+	.avf-regional-staemme__grid > .avf-regional-stamm-card,
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"] {
 		padding: 24px 20px;
 	}
 
 	.avf-regional-stamm-card__header {
-		grid-template-columns: 60px minmax(0, 1fr);
+		grid-template-columns: minmax(0, 1fr) 56px !important;
 		gap: 14px;
 	}
 
 	.avf-regional-stamm-card__crest {
-		width: 60px;
-		height: 60px;
+		width: 56px;
+		height: 56px;
 		padding: 8px;
 		border-radius: 14px;
+	}
+
+	.avf-regional-staemme__grid > .avf-regional-stamm-card:hover,
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:hover,
+	.avf-regional-staemme__grid > .avf-regional-stamm-card:focus-within,
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:focus-within {
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.avf-regional-staemme__grid > .avf-regional-stamm-card,
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"] {
+		transition: none;
 	}
 }

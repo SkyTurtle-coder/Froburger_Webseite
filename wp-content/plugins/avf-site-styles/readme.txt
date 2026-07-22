@@ -4,7 +4,7 @@ Tags: elementor, layout, bugfix
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 
 Enthaelt gezielte projektspezifische Layoutkorrekturen.
@@ -114,6 +114,13 @@ wiederverwendbaren Klassen und das responsive Kartenlayout.
   automatisch mittig ueber beide Spalten gezogen.
 
 == Changelog ==
+
+= 1.2.1 =
+* Kartenstil des statischen Elementor-Abschnitts "Regelmaessige regionale
+  Staemme" gegen die tatsaechliche Live-Struktur verfeinert: robuste
+  Selektoren fuer die aktuellen Kartencontainer, echtes 3/2/1-Layout,
+  staerkere Kartenabgrenzung, sauberer Kopf mit Titel/Wappen, gleich hohe
+  Karten und stabiler Kontaktblock am unteren Rand.
 
 = 1.2.0 =
 * Neue dateibasierte CSS-Grundlage fuer den statischen Elementor-Abschnitt
