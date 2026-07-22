@@ -165,3 +165,274 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	);
 	pointer-events: none;
 }
+
+/*
+ * Foundation: static Elementor section "Regelmässige regionale Stämme".
+ *
+ * This is intentionally component-scoped and data-agnostic: Elementor
+ * editors create the container/content structure manually, while the
+ * reusable, versioned visual system lives here. No Elementor IDs, no
+ * generated page CSS, no dependence on a particular page template.
+ */
+.avf-regional-staemme {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 72px 24px;
+	background:
+		radial-gradient(ellipse 760px 320px at 100% 0%, rgba(36, 92, 43, 0.05), transparent 58%),
+		radial-gradient(ellipse 520px 260px at 0% 100%, rgba(216, 120, 54, 0.07), transparent 55%),
+		var(--avf-warm-white, #f7f5ef);
+	color: var(--avf-text, #202620);
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+}
+
+.avf-regional-staemme *,
+.avf-regional-staemme *::before,
+.avf-regional-staemme *::after {
+	box-sizing: border-box;
+}
+
+.avf-regional-staemme__inner {
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.avf-regional-staemme__heading {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 16px;
+	width: 100%;
+	max-width: none;
+	margin: 0 0 44px;
+}
+
+.avf-regional-staemme__eyebrow {
+	margin: 0;
+	max-width: 760px;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--avf-green-dark, #183f1e);
+}
+
+.avf-regional-staemme__title {
+	margin: 0;
+	max-width: 760px;
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-size: clamp(2.2rem, 4vw, 3.4rem);
+	line-height: 1.08;
+	font-weight: 600;
+	color: var(--avf-green-dark, #183f1e);
+	text-wrap: balance;
+}
+
+.avf-regional-staemme__intro {
+	margin: 0;
+	width: 100%;
+	max-width: 62ch;
+	font-size: 16px;
+	line-height: 1.7;
+	color: var(--avf-text-muted, #657067);
+}
+
+.avf-regional-staemme__grid {
+	display: grid !important;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	gap: 30px !important;
+	align-items: stretch !important;
+	width: 100%;
+	max-width: 100%;
+	margin-top: 12px;
+}
+
+.avf-regional-staemme__grid > .avf-regional-stamm-card,
+.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"] {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	flex: 1 1 0;
+	min-width: 0;
+	min-height: 100% !important;
+	padding: 26px 24px !important;
+	background: var(--avf-white, #ffffff) !important;
+	border: 1px solid rgba(24, 63, 30, 0.1) !important;
+	border-top: 4px solid var(--avf-green, #245c2b) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 12px 28px rgba(14, 23, 17, 0.08) !important;
+	color: var(--avf-text, #202620);
+	overflow: hidden;
+	transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.avf-regional-staemme__grid > .avf-regional-stamm-card:nth-child(even),
+.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:nth-child(even) {
+	border-top-color: var(--avf-orange, #d87836);
+}
+
+.avf-regional-staemme__grid > .avf-regional-stamm-card:hover,
+.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:hover,
+.avf-regional-staemme__grid > .avf-regional-stamm-card:focus-within,
+.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:focus-within {
+	border-color: rgba(24, 63, 30, 0.14) !important;
+	box-shadow: 0 18px 36px rgba(14, 23, 17, 0.11) !important;
+	transform: translateY(-2px);
+}
+
+.avf-regional-stamm-card__header {
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr) 62px !important;
+	align-items: start !important;
+	gap: 16px !important;
+	width: 100%;
+	margin-bottom: 20px;
+	padding: 0 !important;
+}
+
+.avf-regional-stamm-card__crest {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 62px;
+	height: 62px;
+	padding: 8px !important;
+	margin-left: auto;
+	border-radius: 14px;
+	background: linear-gradient(180deg, rgba(247, 245, 239, 0.95) 0%, rgba(247, 245, 239, 0.72) 100%);
+	border: 1px solid rgba(24, 63, 30, 0.08);
+}
+
+.avf-regional-stamm-card__crest img,
+.avf-regional-stamm-card__crest svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.avf-regional-stamm-card__title {
+	margin: 0;
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-size: clamp(1.8rem, 2.3vw, 2rem);
+	line-height: 1.08;
+	font-weight: 600;
+	color: var(--avf-green-dark, #183f1e);
+	text-wrap: balance;
+}
+
+.avf-regional-stamm-card__details,
+.avf-regional-stamm-card__contact {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.65;
+	color: var(--avf-text, #202620);
+	overflow-wrap: anywhere;
+}
+
+.avf-regional-stamm-card__details {
+	margin-bottom: 16px;
+}
+
+.avf-regional-stamm-card__contact {
+	margin-top: auto;
+	padding-top: 18px;
+	border-top: 1px solid rgba(24, 63, 30, 0.1);
+	color: var(--avf-text-muted, #657067);
+}
+
+.avf-regional-stamm-card__contact a {
+	color: var(--avf-green, #245c2b);
+	font-weight: 600;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.16em;
+	word-break: break-word;
+}
+
+.avf-regional-stamm-card__contact a:hover,
+.avf-regional-stamm-card__contact a:focus {
+	color: var(--avf-orange, #d87836);
+}
+
+.avf-regional-stamm-card__contact a:focus-visible {
+	outline: 2px solid var(--avf-orange, #d87836);
+	outline-offset: 4px;
+	border-radius: 4px;
+}
+
+@media (max-width: 1024px) {
+	.avf-regional-staemme {
+		padding: 64px 20px;
+	}
+
+	.avf-regional-staemme__inner {
+		padding: 0 !important;
+	}
+
+	.avf-regional-staemme__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+
+	.avf-regional-staemme__grid > .avf-regional-stamm-card:last-child:nth-child(odd),
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:last-child:nth-child(odd) {
+		grid-column: 1 / -1;
+		max-width: min(100%, 420px);
+		justify-self: center;
+	}
+}
+
+@media (max-width: 767px) {
+	.avf-regional-staemme {
+		padding: 52px 16px;
+	}
+
+	.avf-regional-staemme__heading {
+		gap: 14px;
+		margin-bottom: 32px;
+	}
+
+	.avf-regional-staemme__grid {
+		grid-template-columns: minmax(0, 1fr) !important;
+		gap: 22px !important;
+	}
+
+	.avf-regional-staemme__grid > .avf-regional-stamm-card:last-child:nth-child(odd),
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:last-child:nth-child(odd) {
+		grid-column: auto;
+		max-width: none;
+		justify-self: stretch;
+	}
+
+	.avf-regional-staemme__grid > .avf-regional-stamm-card,
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"] {
+		padding: 24px 20px;
+	}
+
+	.avf-regional-stamm-card__header {
+		grid-template-columns: minmax(0, 1fr) 56px !important;
+		gap: 14px;
+	}
+
+	.avf-regional-stamm-card__crest {
+		width: 56px;
+		height: 56px;
+		padding: 8px;
+		border-radius: 14px;
+	}
+
+	.avf-regional-staemme__grid > .avf-regional-stamm-card:hover,
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:hover,
+	.avf-regional-staemme__grid > .avf-regional-stamm-card:focus-within,
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:focus-within {
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.avf-regional-staemme__grid > .avf-regional-stamm-card,
+	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"] {
+		transition: none;
+	}
+}
