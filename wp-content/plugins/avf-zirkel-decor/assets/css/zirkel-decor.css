@@ -1,0 +1,371 @@
+/**
+ * AV Froburger Zirkel Decor – reusable decorative background rings.
+ * Loaded on every frontend request (and in the Elementor editor preview
+ * iframe). Visual effect only applies inside elements carrying the
+ * .avf-decor class (manual/auto-preset sections) or the page-wide opt-in
+ * classes .avf-home-main / .avf-has-zirkel-bg (see below).
+ */
+
+.avf-decor {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+}
+
+.avf-zirkel-decor-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+/*
+ * Low specificity on purpose (:where) so existing, more specific
+ * Elementor rules keep winning over this fallback stacking context fix.
+ * Elements that are already positioned (absolute/fixed/sticky) are left
+ * alone by their own more specific Elementor styles.
+ */
+.avf-decor > :where(:not(.avf-zirkel-decor-layer)) {
+	position: relative;
+	z-index: 1;
+}
+
+.avf-zirkel {
+	position: absolute;
+	width: var(--avf-ring-size, 480px);
+	height: var(--avf-ring-size, 480px);
+	left: var(--avf-ring-left, 0);
+	top: var(--avf-ring-top, 0);
+	transform: rotate(var(--avf-ring-rotate, 0deg));
+	opacity: var(--avf-ring-opacity, 0.08);
+	background-color: currentColor;
+	mask-image: url("../images/zirkel.svg");
+	-webkit-mask-image: url("../images/zirkel.svg");
+	mask-repeat: no-repeat;
+	-webkit-mask-repeat: no-repeat;
+	mask-position: center;
+	-webkit-mask-position: center;
+	mask-size: contain;
+	-webkit-mask-size: contain;
+	pointer-events: none;
+}
+
+/* Light section (default): green + orange. */
+.avf-decor--light .avf-zirkel--green,
+.avf-decor:not(.avf-decor--dark) .avf-zirkel--green {
+	color: var(--avf-green, #245c2b);
+}
+
+.avf-decor--light .avf-zirkel--orange,
+.avf-decor:not(.avf-decor--dark) .avf-zirkel--orange {
+	color: var(--avf-orange, #d87836);
+}
+
+/* Dark section: white instead of green, orange unchanged. */
+.avf-decor--dark .avf-zirkel--green {
+	color: var(--avf-white, #ffffff);
+}
+
+.avf-decor--dark .avf-zirkel--orange {
+	color: var(--avf-orange, #d87836);
+}
+
+/* Hide all rings below ~560px when desktop-only decoration is requested. */
+@media (max-width: 559.98px) {
+	.avf-decor--desktop-only > .avf-zirkel-decor-layer {
+		display: none;
+	}
+}
+
+/* No motion is used, but transitions are explicitly disabled defensively. */
+@media (prefers-reduced-motion: reduce) {
+	.avf-zirkel {
+		transition: none !important;
+	}
+}
+
+/*
+ * Auto-preset section: "Was uns verbindet" (.avf-values-section).
+ * The base ".avf-decor" rules above already apply here too, since the
+ * JavaScript adds the "avf-decor" class automatically. These extra
+ * rules only make sure the section's own background/layout containers
+ * don't accidentally hide the decoration layer behind an opaque
+ * background, and that the rings stay behind heading and cards.
+ */
+.avf-values-section {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	background: var(--avf-surface, #f7f5ef);
+}
+
+.avf-values-section .avf-values-inner,
+.avf-values-section .avf-values-heading,
+.avf-values-section .avf-values-heading-main,
+.avf-values-section .avf-values-heading-intro,
+.avf-values-section .avf-values-grid {
+	background: transparent !important;
+}
+
+.avf-values-section .avf-values-card {
+	position: relative;
+	z-index: 1;
+	background: var(--avf-white, #ffffff);
+}
+
+.avf-values-section > .avf-zirkel-decor-layer {
+	z-index: 0;
+}
+
+/*
+ * Page-wide decoration mode, opt-in via a single CSS class in Elementor
+ * ("Erweitert -> CSS-Klassen"): avf-has-zirkel-bg. Built by the same
+ * page-wide pipeline in zirkel-decor.js that also drives ".avf-home-main"
+ * on the front page - one shared ".avf-page-zirkel-decor-layer" per
+ * container, injected by JS, never duplicated (idempotent, see JS).
+ */
+.avf-has-zirkel-bg {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	--avf-ring-opacity-green: 0.22;
+	--avf-ring-opacity-orange: 0.2;
+}
+
+/* Exactly one direct decoration layer per container. */
+.avf-has-zirkel-bg > .avf-page-zirkel-decor-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+/*
+ * Low specificity on purpose (:where), same pattern as ".avf-decor" above,
+ * so more specific Elementor rules keep winning and content (links,
+ * buttons, widgets) stays clickable above the decoration layer.
+ */
+.avf-has-zirkel-bg > :where(:not(.avf-page-zirkel-decor-layer)) {
+	position: relative;
+	z-index: 1;
+}
+
+/*
+ * Ring colors for the page-wide layer - ancestor-agnostic on purpose, so
+ * they apply identically on ".avf-home-main" (front page) and any
+ * ".avf-has-zirkel-bg" container elsewhere, with no body.home selector
+ * required.
+ */
+.avf-page-zirkel-decor-layer .avf-zirkel--green {
+	color: var(--avf-green, #245c2b);
+}
+
+.avf-page-zirkel-decor-layer .avf-zirkel--orange {
+	color: var(--avf-orange, #d87836);
+}
+
+/*
+ * Stronger ring opacity on ".avf-has-zirkel-bg" pages: the default
+ * PAGE_OPACITY_*_RANGE in zirkel-decor.js (~0.05-0.15, set inline per ring
+ * by JS via --avf-ring-opacity) reads well against the homepage's busier
+ * layout but is too faint on sparser pages like "Aktuelles". These two
+ * selectors are more specific than the base ".avf-zirkel{opacity:var(
+ * --avf-ring-opacity,...)}" rule, so they win without !important and
+ * without fighting the inline custom property JS sets per ring. Colors
+ * still come from --avf-green/--avf-orange above, unchanged. Scoped to
+ * ".avf-has-zirkel-bg" only - the homepage's own opacity is untouched.
+ * (--avf-ring-opacity-green/-orange are declared once, in the base
+ * ".avf-has-zirkel-bg" rule above.)
+ */
+.avf-has-zirkel-bg .avf-zirkel--green {
+	opacity: var(--avf-ring-opacity-green);
+}
+
+.avf-has-zirkel-bg .avf-zirkel--orange {
+	opacity: var(--avf-ring-opacity-orange);
+}
+
+/* =========================================================
+ * Beitragsübersicht ("Aktuelles" & andere ".avf-has-zirkel-bg"-Seiten
+ * mit einem Elementor Loop Grid + ".avf-post-card").
+ *
+ * Root cause (see task report): the Loop Grid's per-instance CSS
+ * already sets ".avf-post-card{width:100%;height:100%}" correctly, but
+ * that 100% resolves against its immediate parent - a wrapper element
+ * generated by the Loop Item template (Elementor template "AVF –
+ * Beitragskachel", ID 311) that carries an auto-generated atomic style
+ * class (e.g. ".e-097b2d4") with a hard "max-width:400px" baked in. That
+ * class name is a random per-instance hash and must never be hardcoded
+ * as a selector (see task constraints), so instead the fix targets the
+ * stable, non-random ".e-con" class every Elementor atomic container
+ * carries, scoped to the direct child of ".e-loop-item" inside a grid
+ * living in ".avf-has-zirkel-bg" - this only loosens the wrapper's own
+ * width, never the template's visual design (border/shadow untouched).
+ * =========================================================
+ */
+
+/*
+ * Real container width decides the column count instead of Elementor's
+ * fixed desktop/tablet/mobile breakpoints ("*.elementor-grid-3
+ * .elementor-grid", ".elementor-grid-tablet-2 .elementor-grid", etc. in
+ * elementor/assets/css/frontend.min.css - left untouched, just outranked
+ * here by a higher-specificity selector, see below).
+ *
+ * auto-fit (not auto-fill): with fewer items than would-be columns, the
+ * unused tracks collapse to 0 width instead of staying reserved, so
+ * "justify-content: center" has an actual gap to center the real card(s)
+ * into - 1 post centers alone, 2 posts center as a pair, a full row uses
+ * the whole width edge-to-edge with no leftover to center.
+ *
+ * !important is used only on the three properties Elementor's own
+ * ".elementor-grid"/".elementor-grid-N .elementor-grid" rules (frontend.
+ * min.css) would otherwise still win on due to load order/specificity
+ * ties; everything else here wins on specificity alone.
+ */
+.avf-has-zirkel-bg .elementor-loop-container.elementor-grid {
+	display: grid !important;
+	width: 100% !important;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 350px)) !important;
+	justify-content: center !important;
+	justify-items: stretch;
+	column-gap: 30px;
+	row-gap: 36px;
+}
+
+.avf-has-zirkel-bg .elementor-loop-container .e-loop-item {
+	width: 100%;
+	max-width: 350px;
+	min-width: 0;
+}
+
+.avf-has-zirkel-bg .elementor-loop-container .e-loop-item > .e-con {
+	width: 100%;
+	max-width: none;
+}
+
+.avf-has-zirkel-bg .avf-post-card {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+}
+
+.avf-has-zirkel-bg .avf-post-card__content {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.avf-has-zirkel-bg .avf-post-card__link {
+	margin-top: auto;
+}
+
+.avf-has-zirkel-bg .avf-post-card__image img {
+	display: block;
+	width: 100%;
+	object-fit: cover;
+}
+
+/*
+ * Mobile image height: the Loop Grid's own per-instance CSS hardcodes
+ * "height:230px" at every breakpoint (".elementor-26 .elementor-element
+ * .avf-post-card__image img", specificity 0,0,4,1). Beating that from an
+ * external, reusable stylesheet without duplicating the page-specific
+ * selector needs !important here - narrowly scoped to this one property,
+ * one breakpoint, one component.
+ */
+@media (max-width: 599px) {
+	.avf-has-zirkel-bg .avf-post-card__image img {
+		height: 180px !important;
+	}
+}
+
+/* =========================================================
+ * Globaler Seitenkopf (".avf-page-head", Elementor-Vorlage
+ * "AVF - Seitenvorlage"): zwei dekorative Zirkel als Wasserzeichen.
+ *
+ * Injiziert von zirkel-decor.js (dritter, unabhängiger Modus, siehe
+ * Datei-Kopfkommentar dort) - hier nur Form/Position/Farbe/Deckkraft.
+ * Reine Dekoration: aria-hidden (per JS), pointer-events: none (per
+ * ".avf-zirkel"-Basisregel oben).
+ * =========================================================
+ */
+
+.avf-page-head__ring {
+	z-index: 0;
+}
+
+/*
+ * Low specificity on purpose (:where), same pattern as ".avf-decor" /
+ * ".avf-has-zirkel-bg" above, so the header's own text/breadcrumb content
+ * stays above the rings without fighting Elementor's own positioning.
+ */
+.avf-page-head > :where(:not(.avf-page-head__ring)) {
+	position: relative;
+	z-index: 1;
+}
+
+/* Dark header ground: green renders white, orange stays orange (same convention as ".avf-decor--dark"). */
+.avf-page-head .avf-zirkel--green {
+	color: var(--avf-white, #ffffff);
+}
+
+.avf-page-head .avf-zirkel--orange {
+	color: var(--avf-orange, #d87836);
+}
+
+/* Large ring, right side, bleeding off the edge for a dynamic, off-centre feel. */
+.avf-page-head__ring--large {
+	width: 520px;
+	height: 520px;
+	left: auto;
+	right: -140px;
+	top: 50%;
+	transform: translateY(-50%) rotate(14deg);
+	opacity: 0.18;
+}
+
+/* Smaller accent ring, top-left, cropped by the header's own overflow:hidden. */
+.avf-page-head__ring--small {
+	width: 200px;
+	height: 200px;
+	left: -50px;
+	right: auto;
+	top: -40px;
+	transform: rotate(-16deg);
+	opacity: 0.16;
+}
+
+@media (max-width: 900px) {
+	.avf-page-head__ring--large {
+		width: 380px;
+		height: 380px;
+		right: -150px;
+		opacity: 0.16;
+	}
+
+	.avf-page-head__ring--small {
+		width: 150px;
+		height: 150px;
+		opacity: 0.14;
+	}
+}
+
+@media (max-width: 599px) {
+	.avf-page-head__ring--large {
+		width: 260px;
+		height: 260px;
+		top: auto;
+		bottom: -70px;
+		right: -90px;
+		transform: rotate(10deg);
+		opacity: 0.14;
+	}
+
+	/* One ring only on small screens - keeps the header calm, not cluttered. */
+	.avf-page-head__ring--small {
+		display: none;
+	}
+}

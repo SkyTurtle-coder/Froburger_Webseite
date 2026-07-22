@@ -1,0 +1,602 @@
+/**
+ * AV Froburger Events Integration - v1 components (upcoming/past lists,
+ * calendar actions, event detail). Loaded only when one of these shortcodes
+ * actually renders (see AVF_Events_Assets::enqueue()). Deliberately
+ * separate from upcoming-events.css, which stays dedicated to the
+ * untouched legacy [avf_upcoming_events] homepage shortcode - no shared
+ * class names with page-specific meaning, so neither stylesheet can affect
+ * the other's markup.
+ */
+
+.avf-events-upcoming,
+.avf-events-past,
+.avf-events-calendar-actions,
+.avf-event-detail {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: var(--avf-content-width, 1200px);
+	margin: 0 auto;
+	padding: 0 24px;
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	color: var(--avf-text, #202620);
+}
+
+/*
+ * Elementor "Shortcode" widgets on this project sit inside atomic flexbox
+ * wrappers (".e-con") whose own layout can set "align-items: center" on
+ * itself (a column-direction flex container) instead of the default
+ * "stretch" - e.g. the "Anlässe" page's content row. Without an override,
+ * every ".e-con" ancestor between that row and our own markup becomes an
+ * auto-width ("shrink-to-fit") flex item, and since our list uses CSS Grid
+ * with "minmax(0, 1fr)" columns internally, the whole component collapses
+ * toward its minimum content width instead of using the available page
+ * width - the "small card on the left" symptom.
+ *
+ * "align-self: stretch" on the actual flex item ancestor is the correct,
+ * targeted fix (it always overrides the parent's "align-items" for that one
+ * item, per the flexbox spec - no specificity fight, no !important needed).
+ * ":has()" finds that ancestor at any nesting depth via our own stable,
+ * semantic class, without hardcoding any random per-page Elementor element
+ * ID or local style class.
+ */
+.e-con:has(.avf-events-upcoming),
+.e-con:has(.avf-events-past),
+.e-con:has(.avf-events-calendar-actions),
+.e-con:has(.avf-event-detail) {
+	align-self: stretch;
+}
+
+/*
+ * That ".e-con" ancestor is itself a row-direction flex container (its
+ * default) with exactly one child: Elementor's own ".elementor-widget-
+ * shortcode" wrapper div. A row container's MAIN axis is horizontal, so
+ * "align-self"/"align-items" (cross-axis only) can't make that child use
+ * the full width - it needs to actually grow along the main axis, which it
+ * doesn't by default (initial "flex: 0 1 auto" plus an auto content-based
+ * width). ".elementor-widget-shortcode" is Elementor's own stable,
+ * non-random class for every "Shortcode" widget, so this is just as safe
+ * to target as ".e-con" above.
+ */
+.elementor-widget-shortcode:has(.avf-events-upcoming),
+.elementor-widget-shortcode:has(.avf-events-past),
+.elementor-widget-shortcode:has(.avf-events-calendar-actions),
+.elementor-widget-shortcode:has(.avf-event-detail) {
+	flex: 1 1 auto;
+	width: 100%;
+}
+
+/*
+ * On the "Anlässe" page, the two-column intro row above the calendar
+ * actions contains a decorative heading column (.avf-events-page__inner)
+ * with large Elementor block margins. Because that row is a flex
+ * container, the bottom margin inflates the whole row's height and
+ * creates ~100px of dead space before our own 44px actions margin even
+ * begins. Trim only that exact pattern: a heading row immediately
+ * followed by the calendar-actions shortcode row.
+ */
+.e-con:has(.avf-events-page__inner):has(+ .e-con .avf-events-calendar-actions) > .avf-events-page__inner {
+	margin-bottom: 0;
+}
+
+.e-con:has(.avf-events-page__inner):has(+ .e-con .avf-events-calendar-actions) {
+	padding-bottom: 0;
+}
+
+.e-con:has(.avf-events-calendar-actions) {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.avf-events-upcoming *,
+.avf-events-past *,
+.avf-events-calendar-actions *,
+.avf-event-detail * {
+	box-sizing: border-box;
+}
+
+/* =========================================================
+   UPCOMING
+   ========================================================= */
+
+.avf-events-upcoming__list {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 24px;
+	width: 100%;
+	margin-bottom: 32px;
+}
+
+.avf-events-tile {
+	display: grid;
+	grid-template-columns: 120px minmax(0, 1fr);
+	align-items: stretch;
+	width: 100%;
+	max-width: var(--avf-content-width, 1200px);
+	min-height: 110px;
+	background: var(--avf-white, #ffffff);
+	border: 1px solid var(--avf-border, #dce2dc);
+	border-top: 3px solid var(--avf-orange, #d87836);
+	border-radius: 0 0 12px 12px;
+	box-shadow: 0 12px 28px rgba(14, 23, 17, 0.08);
+	overflow: hidden;
+}
+
+.avf-events-tile__date {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 24px 16px;
+	text-align: center;
+	border-right: 1px solid var(--avf-border, #dce2dc);
+	font-style: normal;
+}
+
+.avf-events-tile__date strong {
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-size: 42px;
+	line-height: 1;
+	font-weight: 600;
+	color: var(--avf-green-dark, #183f1e);
+}
+
+.avf-events-tile__date span {
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 12px;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--avf-text-muted, #657067);
+}
+
+.avf-events-tile__content {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(180px, 220px) auto;
+	column-gap: 24px;
+	row-gap: 10px;
+	align-items: start;
+	padding: 22px 28px;
+	min-width: 0;
+}
+
+.avf-events-tile__badge {
+	grid-column: 1;
+	align-self: flex-start;
+	padding: 4px 12px;
+	border-radius: 999px;
+	background: var(--avf-warm-white, #f7f5ef);
+	color: var(--avf-green-dark, #183f1e);
+	font-size: 11.5px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.avf-events-tile__title {
+	grid-column: 1;
+	margin: 0;
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-size: 26px;
+	line-height: 1.2;
+	font-weight: 600;
+	color: var(--avf-night, #0e1711);
+}
+
+.avf-events-tile__description {
+	grid-column: 1;
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.5;
+	color: var(--avf-text, #202620);
+}
+
+.avf-events-tile__meta {
+	grid-column: 2;
+	grid-row: 1 / span 3;
+	align-self: center;
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.55;
+	color: var(--avf-text-muted, #657067);
+}
+
+.avf-events-tile__actions {
+	grid-column: 3;
+	grid-row: 1 / span 3;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	align-self: center;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 0;
+	padding-top: 0;
+}
+
+.avf-events-tile__link,
+.avf-events-tile__ics {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 44px;
+	padding: 10px 22px;
+	border-radius: 999px;
+	white-space: nowrap;
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 15px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.avf-events-tile__link {
+	background: var(--avf-green, #245c2b);
+	color: var(--avf-white, #ffffff);
+	border: 2px solid var(--avf-green, #245c2b);
+}
+
+.avf-events-tile__link:hover,
+.avf-events-tile__link:focus {
+	background: var(--avf-green-dark, #183f1e);
+	border-color: var(--avf-green-dark, #183f1e);
+	color: var(--avf-white, #ffffff);
+}
+
+.avf-events-tile__ics {
+	background: transparent;
+	color: var(--avf-green-dark, #183f1e);
+	border: 2px solid var(--avf-border, #dce2dc);
+}
+
+.avf-events-tile__ics:hover,
+.avf-events-tile__ics:focus {
+	border-color: var(--avf-green, #245c2b);
+	color: var(--avf-green, #245c2b);
+}
+
+/* =========================================================
+   PAST (more restrained: no badge, no ICS, single accent line)
+   ========================================================= */
+
+.avf-events-past__list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 24px;
+}
+
+.avf-events-past-item {
+	display: grid;
+	grid-template-columns: 120px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 20px;
+	padding: 18px 4px;
+	border-bottom: 1px solid var(--avf-border, #dce2dc);
+}
+
+.avf-events-past-item__date {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--avf-text-muted, #657067);
+	font-style: normal;
+}
+
+.avf-events-past-item__body {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.avf-events-past-item__title {
+	margin: 0;
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-size: 20px;
+	font-weight: 600;
+	color: var(--avf-text, #202620);
+}
+
+.avf-events-past-item__description {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--avf-text-muted, #657067);
+}
+
+.avf-events-past-item__meta {
+	margin: 0;
+	font-size: 13px;
+	color: var(--avf-text-muted, #657067);
+}
+
+.avf-events-past-item__link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 44px;
+	padding: 0 8px;
+	white-space: nowrap;
+	color: var(--avf-green, #245c2b);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.avf-events-past-item__link:hover,
+.avf-events-past-item__link:focus {
+	color: var(--avf-orange, #d87836);
+}
+
+/* =========================================================
+   "MEHR ANZEIGEN"
+   ========================================================= */
+
+.avf-events-more-wrap {
+	margin: 8px 0 32px;
+	text-align: center;
+}
+
+.avf-events-more {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: 12px 32px;
+	border-radius: 999px;
+	background: var(--avf-warm-white, #f7f5ef);
+	border: 2px solid var(--avf-border, #dce2dc);
+	color: var(--avf-green-dark, #183f1e);
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 15px;
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.avf-events-more:hover {
+	border-color: var(--avf-green, #245c2b);
+}
+
+.avf-events-more[aria-busy="true"] {
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+/* =========================================================
+   CALENDAR ACTIONS
+   ========================================================= */
+
+.avf-events-calendar-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	gap: 16px;
+	/* ~44px from whatever precedes it (e.g. a section heading), ~30px
+	   before the event list that follows - both within the requested
+	   40-48px / 28-32px ranges. */
+	margin: 44px auto 20px;
+}
+
+.avf-events-calendar-actions__link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: 12px 26px;
+	border-radius: 999px;
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 15px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.avf-events-calendar-actions__link--subscribe {
+	background: var(--avf-green, #245c2b);
+	color: var(--avf-white, #ffffff);
+	border: 2px solid var(--avf-green, #245c2b);
+}
+
+.avf-events-calendar-actions__link--subscribe:hover,
+.avf-events-calendar-actions__link--subscribe:focus {
+	background: var(--avf-green-dark, #183f1e);
+	border-color: var(--avf-green-dark, #183f1e);
+}
+
+.avf-events-calendar-actions__link--download {
+	background: transparent;
+	color: var(--avf-green-dark, #183f1e);
+	border: 2px solid var(--avf-border, #dce2dc);
+}
+
+.avf-events-calendar-actions__link--download:hover,
+.avf-events-calendar-actions__link--download:focus {
+	border-color: var(--avf-green, #245c2b);
+	color: var(--avf-green, #245c2b);
+}
+
+/* =========================================================
+   EVENT DETAIL (optional [avf_event_detail])
+   ========================================================= */
+
+.avf-event-detail__date {
+	margin: 0 0 8px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--avf-text-muted, #657067);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.avf-event-detail__title {
+	margin: 0 0 12px;
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-size: clamp(2rem, 4vw, 2.8rem);
+	font-weight: 600;
+	color: var(--avf-night, #0e1711);
+}
+
+.avf-event-detail__description {
+	margin: 0 0 12px;
+	font-size: 16px;
+	line-height: 1.6;
+}
+
+.avf-event-detail__meta {
+	margin: 0 0 20px;
+	color: var(--avf-text-muted, #657067);
+}
+
+/* =========================================================
+   EMPTY / ERROR STATES
+   ========================================================= */
+
+.avf-events-empty {
+	max-width: var(--avf-content-width, 1200px);
+	margin: 16px auto;
+	padding: 32px 16px;
+	text-align: center;
+	color: var(--avf-text-muted, #657067);
+	font-size: 15px;
+}
+
+.avf-events-notice {
+	max-width: var(--avf-content-width, 1200px);
+	margin: 16px auto;
+	padding: 12px 16px;
+	border: 1px dashed var(--avf-border, #dce2dc);
+	border-radius: 8px;
+	color: var(--avf-text-muted, #657067);
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 14px;
+}
+
+/* =========================================================
+   FOCUS STATES (shared)
+   ========================================================= */
+
+.avf-events-tile__link:focus-visible,
+.avf-events-tile__ics:focus-visible,
+.avf-events-past-item__link:focus-visible,
+.avf-events-more:focus-visible,
+.avf-events-calendar-actions__link:focus-visible {
+	outline: 2px solid var(--avf-orange, #d87836);
+	outline-offset: 2px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+	.avf-events-tile {
+		grid-template-columns: 110px minmax(0, 1fr);
+	}
+
+	.avf-events-tile__date {
+		padding: 18px 10px;
+	}
+
+	.avf-events-tile__date strong {
+		font-size: 34px;
+	}
+
+	.avf-events-tile__content {
+		grid-template-columns: minmax(0, 1fr) auto;
+		column-gap: 18px;
+		row-gap: 8px;
+		padding: 18px 20px;
+	}
+
+	.avf-events-tile__meta {
+		grid-column: 2;
+		grid-row: 1 / span 2;
+		max-width: 220px;
+	}
+
+	.avf-events-tile__actions {
+		grid-column: 1 / -1;
+		grid-row: auto;
+		justify-content: flex-start;
+		align-self: start;
+		padding-top: 4px;
+	}
+
+	.avf-events-past-item {
+		grid-template-columns: 100px minmax(0, 1fr);
+	}
+
+	.avf-events-past-item__link {
+		grid-column: 1 / -1;
+		justify-self: start;
+	}
+}
+
+@media (max-width: 600px) {
+	.avf-events-upcoming,
+	.avf-events-past,
+	.avf-events-calendar-actions,
+	.avf-event-detail {
+		padding: 0 16px;
+	}
+
+	.avf-events-tile {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.avf-events-tile__date {
+		flex-direction: row;
+		justify-content: flex-start;
+		gap: 12px;
+		padding: 14px 16px;
+		border-right: none;
+		border-bottom: 1px solid var(--avf-border, #dce2dc);
+	}
+
+	.avf-events-tile__date strong {
+		font-size: 28px;
+	}
+
+	.avf-events-tile__content {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 16px;
+	}
+
+	.avf-events-tile__title {
+		font-size: 21px;
+	}
+
+	.avf-events-past-item {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 4px;
+		padding: 14px 4px;
+	}
+
+	.avf-events-past-item__link {
+		justify-self: start;
+	}
+
+	.avf-events-calendar-actions {
+		flex-direction: column;
+	}
+
+	.avf-events-calendar-actions__link {
+		width: 100%;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.avf-events-tile__link,
+	.avf-events-tile__ics,
+	.avf-events-past-item__link,
+	.avf-events-more,
+	.avf-events-calendar-actions__link {
+		transition: none;
+	}
+}

@@ -1,0 +1,55 @@
+﻿# Standardmässig alles ignorieren
+*
+
+# Repository-Dateien
+!.gitignore
+!README.md
+
+# Eigener WordPress-Code
+!wp-content/
+wp-content/*
+
+# Eigene Plugins
+!wp-content/plugins/
+wp-content/plugins/*
+
+!wp-content/plugins/avf-events-integration/
+!wp-content/plugins/avf-events-integration/**
+
+!wp-content/plugins/avf-featured-post/
+!wp-content/plugins/avf-featured-post/**
+
+!wp-content/plugins/avf-zirkel-decor/
+!wp-content/plugins/avf-zirkel-decor/**
+
+!wp-content/plugins/avf-site-styles/
+!wp-content/plugins/avf-site-styles/**
+
+!wp-content/plugins/avf-homepage-layout/
+!wp-content/plugins/avf-homepage-layout/**
+
+# Eigene Must-use-Plugins, falls vorhanden
+!wp-content/mu-plugins/
+!wp-content/mu-plugins/**
+
+# Eigene Child-Themes, falls später vorhanden
+!wp-content/themes/
+wp-content/themes/*
+!wp-content/themes/hello-elementor-child/
+!wp-content/themes/hello-elementor-child/**
+
+# Niemals versionieren
+wp-config.php
+*.sql
+*.sqlite
+*.sqlite3
+*.log
+*.zip
+*.tar
+*.gz
+.env
+.env.*
+node_modules/
+vendor/
+.DS_Store
+Thumbs.db

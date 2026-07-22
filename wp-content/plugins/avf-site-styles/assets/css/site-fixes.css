@@ -1,0 +1,167 @@
+/**
+ * AV Froburger Site Styles – targeted layout fixes.
+ * Loaded on every frontend request, after Elementor/theme CSS.
+ */
+
+/*
+ * Fix: header/hero gap on the homepage.
+ *
+ * Verified via live DOM + computed-style inspection (Edge headless,
+ * multiple viewports) on the homepage (post ID 20, page template
+ * "elementor_header_footer"). The two elements that sit directly
+ * against each other are:
+ *
+ *   <header class="elementor elementor-15 elementor-location-header">
+ *   <div class="elementor elementor-20" data-elementor-type="wp-page">
+ *     <div class="... avf-hero ">   <-- first child, the hero itself
+ *
+ * This page template does not render a theme <main id="content">,
+ * #content, .site-main or .page-content wrapper at all, so those
+ * selectors are intentionally NOT included here (they would be no-ops
+ * on this page; see readme.txt for details and for what to watch if
+ * the page template is ever changed).
+ *
+ * .avf-hero itself already zeroes its own margin unconditionally
+ * (see the Elementor Kit "Standard-Kit" custom CSS), so the only two
+ * things that must never gain margin/padding/border on the homepage
+ * are the header location wrapper and the page wrapper.
+ */
+
+body.home .elementor-location-header {
+	margin: 0 !important;
+	padding-bottom: 0 !important;
+	border-bottom: 0 !important;
+}
+
+body.home .elementor[data-elementor-type="wp-page"] {
+	margin-top: 0 !important;
+	padding-top: 0 !important;
+	border-top: 0 !important;
+}
+
+/*
+ * Fix: site-wide footer template does not stack on narrow screens.
+ *
+ * The footer (Elementor atomic template, .elementor-location-footer) is a
+ * 3-column atomic flexbox row (logo / Navigation / Kontakt) with
+ * flex-wrap: nowrap hardcoded and no mobile override. Below 768px this
+ * squeezes all three columns to ~90px each, causing text to run off-screen
+ * (e.g. "Akademisc", "info@avfro" clipped) instead of stacking - confirmed
+ * via live DOM inspection (computed flex-wrap: nowrap on the row, columns
+ * at 90px width in a 390px viewport).
+ *
+ * Verified structure (stable across the hash-suffixed per-element classes
+ * Elementor generates, hence the depth-based child-combinator selectors
+ * rather than matching those hashes directly):
+ *   footer.elementor-location-footer
+ *     > footer.e-con.e-flexbox-base          (single wrapping row, 1 child)
+ *       > div.e-con.e-flexbox-base           (the 3-column row - needs wrap)
+ *         > div.e-con  (logo) / div.e-con (Navigation) / div.e-con (Kontakt)
+ */
+@media (max-width: 767px) {
+	.elementor-location-footer > .e-con > .e-con {
+		flex-wrap: wrap !important;
+		row-gap: 32px !important;
+	}
+
+	.elementor-location-footer > .e-con > .e-con > .e-con {
+		flex: 1 1 100% !important;
+		max-width: 100% !important;
+	}
+}
+
+/*
+ * Fix: header's "Interner Bereich" CTA button overflows off the right
+ * edge of the viewport on mobile.
+ *
+ * The header row (.elementor-location-header > .e-con, 3 flex children:
+ * logo / nav-menu widget with its own hamburger toggle / CTA button) has
+ * flex-wrap: nowrap. The nav menu widget correctly collapses its link
+ * list into a hamburger toggle below the tablet breakpoint, but the
+ * remaining space this leaves for the button is narrower than the
+ * button's own text content, and flex items don't shrink below their
+ * content's intrinsic width by default (min-width: auto) - so the button
+ * renders at its full natural width regardless and spills off-canvas
+ * (confirmed via getBoundingClientRect: button right edge at 412.9px in
+ * a 390px viewport). Wrapping the row lets the button drop to its own
+ * line instead of overflowing.
+ */
+@media (max-width: 767px) {
+	.elementor-location-header > .e-con {
+		flex-wrap: wrap !important;
+		row-gap: 10px !important;
+	}
+
+	.elementor-location-header > .e-con > :last-child {
+		margin: 0 auto !important;
+	}
+}
+
+/*
+ * The button's own text still wraps to two lines inside its pill shape up
+ * to the tablet breakpoint (1024px), even where the row itself has room
+ * and doesn't need to wrap (confirmed fine, no overflow, at 820px) -
+ * because flex-basis: auto lets it size below its natural single-line
+ * width. Force single-line sizing across the same range the header can be
+ * touched by a narrow viewport.
+ */
+@media (max-width: 1024px) {
+	.elementor-location-header > .e-con > :last-child {
+		flex: 0 0 auto !important;
+		width: max-content !important;
+		white-space: nowrap !important;
+	}
+}
+
+/*
+ * Enhancement: richer, more dynamic global page header (".avf-page-head",
+ * Elementor template "AVF - Seitenvorlage", applies to every normal page
+ * except the homepage).
+ *
+ * Previously a flat solid #183F1E - reads as a static dark bar. Layers two
+ * soft radial "light zones" (a warm highlight upper-right, a faint orange
+ * glow lower-left) over a diagonal green gradient for depth without
+ * harming text contrast (both radial layers stay under 10% opacity).
+ *
+ * !important is required on "background" alone: Elementor's own compiled
+ * global-class rule for ".avf-page-head" sets a flat "background" at the
+ * same specificity (one class each), and this stylesheet's load order
+ * relative to Elementor's per-page generated CSS isn't guaranteed to stay
+ * fixed across cache regenerations - !important removes that fragility
+ * for the one property it actually matters for.
+ */
+.avf-page-head {
+	background:
+		radial-gradient(ellipse 900px 520px at 82% 12%, rgba(255, 255, 255, 0.07), transparent 60%),
+		radial-gradient(ellipse 700px 500px at 8% 100%, rgba(216, 120, 54, 0.1), transparent 55%),
+		linear-gradient(135deg, var(--avf-night, #0e1711) 0%, var(--avf-green-dark, #183f1e) 55%, var(--avf-green, #245c2b) 100%) !important;
+}
+
+/*
+ * Couleur-Linie (Grün/Weiss/Orange) am unteren Rand des Seitenkopfs.
+ * Implemented as plain CSS rather than via the template's own Elementor
+ * "custom_css" field: that field's "selector" placeholder token is only
+ * substituted by Elementor's editor-side save routine, not at CSS-
+ * generation time, so directly-authored/DB-level custom_css entries render
+ * as inert, invalid CSS on this install (confirmed live) - a plain rule
+ * here sidesteps that entirely and is trivial to verify.
+ */
+.avf-page-head::after {
+	content: "";
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 2;
+	height: 4px;
+	background: linear-gradient(
+		to right,
+		var(--avf-green, #245c2b) 0%,
+		var(--avf-green, #245c2b) 33.333%,
+		var(--avf-white, #ffffff) 33.333%,
+		var(--avf-white, #ffffff) 66.666%,
+		var(--avf-orange, #d87836) 66.666%,
+		var(--avf-orange, #d87836) 100%
+	);
+	pointer-events: none;
+}

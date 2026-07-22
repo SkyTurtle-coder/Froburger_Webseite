@@ -1,0 +1,540 @@
+/**
+ * AV Froburger Homepage Layout – single source of truth for all
+ * homepage-specific layout rules. Loaded on the front page only,
+ * after Elementor's, the theme's and avf-site-styles' stylesheets.
+ *
+ * Everything in this file is scoped to body.home and/or the new
+ * avf-home-* structural classes, so it cannot affect any other page.
+ *
+ * The header/hero seam fix lives exclusively in the avf-site-styles
+ * plugin (body.home .elementor-location-header / .elementor[data-
+ * elementor-type="wp-page"]) and is intentionally NOT duplicated here.
+ */
+
+/* =========================================================
+   HAUPTINHALT-CONTAINER (avf-home-main)
+   ========================================================= */
+
+:root {
+	--avf-home-event-overlap: 64px;
+}
+
+body.home .avf-home-main {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: none;
+	gap: 0;
+	margin: 0;
+	padding: 0;
+
+	/*
+	 * Der Hauptinhalt darf die nach oben ragende Anlasskarte nicht
+	 * abschneiden. Nur die absolute Zirkel-Ebene begrenzt ihren eigenen
+	 * Überlauf.
+	 */
+	overflow: visible;
+
+	position: relative;
+	isolation: isolate;
+	background: #F7F5EF;
+	z-index: 2;
+}
+
+body.home .avf-home-hero {
+	position: relative;
+	z-index: 1;
+	isolation: isolate;
+}
+
+
+/* Page-wide decoration layer, injected as the first child by avf-zirkel-decor. */
+body.home .avf-home-main > .avf-page-zirkel-decor-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+/*
+ * The shared .avf-zirkel shape/position/color rules (including the ring
+ * colors) live in the avf-zirkel-decor plugin, ancestor-agnostically, so
+ * they apply here and on any other ".avf-has-zirkel-bg" container alike.
+ * Nothing home-specific needs to be defined here anymore.
+ */
+
+/* Low specificity so more specific Elementor rules keep winning where needed. */
+body.home .avf-home-main > :where(:not(.avf-page-zirkel-decor-layer)) {
+	position: relative;
+	z-index: 1;
+}
+
+/* =========================================================
+   EVENTS-SLOT
+   ========================================================= */
+
+body.home .avf-home-events-slot {
+	position: relative;
+	z-index: 10;
+
+	width: 100%;
+	max-width: none;
+
+	margin: 0;
+	padding: 0 24px;
+
+	box-sizing: border-box;
+	overflow: visible;
+	background: transparent;
+}
+
+/* Elementor- und Shortcode-Wrapper dürfen die Überlappung nicht abschneiden. */
+body.home .avf-home-events-slot > *,
+body.home .avf-home-events-slot .elementor-widget-shortcode,
+body.home .avf-home-events-slot .elementor-widget-container,
+body.home .avf-home-events-slot .avf-home-events {
+	overflow: visible;
+}
+
+/*
+ * Die vom Event-Plugin früher gesetzte eigene Verschiebung wird
+ * neutralisiert. Die Startseite besitzt genau eine zentrale
+ * Überlappungslogik.
+ */
+body.home .avf-home-events-slot .avf-home-events {
+	position: relative;
+	z-index: 10;
+
+	display: flow-root;
+
+	width: 100%;
+	margin-top: 0;
+	padding: 0;
+
+	background: transparent;
+}
+
+/*
+ * Nur der innere Kartenbereich ragt in den Hero. Der warmweisse
+ * Hauptinhalt bleibt an der tatsächlichen Hero-Unterkante.
+ */
+body.home .avf-home-events-slot .avf-home-events__inner {
+	position: relative;
+	z-index: 12;
+
+	margin-top: calc(-1 * var(--avf-home-event-overlap));
+
+	overflow: visible;
+}
+
+body.home .avf-home-events-slot .avf-home-events__list,
+body.home .avf-home-events-slot .avf-event-card {
+	position: relative;
+	z-index: 13;
+}
+
+
+/* =========================================================
+   FEATURED-POST-SLOT
+   ========================================================= */
+
+body.home .avf-home-featured-slot {
+	width: 100%;
+	background: transparent;
+	box-sizing: border-box;
+}
+
+/* =========================================================
+   WERTEBEREICH (avf-home-values)
+   ========================================================= */
+
+body.home .avf-home-values {
+	width: 100%;
+	background: transparent;
+	padding: 96px 24px;
+	box-sizing: border-box;
+}
+
+body.home .avf-home-values__inner {
+	max-width: var(--avf-content-width, 1200px);
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 56px;
+}
+
+body.home .avf-home-values__heading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	text-align: center;
+	max-width: 720px;
+	margin: 0 auto;
+}
+
+body.home .avf-home-values__heading-main {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+}
+
+body.home .avf-home-values__eyebrow p {
+	margin: 0;
+	color: var(--avf-green, #245c2b);
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+body.home .avf-home-values__title,
+body.home .avf-home-values__title.elementor-heading-title {
+	margin: 0;
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-size: clamp(2rem, 3.6vw, 2.8rem);
+	font-weight: 600;
+	color: var(--avf-green-dark, #183f1e);
+}
+
+body.home .avf-home-values__intro p {
+	margin: 0;
+	color: var(--avf-text-muted, #657067);
+	font-size: 17px;
+	line-height: 1.6;
+}
+
+/* Grid: three equal columns on desktop. */
+body.home .avf-home-values__grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 28px;
+	align-items: stretch;
+}
+
+body.home .avf-home-value-card {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	background: var(--avf-white, #ffffff);
+	border-top: 3px solid var(--avf-border, #dce2dc);
+	border-radius: 0 0 12px 12px;
+	box-shadow: 0 10px 26px rgba(14, 23, 17, 0.07);
+	padding: 32px 28px 28px;
+	box-sizing: border-box;
+}
+
+body.home .avf-home-value-card--orange {
+	border-top-color: var(--avf-orange, #d87836);
+}
+
+body.home .avf-home-value-card--neutral {
+	border-top-color: var(--avf-green-dark, #183f1e);
+}
+
+body.home .avf-home-value-card--green {
+	border-top-color: var(--avf-green, #245c2b);
+}
+
+body.home .avf-home-value-card__icon {
+	color: var(--avf-green, #245c2b);
+	margin-bottom: 12px;
+}
+
+body.home .avf-home-value-card__title,
+body.home .avf-home-value-card__title.elementor-heading-title {
+	margin: 0 0 12px;
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 21px;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--avf-text, #202620);
+	overflow-wrap: break-word;
+	hyphens: auto;
+}
+
+body.home .avf-home-value-card__text p {
+	margin: 0 0 24px;
+	color: var(--avf-text-muted, #657067);
+	font-size: 15px;
+	line-height: 1.6;
+	flex: 1 1 auto;
+}
+
+body.home .avf-home-value-card__link {
+	margin-top: auto;
+	align-self: flex-start;
+	color: var(--avf-green, #245c2b);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+body.home .avf-home-value-card__link:hover,
+body.home .avf-home-value-card__link:focus-visible {
+	color: var(--avf-orange, #d87836);
+}
+
+body.home .avf-home-value-card__link:focus-visible {
+	outline: 2px solid var(--avf-orange, #d87836);
+	outline-offset: 3px;
+}
+
+/* =========================================================
+   ZITATBAND (avf-home-quote)
+   ========================================================= */
+
+body.home .avf-home-quote {
+	position: relative;
+	width: 100%;
+	min-height: 360px;
+	background: var(--avf-night, #0e1711);
+	box-sizing: border-box;
+	padding: 48px 24px;
+}
+
+body.home .avf-home-quote::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: linear-gradient(
+		to right,
+		var(--avf-green, #245c2b) 0%,
+		var(--avf-green, #245c2b) 33.33%,
+		var(--avf-white, #ffffff) 33.33%,
+		var(--avf-white, #ffffff) 66.66%,
+		var(--avf-orange, #d87836) 66.66%,
+		var(--avf-orange, #d87836) 100%
+	);
+}
+
+body.home .avf-home-quote__inner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	max-width: 780px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+body.home .avf-home-quote__latin,
+body.home .avf-home-quote__latin.elementor-heading-title {
+	margin: 0;
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-style: italic;
+	font-weight: 600;
+	font-size: clamp(1.75rem, 3.4vw, 2.6rem);
+	color: var(--avf-white, #ffffff);
+}
+
+body.home .avf-home-quote__translation p {
+	margin: 0;
+	font-size: 16px;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1024px) {
+	:root {
+		--avf-home-event-overlap: 44px;
+	}
+
+	body.home .avf-home-values {
+		padding: 72px 20px;
+	}
+
+	body.home .avf-home-values__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	body.home .avf-home-values__grid > :nth-child(3) {
+		grid-column: 1 / -1;
+		max-width: 460px;
+		margin: 0 auto;
+	}
+}
+
+@media (max-width: 767px) {
+	:root {
+		--avf-home-event-overlap: 24px;
+	}
+
+	body.home .avf-home-events-slot {
+		padding: 0 16px;
+	}
+
+	body.home .avf-home-featured-slot,
+	body.home .avf-home-values {
+		padding-left: 16px;
+		padding-right: 16px;
+	}
+
+	body.home .avf-home-values {
+		padding-top: 56px;
+		padding-bottom: 56px;
+	}
+
+	body.home .avf-home-values__grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	body.home .avf-home-values__grid > :nth-child(3) {
+		grid-column: auto;
+		max-width: none;
+		margin: 0;
+	}
+
+	body.home .avf-home-value-card {
+		height: auto;
+	}
+
+	body.home .avf-home-quote {
+		min-height: 0;
+		padding: 40px 20px;
+	}
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+	body.home .avf-home-value-card__link {
+		transition: none;
+	}
+}
+
+/* =========================================================
+   FINALER FIX – EVENTKARTE RAGT IN DEN HERO
+   Funktioniert im Frontend und Elementor-Canvas
+   ========================================================= */
+
+:root {
+    --avf-home-event-overlap: 120px;
+}
+
+/* Hero bleibt hinter der Anlasskarte */
+.avf-home-hero {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/*
+ * Hauptinhalt nicht verschieben und den Überstand
+ * der Anlasskarte nicht abschneiden.
+ */
+.avf-home-main {
+    position: relative !important;
+    z-index: 2 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    margin-top: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+
+    padding: 0 !important;
+    gap: 0 !important;
+
+    overflow: visible !important;
+}
+
+/*
+ * Der bekannte Elementor-Container selbst wird nach oben gezogen.
+ * Da sein Hintergrund transparent ist, ragt optisch nur die Karte
+ * in das Hero-Karussell hinein.
+ */
+.avf-home-events-slot {
+    position: relative !important;
+    z-index: 20 !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    margin-top:
+        calc(-1 * var(--avf-home-event-overlap))
+        !important;
+
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+
+    padding-right: 24px !important;
+    padding-left: 24px !important;
+
+    overflow: visible !important;
+    background: transparent !important;
+}
+
+/* Alle Elementor- und Shortcode-Wrapper offen halten */
+.avf-home-events-slot > *,
+.avf-home-events-slot .elementor-widget-shortcode,
+.avf-home-events-slot .elementor-widget-container,
+.avf-home-events-slot .avf-home-events,
+.avf-home-events-slot .avf-home-events__inner,
+.avf-home-events-slot .avf-home-events__list {
+    overflow: visible !important;
+}
+
+/*
+ * Frühere negative Verschiebung des Event-Plugins neutralisieren,
+ * damit nur die zentrale 64-px-Überlappung verwendet wird.
+ */
+.avf-home-events-slot .avf-home-events,
+.avf-home-events-slot .avf-home-events__inner {
+    margin-top: 0 !important;
+}
+
+/* Karte garantiert oberhalb des Hero-Bildes */
+.avf-home-events-slot .avf-event-card {
+    position: relative !important;
+    z-index: 30 !important;
+}
+
+/* Zirkel bleiben hinter den Inhalten */
+.avf-home-main > .avf-page-zirkel-decor-layer {
+    z-index: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+    :root {
+        --avf-home-event-overlap: 44px;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 767px) {
+    :root {
+        --avf-home-event-overlap: 24px;
+    }
+
+    .avf-home-events-slot {
+        padding-right: 16px !important;
+        padding-left: 16px !important;
+    }
+}
+/* Zirkel auf der Startseite deutlicher darstellen */
+body.home
+.avf-page-zirkel-decor-layer
+.avf-zirkel {
+    --avf-ring-opacity: 0.12 !important;
+    opacity: var(--avf-ring-opacity) !important;
+}
+
