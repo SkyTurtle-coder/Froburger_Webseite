@@ -167,6 +167,70 @@ body.home .elementor[data-elementor-type="wp-page"] {
 }
 
 /*
+ * Shared content axis for the "Anlaesse" page's three main sections
+ * (upcoming events, regional gatherings, past events). Elementor currently
+ * mixes a custom heading container (.avf-events-page__inner), semantic
+ * component inners and separate shortcode rows with different local
+ * padding defaults. Normalise them onto one 1200px axis without relying
+ * on Elementor IDs.
+ */
+.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner),
+.avf-has-zirkel-bg > .e-con:has(> .elementor-widget-shortcode .avf-events-upcoming),
+.avf-has-zirkel-bg > .e-con:has(> .elementor-widget-shortcode .avf-events-calendar-actions),
+.avf-regional-staemme__inner,
+.avf-events-past-section,
+.avf-events-past-section + .elementor-element:has(.avf-events-past) {
+	width: min(100% - 48px, 1200px) !important;
+	max-width: none !important;
+	margin-inline: auto !important;
+}
+
+/*
+ * Upper events heading row: live DOM is a parent flex row with a left
+ * ".avf-events-page__inner" heading column and a right sibling intro
+ * container. Elementor's default 10px container padding and the heading
+ * column's own 24px side margins shift this block farther left than the
+ * other sections.
+ */
+.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner) {
+	display: grid !important;
+	grid-template-columns: minmax(0, 42%) minmax(0, 50%);
+	justify-content: space-between;
+	align-items: end;
+	column-gap: clamp(40px, 7vw, 120px);
+	padding: 0 !important;
+}
+
+.avf-events-page__inner {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: flex-start !important;
+	gap: 14px !important;
+	width: 100% !important;
+	max-width: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.avf-events-page__inner > .elementor-widget,
+.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner) > .e-con:not(.avf-events-page__inner) > .elementor-widget {
+	width: 100%;
+	margin: 0 !important;
+}
+
+.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner) > .e-con:not(.avf-events-page__inner) {
+	width: 100%;
+	min-width: 0;
+	max-width: 520px;
+	margin: 0 0 0 auto !important;
+	padding: 0 !important;
+}
+
+.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner) > .e-con:not(.avf-events-page__inner) p {
+	margin: 0;
+}
+
+/*
  * Foundation: static Elementor section "Regelmässige regionale Stämme".
  *
  * This is intentionally component-scoped and data-agnostic: Elementor
@@ -177,7 +241,7 @@ body.home .elementor[data-elementor-type="wp-page"] {
 .avf-regional-staemme {
 	box-sizing: border-box;
 	width: 100%;
-	padding: 72px 24px;
+	padding: 72px 0;
 	background:
 		radial-gradient(ellipse 760px 320px at 100% 0%, rgba(36, 92, 43, 0.05), transparent 58%),
 		radial-gradient(ellipse 520px 260px at 0% 100%, rgba(216, 120, 54, 0.07), transparent 55%),
@@ -208,9 +272,7 @@ body.home .elementor[data-elementor-type="wp-page"] {
 }
 
 .avf-regional-staemme__inner {
-	width: 100%;
-	max-width: 1200px;
-	margin: 0 auto;
+	padding: 0 !important;
 }
 
 .avf-regional-staemme__heading {
@@ -221,6 +283,7 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	width: 100%;
 	max-width: none;
 	margin: 0 0 44px;
+	padding: 0 !important;
 }
 
 .avf-regional-staemme__eyebrow {
@@ -394,9 +457,8 @@ body.home .elementor[data-elementor-type="wp-page"] {
 .avf-events-past-section {
 	position: relative;
 	z-index: 1;
-	width: 100%;
 	margin: 96px 0 0;
-	padding: 0 24px;
+	padding: 0 !important;
 	background: transparent;
 }
 
@@ -414,8 +476,8 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	column-gap: 48px;
 	row-gap: 24px;
 	width: 100%;
-	max-width: 1200px;
-	margin: 0 auto;
+	max-width: none;
+	margin: 0;
 	padding: 0 !important;
 	background: transparent;
 }
@@ -470,18 +532,17 @@ body.home .elementor[data-elementor-type="wp-page"] {
 }
 
 .avf-events-past-section + .elementor-element:has(.avf-events-past) {
-	width: 100%;
 	margin-top: 40px;
 	margin-bottom: 88px;
-	padding: 0 24px;
+	padding: 0;
 	background: transparent;
 }
 
 .avf-events-past-section + .elementor-element:has(.avf-events-past) > .e-con-inner,
 .avf-events-past-section + .elementor-element:has(.avf-events-past) > .elementor-container {
 	width: 100%;
-	max-width: 1200px !important;
-	margin: 0 auto !important;
+	max-width: none !important;
+	margin: 0 !important;
 	padding: 0 !important;
 }
 
@@ -504,8 +565,27 @@ body.home .elementor[data-elementor-type="wp-page"] {
 }
 
 @media (max-width: 1024px) {
+	.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner),
+	.avf-has-zirkel-bg > .e-con:has(> .elementor-widget-shortcode .avf-events-upcoming),
+	.avf-has-zirkel-bg > .e-con:has(> .elementor-widget-shortcode .avf-events-calendar-actions),
+	.avf-regional-staemme__inner,
+	.avf-events-past-section,
+	.avf-events-past-section + .elementor-element:has(.avf-events-past) {
+		width: min(100% - 40px, 1200px) !important;
+	}
+
+	.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner) {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: 20px;
+	}
+
+	.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner) > .e-con:not(.avf-events-page__inner) {
+		max-width: 100%;
+		margin-left: 0 !important;
+	}
+
 	.avf-regional-staemme {
-		padding: 64px 20px;
+		padding: 64px 0;
 	}
 
 	.avf-regional-staemme__inner {
@@ -539,8 +619,17 @@ body.home .elementor[data-elementor-type="wp-page"] {
 }
 
 @media (max-width: 767px) {
+	.avf-has-zirkel-bg > .e-con:has(> .avf-events-page__inner),
+	.avf-has-zirkel-bg > .e-con:has(> .elementor-widget-shortcode .avf-events-upcoming),
+	.avf-has-zirkel-bg > .e-con:has(> .elementor-widget-shortcode .avf-events-calendar-actions),
+	.avf-regional-staemme__inner,
+	.avf-events-past-section,
+	.avf-events-past-section + .elementor-element:has(.avf-events-past) {
+		width: min(100% - 32px, 1200px) !important;
+	}
+
 	.avf-regional-staemme {
-		padding: 52px 16px;
+		padding: 52px 0;
 	}
 
 	.avf-regional-staemme__heading {
@@ -586,15 +675,11 @@ body.home .elementor[data-elementor-type="wp-page"] {
 
 	.avf-events-past-section {
 		margin-top: 88px;
-		padding-right: 16px;
-		padding-left: 16px;
 	}
 
 	.avf-events-past-section + .elementor-element:has(.avf-events-past) {
 		margin-top: 32px;
 		margin-bottom: 80px;
-		padding-right: 16px;
-		padding-left: 16px;
 	}
 
 	.avf-events-past-section__title {

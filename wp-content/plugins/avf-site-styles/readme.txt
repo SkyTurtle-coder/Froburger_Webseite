@@ -4,7 +4,7 @@ Tags: elementor, layout, bugfix
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 License: GPLv2 or later
 
 Enthaelt gezielte projektspezifische Layoutkorrekturen.
@@ -114,6 +114,14 @@ wiederverwendbaren Klassen und das responsive Kartenlayout.
   automatisch mittig ueber beide Spalten gezogen.
 
 == Changelog ==
+
+= 1.2.4 =
+* Die drei Hauptbereiche der Seite "Anlaesse" - kommender Event-Heading,
+  regionale Staemme und Rueckblick - auf eine gemeinsame, zentrierte
+  1200px-Inhaltsachse gebracht. Dabei wurden unterschiedliche Elementor-
+  Container-Paddings, Margins und Width-Begrenzungen vereinheitlicht,
+  ohne Eventkarten, Stammkarten oder Shortcode-Komponenten selbst zu
+  veraendern.
 
 = 1.2.3 =
 * Abschnitt "Vergangene Veranstaltungen" auf der Seite "Anlaesse" als
