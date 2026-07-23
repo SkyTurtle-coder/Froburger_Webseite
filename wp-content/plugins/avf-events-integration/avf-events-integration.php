@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       AV Froburger Events Integration
  * Description:       Bindet öffentliche Anlässe aus dem Django-CMS in WordPress und Elementor ein.
- * Version:            2.1.1
+ * Version:            2.1.2
  * Requires at least:  6.0
  * Requires PHP:       7.4
  * Author:             AV Froburger
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'AVF_EVENTS_INTEGRATION_VERSION', '2.1.1' );
+define( 'AVF_EVENTS_INTEGRATION_VERSION', '2.1.2' );
 define( 'AVF_EVENTS_INTEGRATION_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AVF_EVENTS_INTEGRATION_URL', plugin_dir_url( __FILE__ ) );
 

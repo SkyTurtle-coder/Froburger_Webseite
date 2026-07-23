@@ -4,7 +4,7 @@ Tags: elementor, layout, bugfix
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv2 or later
 
 Enthaelt gezielte projektspezifische Layoutkorrekturen.
@@ -114,6 +114,16 @@ wiederverwendbaren Klassen und das responsive Kartenlayout.
   automatisch mittig ueber beide Spalten gezogen.
 
 == Changelog ==
+
+= 1.2.3 =
+* Abschnitt "Vergangene Veranstaltungen" auf der Seite "Anlaesse" als
+  zusammenhaengenden, transparenten Inhaltsblock ausgerichtet: gemeinsamer
+  1200px-Innenbereich fuer Eyebrow, Titel, Einleitung und die nachfolgende
+  Shortcode-Liste, ohne Elementor-IDs oder generierte CSS-Dateien.
+* Der direkt folgende Elementor-Shortcode-Container wird dateibasiert auf
+  volle Inhaltsbreite gebracht, so dass die Rueckblick-Liste nicht mehr in
+  einem schmaleren Boxed-Wrapper haengt und der bestehende Zirkelhintergrund
+  sichtbar bleibt.
 
 = 1.2.2 =
 * Im Zirkelbereich (`.avf-has-zirkel-bg`) den deckenden Hintergrund hinter

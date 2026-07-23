@@ -383,6 +383,126 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	border-radius: 4px;
 }
 
+/*
+ * Foundation: "Vergangene Veranstaltungen" section on the events page.
+ *
+ * Elementor currently renders the intro as a sibling of the heading
+ * container and the shortcode output inside the next container below.
+ * These rules bridge that live structure without relying on Elementor IDs
+ * or generated page CSS.
+ */
+.avf-events-past-section {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	margin: 96px 0 0;
+	padding: 0 24px;
+	background: transparent;
+}
+
+.avf-events-past-section *,
+.avf-events-past-section *::before,
+.avf-events-past-section *::after {
+	box-sizing: border-box;
+}
+
+.avf-events-past-section__inner {
+	display: grid !important;
+	grid-template-columns: minmax(0, 42%) minmax(0, 50%);
+	justify-content: space-between;
+	align-items: start;
+	column-gap: 48px;
+	row-gap: 24px;
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 !important;
+	background: transparent;
+}
+
+.avf-events-past-section__heading {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: flex-start !important;
+	gap: 14px !important;
+	width: 100%;
+	min-width: 0;
+	margin: 0 !important;
+	padding: 0 !important;
+	background: transparent;
+}
+
+.avf-events-past-section__eyebrow {
+	margin: 0;
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.4;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--avf-green-dark, #183f1e);
+}
+
+.avf-events-past-section__title {
+	margin: 0;
+	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
+	font-size: clamp(2.45rem, 2rem + 1.2vw, 3.6rem);
+	line-height: 0.98;
+	font-weight: 600;
+	color: var(--avf-green-dark, #183f1e);
+	text-wrap: balance;
+}
+
+.avf-events-past-section__intro {
+	width: 100%;
+	max-width: 520px;
+	margin: 6px 0 0 auto !important;
+	padding: 0 !important;
+	font-family: var(--avf-font-body, "Inter", sans-serif);
+	font-size: 16px;
+	line-height: 1.75;
+	color: var(--avf-text-muted, #657067);
+	background: transparent;
+}
+
+.avf-events-past-section__intro p {
+	margin: 0;
+}
+
+.avf-events-past-section + .elementor-element:has(.avf-events-past) {
+	width: 100%;
+	margin-top: 40px;
+	margin-bottom: 88px;
+	padding: 0 24px;
+	background: transparent;
+}
+
+.avf-events-past-section + .elementor-element:has(.avf-events-past) > .e-con-inner,
+.avf-events-past-section + .elementor-element:has(.avf-events-past) > .elementor-container {
+	width: 100%;
+	max-width: 1200px !important;
+	margin: 0 auto !important;
+	padding: 0 !important;
+}
+
+.avf-events-past-section + .elementor-element:has(.avf-events-past) .elementor-widget-shortcode,
+.avf-events-past-section + .elementor-element:has(.avf-events-past) .elementor-widget-container,
+.avf-events-past-section + .elementor-element:has(.avf-events-past) .elementor-shortcode,
+.avf-events-past-section + .elementor-element:has(.avf-events-past) .avf-events-past {
+	width: 100% !important;
+	max-width: none !important;
+	margin: 0 !important;
+}
+
+.avf-events-past-section + .elementor-element:has(.avf-events-past) .avf-events-past {
+	padding: 0 !important;
+	background: transparent;
+}
+
+.avf-events-past-section + .elementor-element:has(.avf-events-past) .avf-events-past__list {
+	margin-top: 0;
+}
+
 @media (max-width: 1024px) {
 	.avf-regional-staemme {
 		padding: 64px 20px;
@@ -401,6 +521,20 @@ body.home .elementor[data-elementor-type="wp-page"] {
 		grid-column: 1 / -1;
 		max-width: min(100%, 420px);
 		justify-self: center;
+	}
+
+	.avf-events-past-section {
+		margin-top: 92px;
+	}
+
+	.avf-events-past-section__inner {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: 20px;
+	}
+
+	.avf-events-past-section__intro {
+		max-width: 100%;
+		margin-left: 0 !important;
 	}
 }
 
@@ -448,6 +582,28 @@ body.home .elementor[data-elementor-type="wp-page"] {
 	.avf-regional-staemme__grid > .avf-regional-stamm-card:focus-within,
 	.avf-regional-staemme__grid > [class*="avf-regional-stamm-card"]:focus-within {
 		transform: none;
+	}
+
+	.avf-events-past-section {
+		margin-top: 88px;
+		padding-right: 16px;
+		padding-left: 16px;
+	}
+
+	.avf-events-past-section + .elementor-element:has(.avf-events-past) {
+		margin-top: 32px;
+		margin-bottom: 80px;
+		padding-right: 16px;
+		padding-left: 16px;
+	}
+
+	.avf-events-past-section__title {
+		font-size: clamp(2.1rem, 1.8rem + 1.6vw, 2.8rem);
+	}
+
+	.avf-events-past-section__intro {
+		font-size: 15px;
+		line-height: 1.7;
 	}
 }
 

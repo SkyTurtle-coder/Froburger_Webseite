@@ -360,6 +360,21 @@ class AVF_Events_List_Shortcode {
 	public static function render_past_card( array $view ) {
 		$anchor     = 'event-' . $view['slug'];
 		$detail_url = AVF_Events_View_Helpers::build_detail_url( $view );
+		$meta_parts = array();
+
+		if ( '' !== $view['time_part'] ) {
+			$meta_parts[] = sprintf(
+				/* translators: %s: event start time. */
+				__( '%s Uhr', 'avf-events-integration' ),
+				$view['time_part']
+			);
+		}
+
+		if ( '' !== $view['location_name'] ) {
+			$meta_parts[] = $view['location_name'];
+		}
+
+		$meta_text = implode( ' · ', $meta_parts );
 
 		ob_start();
 		?>
@@ -372,7 +387,9 @@ class AVF_Events_List_Shortcode {
 				<?php if ( '' !== $view['short_description'] ) : ?>
 					<p class="avf-events-past-item__description"><?php echo esc_html( $view['short_description'] ); ?></p>
 				<?php endif; ?>
-				<p class="avf-events-past-item__meta"><?php echo esc_html( $view['location_name'] ); ?></p>
+				<?php if ( '' !== $meta_text ) : ?>
+					<p class="avf-events-past-item__meta"><?php echo esc_html( $meta_text ); ?></p>
+				<?php endif; ?>
 			</div>
 			<a class="avf-events-past-item__link" href="<?php echo esc_url( $detail_url ); ?>">
 				<?php esc_html_e( 'Rückblick', 'avf-events-integration' ); ?>

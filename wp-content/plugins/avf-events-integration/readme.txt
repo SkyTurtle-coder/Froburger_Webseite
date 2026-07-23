@@ -4,7 +4,7 @@ Tags: events, api, shortcode, elementor
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.1.2
 License: GPLv2 or later
 
 Bindet öffentliche Anlässe aus dem Django-CMS in WordPress und Elementor ein.
@@ -259,6 +259,15 @@ Button auf die normale Link-Navigation zurück.
   (verschiedene Fehlerszenarien) - siehe Commit-/Change-Historie für Details.
 
 == Changelog ==
+
+= 2.1.2 =
+* Rueckblick-Liste (`[avf_events_past]`) visuell verfeinert: breite,
+  zurueckhaltende Zeilenkarten mit hellem Hintergrund, feinem Rahmen,
+  dezentem Schatten, staerkerem Innenabstand und robusterem responsivem
+  Umbruch fuer Desktop, Tablet und Mobil.
+* Vergangene Events zeigen nun - sofern vorhanden - Uhrzeit und Ort gemeinsam
+  im Meta-Bereich, ohne die kommende Eventliste oder den Legacy-Shortcode zu
+  veraendern.
 
 = 2.0.0 =
 * Neue v1-API-Unterstützung: konfigurierbare Basis-URL (`avf_events_api_base`), zusätzlich zum
