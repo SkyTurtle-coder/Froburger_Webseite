@@ -442,6 +442,32 @@ body.home .avf-home-quote__translation p {
     overflow: visible !important;
 }
 
+/*
+ * Elementor can create an additional stacking context around the hero. Keep
+ * the overlapping event card and, critically, its CTA above that context so
+ * the visible button always remains clickable.
+ */
+body.home .avf-home-events-slot,
+body.home .avf-home-main .avf-home-events-slot {
+    position: relative !important;
+    z-index: 10 !important;
+    isolation: isolate;
+}
+
+body.home .avf-home-events-slot .avf-home-events,
+body.home .avf-home-events-slot .avf-home-events__inner,
+body.home .avf-home-events-slot .avf-home-events__list,
+body.home .avf-home-events-slot .avf-event-card {
+    position: relative;
+    z-index: 1;
+}
+
+body.home .avf-home-events-slot .avf-event-card__link {
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
+}
+
 /* Zirkel bleiben hinter den Inhalten */
 .avf-home-main > .avf-page-zirkel-decor-layer {
     z-index: 0 !important;
