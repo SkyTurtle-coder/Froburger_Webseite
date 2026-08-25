@@ -161,18 +161,12 @@ class AVF_Upcoming_Events_Shortcode {
 	 * @return string
 	 */
 	private function build_detail_url( array $view ) {
-		$page_path = get_option( 'avf_events_page_path', '/anlaesse/' );
-		if ( ! is_string( $page_path ) || '' === $page_path ) {
-			$page_path = '/anlaesse/';
-		}
-
-		$anchor = 'event-' . $view['slug'];
-		$url    = home_url( $page_path . '#' . $anchor );
+		$url = AVF_Events_View_Helpers::get_detail_url_from_slug( $view['slug'] );
 
 		/**
 		 * Filters the generated WordPress detail URL for an upcoming event.
 		 *
-		 * @param string $url  Generated URL pointing to the WordPress events page anchor.
+		 * @param string $url  Generated URL pointing to the WordPress detail page.
 		 * @param array  $view Normalized event data used to build the URL.
 		 */
 		return apply_filters( 'avf_event_detail_url', $url, $view );

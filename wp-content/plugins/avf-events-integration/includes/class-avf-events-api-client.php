@@ -2,15 +2,6 @@
 /**
  * Fetches, validates, normalizes and caches events from the Django public API.
  *
- * Two API generations are supported side by side:
- * - Legacy: a single full URL (`avf_events_api_endpoint`), upcoming events only.
- * - v1: a configurable base (`avf_events_api_base`), upcoming/past/detail/calendar.
- *
- * There is exactly one HTTP call site (request_json()) and exactly one cache
- * mechanism (WordPress transients via set_cached()/get_transient()) shared by
- * both generations - see the class docblock sections below for how each
- * public method composes them.
- *
  * @package AVF_Events_Integration
  */
 
@@ -18,30 +9,14 @@ defined( 'ABSPATH' ) || exit;
 
 class AVF_Events_API_Client {
 
-	/**
-	 * Option name holding the list of transient keys created by this plugin,
-	 * so the cache can be cleared without touching unrelated options.
-	 */
 	const CACHE_KEYS_OPTION = 'avf_events_cache_keys';
-
-	/**
-	 * Maximum lifetime of the fallback cache, used when the API is unreachable.
-	 */
 	const FALLBACK_MAX_AGE = DAY_IN_SECONDS;
-
-	/**
-	 * Upper bound for v1 list requests (upcoming/past "load more"). Higher
-	 * than the legacy shortcode's MAX_LIMIT (12) since these lists are meant
-	 * to grow via "Mehr anzeigen" clicks; still a hard ceiling against
-	 * crafted/abusive requests.
-	 */
 	const V1_LIST_MAX_LIMIT = 60;
+	const SIGNUP_TIMESTAMP_HEADER = 'X-AVF-Timestamp';
+	const SIGNUP_SIGNATURE_HEADER = 'X-AVF-Signature';
 
 	/**
-	 * Fields that must be present and non-empty on every event returned by the API.
-	 * Identical for the legacy endpoint and every v1 endpoint (verified against
-	 * live responses from all four v1 routes during development - see readme.txt
-	 * "API-Vertrag").
+	 * Fields required on every list item returned by Django.
 	 *
 	 * @var string[]
 	 */
@@ -56,27 +31,15 @@ class AVF_Events_API_Client {
 		'location_name',
 	);
 
-	/* -----------------------------------------------------------
-	 * Legacy path (unchanged behaviour/contract - used exclusively by the
-	 * original [avf_upcoming_events] shortcode, which must keep working
-	 * exactly as before).
-	 * ----------------------------------------------------------- */
-
 	/**
-	 * Returns up to $limit normalized upcoming events, using cache where possible.
+	 * Returns up to $limit normalized upcoming events from the legacy endpoint.
 	 *
-	 * @param int $limit Maximum number of events to return (already validated by caller).
-	 * @return array|WP_Error Array of normalized event arrays, or WP_Error when nothing is available.
+	 * @param int $limit Maximum number of events to return.
+	 * @return array|WP_Error
 	 */
 	public function get_upcoming_events( $limit ) {
-		$endpoint = $this->get_legacy_endpoint();
-
-		if ( '' === $endpoint ) {
-			return new WP_Error( 'avf_events_no_endpoint', 'No API endpoint configured.' );
-		}
-
 		$limit        = max( 1, min( 12, (int) $limit ) );
-		$cache_key    = $this->build_cache_key( $endpoint, $limit );
+		$cache_key    = $this->build_cache_key( 'legacy_upcoming', $limit );
 		$fallback_key = $cache_key . '_fallback';
 
 		$fresh = get_transient( $cache_key );
@@ -84,7 +47,7 @@ class AVF_Events_API_Client {
 			return $fresh;
 		}
 
-		$events = $this->fetch_from_api( $endpoint, $limit );
+		$events = $this->fetch_from_api( '/api/public/events/upcoming/', $limit );
 
 		if ( is_wp_error( $events ) ) {
 			$fallback = get_transient( $fallback_key );
@@ -102,45 +65,31 @@ class AVF_Events_API_Client {
 		return $events;
 	}
 
-	/* -----------------------------------------------------------
-	 * v1 path (new). Upcoming has a controlled transition strategy: try v1
-	 * first, fall back to the legacy endpoint only when v1 is not configured
-	 * or responds 404 (i.e. genuinely "unsupported/not found", never on other
-	 * error types - a 500, a timeout or invalid JSON from v1 must NOT trigger
-	 * a silent switch to a different data source, per the project's explicit
-	 * transition rules). Past/detail/calendar have no legacy equivalent, so
-	 * they simply fail (leading to fallback-cache-or-empty-state) when v1
-	 * isn't available.
-	 * ----------------------------------------------------------- */
-
 	/**
-	 * Returns up to $limit normalized upcoming events from the v1 API, with a
-	 * logged (never user-facing) fallback to the legacy endpoint if v1 is not
-	 * configured or returns 404.
+	 * Returns normalized upcoming events from the v1 API.
 	 *
 	 * @param int $limit Maximum number of events to return.
-	 * @return array|WP_Error {events: array[], total: int|null, source: string} or WP_Error.
+	 * @return array|WP_Error
 	 */
 	public function get_upcoming_events_v1( $limit ) {
 		return $this->get_v1_list( 'upcoming', $limit, true );
 	}
 
 	/**
-	 * Returns up to $limit normalized past events from the v1 API. No legacy
-	 * fallback exists for this resource.
+	 * Returns normalized past events from the v1 API.
 	 *
 	 * @param int $limit Maximum number of events to return.
-	 * @return array|WP_Error {events: array[], total: int|null, source: string} or WP_Error.
+	 * @return array|WP_Error
 	 */
 	public function get_past_events( $limit ) {
 		return $this->get_v1_list( 'past', $limit, false );
 	}
 
 	/**
-	 * Returns a single normalized event by slug from the v1 detail endpoint.
+	 * Returns one normalized detail payload for the given event slug.
 	 *
 	 * @param string $slug Event slug.
-	 * @return array|WP_Error Normalized event, or WP_Error.
+	 * @return array|WP_Error
 	 */
 	public function get_event_detail( $slug ) {
 		$slug = sanitize_title( (string) $slug );
@@ -148,13 +97,7 @@ class AVF_Events_API_Client {
 			return new WP_Error( 'avf_events_invalid_slug', 'Invalid event slug.' );
 		}
 
-		$base = $this->get_api_base();
-		if ( '' === $base ) {
-			return new WP_Error( 'avf_events_no_v1_base', 'No v1 API base configured.' );
-		}
-
-		$url          = $this->build_v1_url( $base, $slug );
-		$cache_key    = $this->build_v1_cache_key( 'detail', $url, 0 );
+		$cache_key    = $this->build_v1_cache_key( 'detail', $slug, 0 );
 		$fallback_key = $cache_key . '_fallback';
 
 		$fresh = get_transient( $cache_key );
@@ -162,7 +105,7 @@ class AVF_Events_API_Client {
 			return $fresh;
 		}
 
-		$data = $this->request_json( $url );
+		$data = $this->request_json( 'GET', '/api/v1/public/events/' . rawurlencode( $slug ) . '/', 8 );
 
 		if ( is_wp_error( $data ) ) {
 			$fallback = get_transient( $fallback_key );
@@ -173,7 +116,7 @@ class AVF_Events_API_Client {
 			return $data;
 		}
 
-		$event = $this->normalize_event( $data );
+		$event = $this->normalize_event_detail( $data );
 		if ( null === $event ) {
 			$this->log( 'Invalid event detail response for slug: ' . $slug );
 			return new WP_Error( 'avf_events_invalid_detail', 'The event detail response was invalid.' );
@@ -187,47 +130,276 @@ class AVF_Events_API_Client {
 	}
 
 	/**
-	 * Returns the absolute URL to Django's calendar.ics endpoint, or '' if no
-	 * v1 base is configured. No HTTP request is made here - WordPress never
-	 * generates or parses calendar data itself, it only ever links to this
-	 * Django-provided URL (see AVF_Events_Calendar_Actions_Shortcode).
+	 * Proxies a public signup POST to Django without automatic replay.
+	 *
+	 * @param string $slug    Event slug.
+	 * @param array  $payload Signup payload.
+	 * @return array|WP_Error
+	 */
+	public function submit_event_signup( $slug, array $payload ) {
+		$slug = sanitize_title( (string) $slug );
+		if ( '' === $slug ) {
+			return new WP_Error( 'avf_events_invalid_slug', 'Invalid event slug.' );
+		}
+
+		if ( isset( $payload['values'] ) && is_array( $payload['values'] ) && empty( $payload['values'] ) ) {
+			$payload['values'] = new stdClass();
+		}
+
+		$body = wp_json_encode( $payload );
+
+		$headers = array(
+			'Accept'       => 'application/json',
+			'Content-Type' => 'application/json',
+		);
+
+		$secret = $this->get_signup_secret();
+		if ( '' !== $secret ) {
+			// HMAC over method/slug/timestamp/body-hash, verified and replay-checked
+			// on the Django side.
+			$timestamp                                 = (string) time();
+			$headers[ self::SIGNUP_TIMESTAMP_HEADER ]  = $timestamp;
+			$headers[ self::SIGNUP_SIGNATURE_HEADER ]  = $this->sign_signup_request( $slug, $timestamp, $body, $secret );
+		}
+
+		$response = avf_internal_api_request(
+			'POST',
+			'/api/v1/public/events/' . rawurlencode( $slug ) . '/signup/',
+			array(
+				'timeout' => 8,
+				'headers' => $headers,
+				'body'    => $body,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			$this->log(
+				sprintf(
+					'Signup request failed for slug "%1$s": wp_error=%2$s; message=%3$s; secret_configured=%4$s',
+					$slug,
+					$response->get_error_code(),
+					$response->get_error_message(),
+					'' !== $secret ? 'yes' : 'no'
+				)
+			);
+			return new WP_Error(
+				'avf_events_signup_request_failed',
+				'The signup request failed.',
+				array(
+					'error_code' => $response->get_error_code(),
+					'http_code'  => 0,
+					'api_code'   => '',
+				)
+			);
+		}
+
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		$body = wp_remote_retrieve_body( $response );
+		$data = json_decode( (string) $body, true );
+
+		if ( $code >= 200 && $code < 300 ) {
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $data ) ) {
+				return new WP_Error( 'avf_events_invalid_signup_response', 'The signup API returned invalid JSON.', array( 'http_code' => $code ) );
+			}
+
+			return $data;
+		}
+
+		$message  = 'The signup API returned an unexpected response.';
+		$api_code = '';
+
+		if ( is_array( $data ) ) {
+			if ( isset( $data['message'] ) && is_scalar( $data['message'] ) ) {
+				$message = (string) $data['message'];
+			}
+
+			if ( isset( $data['code'] ) && is_scalar( $data['code'] ) ) {
+				$api_code = (string) $data['code'];
+			}
+		}
+
+		$this->log(
+			sprintf(
+				'Signup API rejected slug "%1$s": http=%2$d; api_code=%3$s; secret_configured=%4$s',
+				$slug,
+				$code,
+				'' !== $api_code ? $api_code : 'none',
+				'' !== $secret ? 'yes' : 'no'
+			)
+		);
+
+		return new WP_Error(
+			'avf_events_signup_failed',
+			$message,
+			array(
+				'error_code' => 'avf_events_signup_failed',
+				'http_code' => $code,
+				'api_code'  => $api_code,
+				'response'  => is_array( $data ) ? $data : null,
+			)
+		);
+	}
+
+	/**
+	 * Returns the absolute URL to Django's calendar feed.
 	 *
 	 * @return string
 	 */
 	public function get_calendar_ics_url() {
-		$base = $this->get_api_base();
-		if ( '' === $base ) {
-			return '';
+		$configured_url = trim( (string) get_option( 'avf_calendar_public_feed_url', '' ) );
+		if ( '' !== $configured_url ) {
+			return esc_url_raw( $configured_url );
 		}
 
-		return $this->build_v1_url( $base, 'calendar' );
+		$url = AVF_Internal_Endpoint_Resolver::instance()->build_url( '/calendar/public/events.ics' );
+		if ( ! is_wp_error( $url ) ) {
+			return $url;
+		}
+
+		$url = AVF_Internal_Endpoint_Resolver::instance()->build_url( '/api/v1/public/events/calendar.ics' );
+
+		return is_wp_error( $url ) ? '' : $url;
 	}
 
 	/**
-	 * Shared implementation behind get_upcoming_events_v1() and get_past_events():
-	 * resolves the v1 base, applies the legacy-fallback transition rules,
-	 * caches, and returns a uniform {events, total, source} shape.
+	 * Returns the absolute URL to one single-event ICS resource.
 	 *
-	 * @param string $resource               'upcoming' or 'past'.
-	 * @param int    $limit                  Requested limit.
-	 * @param bool   $allow_legacy_fallback   Whether a missing/404 v1 endpoint may fall back to the legacy endpoint.
+	 * @param string $slug Event slug.
+	 * @return string
+	 */
+	public function get_event_calendar_ics_url( $slug ) {
+		$slug = sanitize_title( (string) $slug );
+		if ( '' === $slug ) {
+			return '';
+		}
+
+		$url = AVF_Internal_Endpoint_Resolver::instance()->build_url( '/calendar/public/events/' . rawurlencode( $slug ) . '.ics' );
+
+		return is_wp_error( $url ) ? '' : $url;
+	}
+
+	/**
+	 * Deletes all plugin-managed transients.
+	 *
+	 * @return void
+	 */
+	public static function clear_cache() {
+		$keys = get_option( self::CACHE_KEYS_OPTION, array() );
+
+		if ( is_array( $keys ) ) {
+			foreach ( $keys as $key ) {
+				delete_transient( $key );
+			}
+		}
+
+		delete_option( self::CACHE_KEYS_OPTION );
+	}
+
+	/**
+	 * Signs a signup request the same way Django verifies it (SEC-005):
+	 * HMAC-SHA256 over "POST\n{slug}\n{timestamp}\n{sha256(body)}".
+	 *
+	 * @param string $slug      Event slug (must match the URL segment).
+	 * @param string $timestamp Unix timestamp as a string.
+	 * @param string $body      Exact raw request body being sent.
+	 * @param string $secret    Shared secret.
+	 * @return string Hex-encoded HMAC-SHA256 signature.
+	 */
+	private function sign_signup_request( $slug, $timestamp, $body, $secret ) {
+		$body_hash = hash( 'sha256', (string) $body );
+		$message   = "POST\n" . $slug . "\n" . $timestamp . "\n" . $body_hash;
+
+		return hash_hmac( 'sha256', $message, $secret );
+	}
+
+	/**
+	 * Returns the shared secret used for server-to-server signup calls.
+	 *
+	 * @return string
+	 */
+	private function get_signup_secret() {
+		$secret = '';
+
+		if ( defined( 'AVF_EVENTS_SIGNUP_SHARED_SECRET' ) && is_string( AVF_EVENTS_SIGNUP_SHARED_SECRET ) ) {
+			$secret = trim( AVF_EVENTS_SIGNUP_SHARED_SECRET );
+		}
+
+		$secret = apply_filters( 'avf_events_signup_shared_secret', $secret );
+
+		return is_string( $secret ) ? trim( $secret ) : '';
+	}
+
+	/**
+	 * Returns the shared cache TTL.
+	 *
+	 * @return int
+	 */
+	private function get_cache_ttl() {
+		$ttl = (int) get_option( 'avf_events_cache_ttl', 300 );
+
+		if ( $ttl < 60 || $ttl > 3600 ) {
+			$ttl = 300;
+		}
+
+		return $ttl;
+	}
+
+	/**
+	 * Builds a cache key namespace.
+	 *
+	 * @param string $resource Resource namespace.
+	 * @param int    $limit    Requested limit.
+	 * @return string
+	 */
+	private function build_cache_key( $resource, $limit ) {
+		return 'avf_events_' . md5( $resource . '|' . $limit );
+	}
+
+	/**
+	 * Builds a v1 cache key.
+	 *
+	 * @param string $resource Resource namespace.
+	 * @param string $identifier Request identifier.
+	 * @param int    $limit Requested limit.
+	 * @return string
+	 */
+	private function build_v1_cache_key( $resource, $identifier, $limit ) {
+		return 'avf_events_v1_' . $resource . '_' . md5( $identifier . '|' . $limit );
+	}
+
+	/**
+	 * Stores a transient and tracks its key.
+	 *
+	 * @param string $key   Transient key.
+	 * @param array  $value Value to cache.
+	 * @param int    $ttl   Cache lifetime in seconds.
+	 * @return void
+	 */
+	private function set_cached( $key, $value, $ttl ) {
+		set_transient( $key, $value, $ttl );
+
+		$keys = get_option( self::CACHE_KEYS_OPTION, array() );
+		if ( ! is_array( $keys ) ) {
+			$keys = array();
+		}
+
+		if ( ! in_array( $key, $keys, true ) ) {
+			$keys[] = $key;
+			update_option( self::CACHE_KEYS_OPTION, $keys, false );
+		}
+	}
+
+	/**
+	 * Shared implementation for v1 list resources.
+	 *
+	 * @param string $resource              Resource name.
+	 * @param int    $limit                 Requested limit.
+	 * @param bool   $allow_legacy_fallback Whether 404 may fall back to legacy.
 	 * @return array|WP_Error
 	 */
 	private function get_v1_list( $resource, $limit, $allow_legacy_fallback ) {
-		$limit = max( 1, min( self::V1_LIST_MAX_LIMIT, (int) $limit ) );
-		$base  = $this->get_api_base();
-
-		if ( '' === $base ) {
-			if ( $allow_legacy_fallback ) {
-				$this->log( 'No v1 API base configured; falling back to legacy upcoming endpoint.' );
-				return $this->as_legacy_fallback_result( $limit );
-			}
-
-			return new WP_Error( 'avf_events_no_v1_base', 'No v1 API base configured.' );
-		}
-
-		$url          = $this->build_v1_url( $base, $resource );
-		$cache_key    = $this->build_v1_cache_key( $resource, $url, $limit );
+		$limit        = max( 1, min( self::V1_LIST_MAX_LIMIT, (int) $limit ) );
+		$cache_key    = $this->build_v1_cache_key( $resource, $resource, $limit );
 		$fallback_key = $cache_key . '_fallback';
 
 		$fresh = get_transient( $cache_key );
@@ -235,14 +407,12 @@ class AVF_Events_API_Client {
 			return $fresh;
 		}
 
-		$result = $this->fetch_list( $url, $limit );
+		$result = $this->fetch_list( '/api/v1/public/events/' . $resource . '/', $limit );
 
 		if ( is_wp_error( $result ) ) {
 			$error_data = $result->get_error_data();
 			$http_code  = ( is_array( $error_data ) && isset( $error_data['http_code'] ) ) ? (int) $error_data['http_code'] : 0;
 
-			// Only a genuine "not found/unsupported" response (404) triggers the
-			// legacy fallback - never on other error types (see class docblock).
 			if ( $allow_legacy_fallback && 404 === $http_code ) {
 				$this->log( 'v1 "' . $resource . '" endpoint returned 404; falling back to legacy upcoming endpoint.' );
 				return $this->as_legacy_fallback_result( $limit );
@@ -266,10 +436,7 @@ class AVF_Events_API_Client {
 	}
 
 	/**
-	 * Wraps the existing, untouched legacy upcoming path (with its own
-	 * cache/fallback-cache, reused as-is) into the same {events, total,
-	 * source} shape the v1 list methods return, so calling code never has to
-	 * care which generation actually answered.
+	 * Wraps the legacy upcoming endpoint into the v1 result shape.
 	 *
 	 * @param int $limit Requested limit.
 	 * @return array|WP_Error
@@ -283,166 +450,33 @@ class AVF_Events_API_Client {
 
 		return array(
 			'events' => $events,
-			// The legacy endpoint exposes no distinct "total available" signal
-			// beyond the count of returned results (see readme.txt "API-Vertrag").
 			'total'  => count( $events ),
 			'source' => 'legacy',
 		);
 	}
 
 	/**
-	 * Deletes all transients created by this plugin (both legacy and v1).
+	 * Requests and parses JSON from one API path.
 	 *
-	 * @return void
-	 */
-	public static function clear_cache() {
-		$keys = get_option( self::CACHE_KEYS_OPTION, array() );
-
-		if ( is_array( $keys ) ) {
-			foreach ( $keys as $key ) {
-				delete_transient( $key );
-			}
-		}
-
-		delete_option( self::CACHE_KEYS_OPTION );
-	}
-
-	/**
-	 * Reads the configured legacy API endpoint (full URL).
-	 *
-	 * @return string
-	 */
-	private function get_legacy_endpoint() {
-		$endpoint = get_option( 'avf_events_api_endpoint', '' );
-
-		return is_string( $endpoint ) ? trim( $endpoint ) : '';
-	}
-
-	/**
-	 * Reads the configured v1 API base URL (e.g. ".../api/v1/public/"),
-	 * always returned with a trailing slash, or '' if unconfigured.
-	 *
-	 * @return string
-	 */
-	private function get_api_base() {
-		$base = get_option( 'avf_events_api_base', '' );
-		$base = is_string( $base ) ? trim( $base ) : '';
-
-		if ( '' === $base ) {
-			return '';
-		}
-
-		return trailingslashit( $base );
-	}
-
-	/**
-	 * Builds a full v1 resource URL from the configured base.
-	 *
-	 * @param string $base     Trailing-slashed v1 base URL.
-	 * @param string $resource 'upcoming', 'past', 'calendar', or an event slug (detail).
-	 * @return string
-	 */
-	private function build_v1_url( $base, $resource ) {
-		if ( 'upcoming' === $resource || 'past' === $resource ) {
-			return $base . 'events/' . $resource . '/';
-		}
-
-		if ( 'calendar' === $resource ) {
-			return $base . 'events/calendar.ics';
-		}
-
-		// Anything else is treated as an event slug for the detail endpoint.
-		return $base . 'events/' . rawurlencode( $resource ) . '/';
-	}
-
-	/**
-	 * Reads the configured cache TTL, clamped to the allowed range. Shared by
-	 * both API generations - one cache-duration setting for the whole plugin.
-	 *
-	 * @return int
-	 */
-	private function get_cache_ttl() {
-		$ttl = (int) get_option( 'avf_events_cache_ttl', 300 );
-
-		if ( $ttl < 60 || $ttl > 3600 ) {
-			$ttl = 300;
-		}
-
-		return $ttl;
-	}
-
-	/**
-	 * Builds a cache key scoped to the endpoint and limit (legacy path only -
-	 * unchanged so existing cached transients and behaviour are unaffected).
-	 *
-	 * @param string $endpoint API endpoint.
-	 * @param int    $limit    Requested limit.
-	 * @return string
-	 */
-	private function build_cache_key( $endpoint, $limit ) {
-		return 'avf_events_' . md5( $endpoint . '|' . $limit );
-	}
-
-	/**
-	 * Builds a cache key scoped to a v1 resource, URL and limit. Namespaced
-	 * separately from the legacy cache key so the two generations can never
-	 * collide even if pointed at similarly-shaped URLs.
-	 *
-	 * @param string $resource 'upcoming', 'past' or 'detail'.
-	 * @param string $url      Full request URL.
-	 * @param int    $limit    Requested limit (0 for single-item requests).
-	 * @return string
-	 */
-	private function build_v1_cache_key( $resource, $url, $limit ) {
-		return 'avf_events_v1_' . $resource . '_' . md5( $url . '|' . $limit );
-	}
-
-	/**
-	 * Stores a transient and records its key so it can be cleared later.
-	 *
-	 * @param string $key   Transient key.
-	 * @param array  $value Value to cache.
-	 * @param int    $ttl   Time to live in seconds.
-	 * @return void
-	 */
-	private function set_cached( $key, $value, $ttl ) {
-		set_transient( $key, $value, $ttl );
-
-		$keys = get_option( self::CACHE_KEYS_OPTION, array() );
-		if ( ! is_array( $keys ) ) {
-			$keys = array();
-		}
-
-		if ( ! in_array( $key, $keys, true ) ) {
-			$keys[] = $key;
-			update_option( self::CACHE_KEYS_OPTION, $keys, false );
-		}
-	}
-
-	/**
-	 * The one and only HTTP call site in this class: requests a URL, and
-	 * validates transport, HTTP status, body and JSON shape. Returns the
-	 * decoded response body (not yet interpreted as a list or single event -
-	 * callers do that) or a WP_Error carrying the HTTP status code (when
-	 * known) in its error data, e.g. for 404-based fallback decisions.
-	 *
-	 * @param string $url Full request URL.
+	 * @param string $method  HTTP method.
+	 * @param string $path    Relative API path.
+	 * @param int    $timeout Timeout in seconds.
 	 * @return array|WP_Error
 	 */
-	private function request_json( $url ) {
-		$response = wp_remote_get(
-			$url,
+	private function request_json( $method, $path, $timeout ) {
+		$response = avf_internal_api_request(
+			$method,
+			$path,
 			array(
-				'timeout'     => 8,
-				'redirection' => 3,
-				'headers'     => array(
+				'timeout' => $timeout,
+				'headers' => array(
 					'Accept' => 'application/json',
 				),
 			)
 		);
 
 		if ( is_wp_error( $response ) ) {
-			$this->log( 'Request failed: ' . $response->get_error_message() );
+			$this->log( 'Request failed: ' . $response->get_error_code() );
 			return new WP_Error( 'avf_events_request_failed', 'The events request failed.' );
 		}
 
@@ -468,19 +502,16 @@ class AVF_Events_API_Client {
 	}
 
 	/**
-	 * Calls the legacy endpoint and returns normalized events or a WP_Error.
-	 * Used exclusively by get_upcoming_events() (unchanged contract).
+	 * Fetches events from the legacy list endpoint.
 	 *
-	 * @param string $endpoint API endpoint.
-	 * @param int    $limit    Requested limit.
+	 * @param string $path  Endpoint path.
+	 * @param int    $limit Requested limit.
 	 * @return array|WP_Error
 	 */
-	private function fetch_from_api( $endpoint, $limit ) {
-		$url = add_query_arg( array( 'limit' => $limit ), $endpoint );
-
-		$data = $this->request_json( $url );
+	private function fetch_from_api( $path, $limit ) {
+		$data = $this->request_json( 'GET', add_query_arg( array( 'limit' => $limit ), $path ), 8 );
 		if ( is_wp_error( $data ) ) {
-			return new WP_Error( $data->get_error_code(), $data->get_error_message() );
+			return new WP_Error( $data->get_error_code(), $data->get_error_message(), $data->get_error_data() );
 		}
 
 		if ( ! isset( $data['results'] ) || ! is_array( $data['results'] ) ) {
@@ -504,17 +535,14 @@ class AVF_Events_API_Client {
 	}
 
 	/**
-	 * Calls a v1 list endpoint (upcoming/past) and returns normalized events
-	 * plus the API's reported total count.
+	 * Fetches a v1 list resource.
 	 *
-	 * @param string $url   Full v1 list endpoint URL (without ?limit=).
+	 * @param string $path  Endpoint path.
 	 * @param int    $limit Requested limit.
-	 * @return array|WP_Error {events: array[], total: int|null} or WP_Error (http_code preserved for 404 detection).
+	 * @return array|WP_Error
 	 */
-	private function fetch_list( $url, $limit ) {
-		$url = add_query_arg( array( 'limit' => $limit ), $url );
-
-		$data = $this->request_json( $url );
+	private function fetch_list( $path, $limit ) {
+		$data = $this->request_json( 'GET', add_query_arg( array( 'limit' => $limit ), $path ), 8 );
 		if ( is_wp_error( $data ) ) {
 			return $data;
 		}
@@ -548,12 +576,10 @@ class AVF_Events_API_Client {
 	}
 
 	/**
-	 * Validates and normalizes a single raw event entry from the API. Shared
-	 * by every code path (legacy, v1 lists, v1 detail) - the same field
-	 * schema applies everywhere (verified live).
+	 * Normalizes one event list item.
 	 *
-	 * @param mixed $item Raw event data.
-	 * @return array|null Normalized event, or null if required fields are missing.
+	 * @param mixed $item Raw API item.
+	 * @return array|null
 	 */
 	private function normalize_event( $item ) {
 		if ( ! is_array( $item ) ) {
@@ -572,14 +598,22 @@ class AVF_Events_API_Client {
 			}
 		}
 
+		$resolver    = AVF_Internal_Endpoint_Resolver::instance();
 		$detail_path = '';
 		if ( isset( $item['detail_path'] ) && is_scalar( $item['detail_path'] ) ) {
-			$detail_path = (string) $item['detail_path'];
+			$detail_path = $resolver->sanitize_internal_path( (string) $item['detail_path'] );
+		}
+
+		$source_path = '';
+		if ( isset( $item['source_url'] ) && is_scalar( $item['source_url'] ) ) {
+			$source_path = $resolver->extract_known_internal_path( (string) $item['source_url'] );
 		}
 
 		$source_url = '';
-		if ( isset( $item['source_url'] ) && is_scalar( $item['source_url'] ) ) {
-			$source_url = (string) $item['source_url'];
+		if ( '' !== $source_path ) {
+			$source_url = $resolver->normalize_known_internal_url( $source_path );
+		} elseif ( isset( $item['source_url'] ) && is_scalar( $item['source_url'] ) ) {
+			$source_url = esc_url_raw( (string) $item['source_url'] );
 		}
 
 		return array(
@@ -587,17 +621,161 @@ class AVF_Events_API_Client {
 			'title'             => (string) $item['title'],
 			'slug'              => sanitize_title( (string) $item['slug'] ),
 			'short_description' => (string) $item['short_description'],
+			'status'            => ( isset( $item['status'] ) && is_scalar( $item['status'] ) ) ? sanitize_key( (string) $item['status'] ) : '',
+			'status_label'      => ( isset( $item['status_label'] ) && is_scalar( $item['status_label'] ) ) ? sanitize_text_field( (string) $item['status_label'] ) : '',
 			'start_at'          => (string) $item['start_at'],
 			'end_at'            => (string) $item['end_at'],
 			'timezone_name'     => (string) $item['timezone_name'],
 			'location_name'     => (string) $item['location_name'],
 			'detail_path'       => $detail_path,
+			'source_path'       => $source_path,
 			'source_url'        => $source_url,
 		);
 	}
 
 	/**
-	 * Logs a debug message without leaking sensitive data, only when WP_DEBUG is enabled.
+	 * Normalizes the richer detail payload.
+	 *
+	 * @param mixed $item Raw API payload.
+	 * @return array|null
+	 */
+	private function normalize_event_detail( $item ) {
+		$event = $this->normalize_event( $item );
+		if ( null === $event || ! is_array( $item ) ) {
+			return null;
+		}
+
+		if ( ! isset( $item['description'], $item['date'], $item['start_time'], $item['location'], $item['signup_enabled'], $item['signup_open'], $item['signup_columns'], $item['signups'] ) ) {
+			return null;
+		}
+
+		if ( ! is_array( $item['signup_columns'] ) || ! is_array( $item['signups'] ) ) {
+			return null;
+		}
+
+		$signup_columns = array();
+		foreach ( $item['signup_columns'] as $column ) {
+			$normalized_column = $this->normalize_signup_column( $column );
+			if ( null !== $normalized_column ) {
+				$signup_columns[] = $normalized_column;
+			}
+		}
+
+		$signups = array();
+		foreach ( $item['signups'] as $signup ) {
+			$normalized_signup = $this->normalize_public_signup( $signup );
+			if ( null !== $normalized_signup ) {
+				$signups[] = $normalized_signup;
+			}
+		}
+
+		$resolver = AVF_Internal_Endpoint_Resolver::instance();
+		$image_path = '';
+		if ( isset( $item['image_url'] ) && is_scalar( $item['image_url'] ) ) {
+			$image_path = $resolver->extract_known_internal_path( (string) $item['image_url'] );
+		}
+
+		$event['description']      = is_scalar( $item['description'] ) ? (string) $item['description'] : '';
+		$event['date']             = is_scalar( $item['date'] ) ? (string) $item['date'] : '';
+		$event['start_time']       = is_scalar( $item['start_time'] ) ? (string) $item['start_time'] : '';
+		$event['end_time']         = ( isset( $item['end_time'] ) && is_scalar( $item['end_time'] ) ) ? (string) $item['end_time'] : '';
+		$event['location']         = is_scalar( $item['location'] ) ? (string) $item['location'] : '';
+		$event['image_path']       = $image_path;
+		$event['image_url']        = '' !== $image_path ? $resolver->normalize_known_internal_url( $image_path ) : ( ( isset( $item['image_url'] ) && is_scalar( $item['image_url'] ) ) ? esc_url_raw( (string) $item['image_url'] ) : '' );
+		$event['signup_enabled']   = (bool) $item['signup_enabled'];
+		$event['signup_open']      = (bool) $item['signup_open'];
+		$event['signup_deadline']  = ( isset( $item['signup_deadline'] ) && is_scalar( $item['signup_deadline'] ) ) ? (string) $item['signup_deadline'] : '';
+		$event['signup_columns']   = $signup_columns;
+		$event['signups']          = $signups;
+
+		return $event;
+	}
+
+	/**
+	 * Normalizes one signup column definition from Django.
+	 *
+	 * @param mixed $column Raw column payload.
+	 * @return array|null
+	 */
+	private function normalize_signup_column( $column ) {
+		if ( ! is_array( $column ) ) {
+			return null;
+		}
+
+		$required = array( 'key', 'label', 'type', 'required', 'public', 'sort_order' );
+		foreach ( $required as $field ) {
+			if ( ! array_key_exists( $field, $column ) ) {
+				return null;
+			}
+		}
+
+		$type = is_scalar( $column['type'] ) ? (string) $column['type'] : '';
+		if ( ! in_array( $type, array( 'text', 'textarea', 'select', 'checkbox' ), true ) ) {
+			return null;
+		}
+
+		$options = array();
+		if ( isset( $column['options'] ) && is_array( $column['options'] ) ) {
+			foreach ( $column['options'] as $option ) {
+				if ( is_scalar( $option ) && '' !== trim( (string) $option ) ) {
+					$options[] = (string) $option;
+				}
+			}
+		}
+
+		return array(
+			'key'         => sanitize_key( (string) $column['key'] ),
+			'label'       => is_scalar( $column['label'] ) ? (string) $column['label'] : '',
+			'type'        => $type,
+			'required'    => (bool) $column['required'],
+			'public'      => (bool) $column['public'],
+			'sort_order'  => (int) $column['sort_order'],
+			'options'     => $options,
+			'placeholder' => ( isset( $column['placeholder'] ) && is_scalar( $column['placeholder'] ) ) ? (string) $column['placeholder'] : '',
+		);
+	}
+
+	/**
+	 * Normalizes one public signup row from Django.
+	 *
+	 * @param mixed $signup Raw signup payload.
+	 * @return array|null
+	 */
+	private function normalize_public_signup( $signup ) {
+		if ( ! is_array( $signup ) || ! isset( $signup['vulgo'], $signup['attending'], $signup['values'] ) || ! is_array( $signup['values'] ) ) {
+			return null;
+		}
+
+		$values = array();
+		foreach ( $signup['values'] as $key => $value ) {
+			if ( ! is_string( $key ) ) {
+				continue;
+			}
+
+			if ( is_bool( $value ) ) {
+				$values[ sanitize_key( $key ) ] = $value;
+				continue;
+			}
+
+			if ( null === $value ) {
+				$values[ sanitize_key( $key ) ] = '';
+				continue;
+			}
+
+			if ( is_scalar( $value ) ) {
+				$values[ sanitize_key( $key ) ] = (string) $value;
+			}
+		}
+
+		return array(
+			'vulgo'     => is_scalar( $signup['vulgo'] ) ? (string) $signup['vulgo'] : '',
+			'attending' => (bool) $signup['attending'],
+			'values'    => $values,
+		);
+	}
+
+	/**
+	 * Logs a debug message without leaking sensitive data.
 	 *
 	 * @param string $message Message to log.
 	 * @return void

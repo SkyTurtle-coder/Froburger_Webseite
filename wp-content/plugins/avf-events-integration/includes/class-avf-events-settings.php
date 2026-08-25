@@ -10,8 +10,9 @@ defined( 'ABSPATH' ) || exit;
 class AVF_Events_Settings {
 
 	const OPTION_GROUP = 'avf_events_settings';
-	const PAGE_SLUG    = 'avf-events-integration';
-	const CLEAR_ACTION  = 'avf_events_clear_cache';
+	const PAGE_SLUG = 'avf-events-integration';
+	const CLEAR_ACTION = 'avf_events_clear_cache';
+	const RECHECK_ACTION = 'avf_internal_endpoint_recheck';
 
 	/**
 	 * Singleton instance.
@@ -21,7 +22,7 @@ class AVF_Events_Settings {
 	private static $instance = null;
 
 	/**
-	 * Returns the singleton instance, creating it on first call.
+	 * Returns the singleton instance.
 	 *
 	 * @return AVF_Events_Settings
 	 */
@@ -40,6 +41,7 @@ class AVF_Events_Settings {
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_post_' . self::CLEAR_ACTION, array( $this, 'handle_clear_cache' ) );
+		add_action( 'admin_post_' . self::RECHECK_ACTION, array( $this, 'handle_recheck_status' ) );
 		add_action( 'admin_notices', array( $this, 'render_admin_notices' ) );
 	}
 
@@ -59,28 +61,28 @@ class AVF_Events_Settings {
 	}
 
 	/**
-	 * Registers settings, sections and fields via the Settings API.
+	 * Registers plugin settings.
 	 *
 	 * @return void
 	 */
 	public function register_settings() {
 		register_setting(
 			self::OPTION_GROUP,
-			'avf_events_api_endpoint',
+			AVF_Internal_Endpoint_Resolver::PRIMARY_OPTION,
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_endpoint' ),
-				'default'           => '',
+				'sanitize_callback' => array( $this, 'sanitize_internal_base' ),
+				'default'           => AVF_Internal_Endpoint_Resolver::default_primary_url(),
 			)
 		);
 
 		register_setting(
 			self::OPTION_GROUP,
-			'avf_events_api_base',
+			AVF_Internal_Endpoint_Resolver::FALLBACK_OPTION,
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_api_base' ),
-				'default'           => '',
+				'sanitize_callback' => array( $this, 'sanitize_internal_base' ),
+				'default'           => AVF_Internal_Endpoint_Resolver::default_fallback_url(),
 			)
 		);
 
@@ -104,32 +106,52 @@ class AVF_Events_Settings {
 			)
 		);
 
+		register_setting(
+			self::OPTION_GROUP,
+			'avf_event_detail_page_path',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_page_path' ),
+				'default'           => '/anlassdetail/',
+			)
+		);
+
+		register_setting(
+			self::OPTION_GROUP,
+			'avf_calendar_public_feed_url',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'esc_url_raw',
+				'default'           => '',
+			)
+		);
+
 		add_settings_section(
 			'avf_events_main_section',
-			__( 'API-Einstellungen', 'avf-events-integration' ),
+			__( 'Interne Django-Anbindung', 'avf-events-integration' ),
 			'__return_false',
 			self::PAGE_SLUG
 		);
 
 		add_settings_field(
-			'avf_events_api_endpoint',
-			__( 'API-Endpunkt', 'avf-events-integration' ),
-			array( $this, 'render_endpoint_field' ),
+			'avf_internal_primary_url',
+			__( 'Primaere Django-URL', 'avf-events-integration' ),
+			array( $this, 'render_primary_url_field' ),
 			self::PAGE_SLUG,
 			'avf_events_main_section'
 		);
 
 		add_settings_field(
-			'avf_events_api_base',
-			__( 'API-Basis (v1)', 'avf-events-integration' ),
-			array( $this, 'render_api_base_field' ),
+			'avf_internal_fallback_url',
+			__( 'Fallback-Django-URL', 'avf-events-integration' ),
+			array( $this, 'render_fallback_url_field' ),
 			self::PAGE_SLUG,
 			'avf_events_main_section'
 		);
 
 		add_settings_field(
 			'avf_events_cache_ttl',
-			__( 'Cache-Dauer (Sekunden)', 'avf-events-integration' ),
+			__( 'Event-Cache-Dauer (Sekunden)', 'avf-events-integration' ),
 			array( $this, 'render_cache_ttl_field' ),
 			self::PAGE_SLUG,
 			'avf_events_main_section'
@@ -137,37 +159,36 @@ class AVF_Events_Settings {
 
 		add_settings_field(
 			'avf_events_page_path',
-			__( 'Zielseite für Anlassdetails', 'avf-events-integration' ),
+			__( 'Pfad der Anlassuebersicht', 'avf-events-integration' ),
 			array( $this, 'render_page_path_field' ),
+			self::PAGE_SLUG,
+			'avf_events_main_section'
+		);
+
+		add_settings_field(
+			'avf_event_detail_page_path',
+			__( 'Interne Detailseite', 'avf-events-integration' ),
+			array( $this, 'render_detail_page_path_field' ),
+			self::PAGE_SLUG,
+			'avf_events_main_section'
+		);
+
+		add_settings_field(
+			'avf_calendar_public_feed_url',
+			__( 'Kanonische Kalender-Feed-URL', 'avf-events-integration' ),
+			array( $this, 'render_calendar_feed_url_field' ),
 			self::PAGE_SLUG,
 			'avf_events_main_section'
 		);
 	}
 
 	/**
-	 * Sanitizes the API endpoint URL.
+	 * Sanitizes one central internal base URL.
 	 *
-	 * @param mixed $value Raw submitted value.
+	 * @param mixed $value Raw value.
 	 * @return string
 	 */
-	public function sanitize_endpoint( $value ) {
-		$value = is_string( $value ) ? trim( $value ) : '';
-
-		if ( '' === $value ) {
-			return '';
-		}
-
-		return esc_url_raw( $value );
-	}
-
-	/**
-	 * Sanitizes the v1 API base URL, ensuring a trailing slash so URL
-	 * building elsewhere never has to guess.
-	 *
-	 * @param mixed $value Raw submitted value.
-	 * @return string
-	 */
-	public function sanitize_api_base( $value ) {
+	public function sanitize_internal_base( $value ) {
 		$value = is_string( $value ) ? trim( $value ) : '';
 
 		if ( '' === $value ) {
@@ -175,14 +196,23 @@ class AVF_Events_Settings {
 		}
 
 		$value = esc_url_raw( $value );
+		$parts = wp_parse_url( $value );
+		if ( '' === $value || ! is_array( $parts ) || empty( $parts['scheme'] ) || empty( $parts['host'] ) || 'https' !== strtolower( (string) $parts['scheme'] ) ) {
+			add_settings_error(
+				self::OPTION_GROUP,
+				'avf_internal_invalid_base',
+				__( 'Die interne Basis-URL muss mit https:// beginnen und einen gueltigen Host enthalten.', 'avf-events-integration' )
+			);
+			return '';
+		}
 
-		return '' === $value ? '' : trailingslashit( $value );
+		return untrailingslashit( $value );
 	}
 
 	/**
-	 * Sanitizes and clamps the cache TTL to the allowed range.
+	 * Sanitizes the cache TTL.
 	 *
-	 * @param mixed $value Raw submitted value.
+	 * @param mixed $value Raw value.
 	 * @return int
 	 */
 	public function sanitize_cache_ttl( $value ) {
@@ -196,9 +226,9 @@ class AVF_Events_Settings {
 	}
 
 	/**
-	 * Sanitizes the relative page path, ensuring leading and trailing slashes.
+	 * Sanitizes a relative page path.
 	 *
-	 * @param mixed $value Raw submitted value.
+	 * @param mixed $value Raw value.
 	 * @return string
 	 */
 	public function sanitize_page_path( $value ) {
@@ -222,43 +252,43 @@ class AVF_Events_Settings {
 	}
 
 	/**
-	 * Renders the API endpoint field.
+	 * Renders the primary URL field.
 	 *
 	 * @return void
 	 */
-	public function render_endpoint_field() {
-		$value = get_option( 'avf_events_api_endpoint', '' );
+	public function render_primary_url_field() {
+		$value = get_option( AVF_Internal_Endpoint_Resolver::PRIMARY_OPTION, AVF_Internal_Endpoint_Resolver::default_primary_url() );
 		?>
 		<input
 			type="url"
 			class="regular-text code"
-			name="avf_events_api_endpoint"
+			name="<?php echo esc_attr( AVF_Internal_Endpoint_Resolver::PRIMARY_OPTION ); ?>"
 			value="<?php echo esc_attr( $value ); ?>"
-			placeholder="https://intern.avfroburger.ch/api/public/events/upcoming/"
+			placeholder="https://intern.avfroburger.ch"
 		/>
 		<p class="description">
-			<?php esc_html_e( 'Die URL soll auf /api/public/events/upcoming/ enden.', 'avf-events-integration' ); ?>
+			<?php esc_html_e( 'Kanonische Basisadresse der Django-Anwendung. Health-Checks laufen ueber /healthz/.', 'avf-events-integration' ); ?>
 		</p>
 		<?php
 	}
 
 	/**
-	 * Renders the v1 API base field.
+	 * Renders the fallback URL field.
 	 *
 	 * @return void
 	 */
-	public function render_api_base_field() {
-		$value = get_option( 'avf_events_api_base', '' );
+	public function render_fallback_url_field() {
+		$value = get_option( AVF_Internal_Endpoint_Resolver::FALLBACK_OPTION, AVF_Internal_Endpoint_Resolver::default_fallback_url() );
 		?>
 		<input
 			type="url"
 			class="regular-text code"
-			name="avf_events_api_base"
+			name="<?php echo esc_attr( AVF_Internal_Endpoint_Resolver::FALLBACK_OPTION ); ?>"
 			value="<?php echo esc_attr( $value ); ?>"
-			placeholder="https://intern.avfroburger.ch/api/v1/public/"
+			placeholder="https://intern-avfroburger.ch"
 		/>
 		<p class="description">
-			<?php esc_html_e( 'Basis-URL der neuen v1-API, endet auf /api/v1/public/. Wird für die neuen Shortcodes (avf_events_upcoming, avf_events_past, avf_events_calendar_actions, avf_event_detail) verwendet. Leer lassen, um ausschliesslich den Legacy-Endpunkt oben zu nutzen - [avf_upcoming_events] funktioniert davon unabhängig immer über den Legacy-Endpunkt.', 'avf-events-integration' ); ?>
+			<?php esc_html_e( 'Absicherung gegen Probleme eines einzelnen Hostnamens. Beide Hostnamen zeigen weiterhin auf denselben VPS.', 'avf-events-integration' ); ?>
 		</p>
 		<?php
 	}
@@ -281,13 +311,13 @@ class AVF_Events_Settings {
 			step="1"
 		/>
 		<p class="description">
-			<?php esc_html_e( 'Zwischen 60 und 3600 Sekunden. Standard: 300.', 'avf-events-integration' ); ?>
+			<?php esc_html_e( 'Zwischen 60 und 3600 Sekunden. Eventdaten und erfolgreiche Health-Checks werden davon getrennt gecacht.', 'avf-events-integration' ); ?>
 		</p>
 		<?php
 	}
 
 	/**
-	 * Renders the page path field.
+	 * Renders the public overview path field.
 	 *
 	 * @return void
 	 */
@@ -302,13 +332,55 @@ class AVF_Events_Settings {
 			placeholder="/anlaesse/"
 		/>
 		<p class="description">
-			<?php esc_html_e( 'Relativer WordPress-Pfad, z. B. /anlaesse/. Wird für interne Eventlinks verwendet.', 'avf-events-integration' ); ?>
+			<?php esc_html_e( 'Sichtbarer WordPress-Pfad der Anlassuebersicht. Detailseiten werden darunter als /anlaesse/<slug>/ erzeugt.', 'avf-events-integration' ); ?>
 		</p>
 		<?php
 	}
 
 	/**
-	 * Renders the settings page, including the cache clear form.
+	 * Renders the internal detail page path field.
+	 *
+	 * @return void
+	 */
+	public function render_detail_page_path_field() {
+		$value = get_option( 'avf_event_detail_page_path', '/anlassdetail/' );
+		?>
+		<input
+			type="text"
+			class="regular-text code"
+			name="avf_event_detail_page_path"
+			value="<?php echo esc_attr( $value ); ?>"
+			placeholder="/anlassdetail/"
+		/>
+		<p class="description">
+			<?php esc_html_e( 'Feste interne Seite mit dem Shortcode [avf_event_detail]. Die sichtbare URL bleibt trotzdem /anlaesse/<slug>/.', 'avf-events-integration' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders the canonical public feed URL field.
+	 *
+	 * @return void
+	 */
+	public function render_calendar_feed_url_field() {
+		$value = get_option( 'avf_calendar_public_feed_url', '' );
+		?>
+		<input
+			type="url"
+			class="regular-text code"
+			name="avf_calendar_public_feed_url"
+			value="<?php echo esc_attr( $value ); ?>"
+			placeholder="https://intern.avfroburger.ch/calendar/public/events.ics"
+		/>
+		<p class="description">
+			<?php esc_html_e( 'Stabile abonnierbare HTTPS-URL fuer den oeffentlichen Kalender. Wenn leer, verwendet das Plugin den Django-Endpunkt automatisch.', 'avf-events-integration' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders the settings page.
 	 *
 	 * @return void
 	 */
@@ -330,8 +402,13 @@ class AVF_Events_Settings {
 
 			<hr />
 
+			<h2><?php esc_html_e( 'Interne Endpoint-Diagnose', 'avf-events-integration' ); ?></h2>
+			<?php $this->render_endpoint_diagnostics(); ?>
+
+			<hr />
+
 			<h2><?php esc_html_e( 'Event-Cache', 'avf-events-integration' ); ?></h2>
-			<p><?php esc_html_e( 'Leert alle zwischengespeicherten Anlassdaten. Beim nächsten Aufruf werden die Daten erneut von der API geladen.', 'avf-events-integration' ); ?></p>
+			<p><?php esc_html_e( 'Leert alle zwischengespeicherten Anlassdaten. Beim naechsten Aufruf werden sie erneut von Django geladen.', 'avf-events-integration' ); ?></p>
 			<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::CLEAR_ACTION ); ?>" />
 				<?php wp_nonce_field( self::CLEAR_ACTION, self::CLEAR_ACTION . '_nonce' ); ?>
@@ -342,7 +419,7 @@ class AVF_Events_Settings {
 	}
 
 	/**
-	 * Handles the "clear cache" form submission.
+	 * Handles the cache clear action.
 	 *
 	 * @return void
 	 */
@@ -368,22 +445,135 @@ class AVF_Events_Settings {
 	}
 
 	/**
-	 * Displays a success notice after the cache has been cleared.
+	 * Runs a fresh endpoint check for both hosts.
+	 *
+	 * @return void
+	 */
+	public function handle_recheck_status() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Keine Berechtigung.', 'avf-events-integration' ), 403 );
+		}
+
+		check_admin_referer( self::RECHECK_ACTION, self::RECHECK_ACTION . '_nonce' );
+
+		$resolver = AVF_Internal_Endpoint_Resolver::instance();
+		$resolver->invalidate_health_cache();
+		$resolver->check_endpoint( $resolver->get_primary_url() );
+		$resolver->check_endpoint( $resolver->get_fallback_url() );
+
+		$redirect = add_query_arg(
+			array(
+				'page'                  => self::PAGE_SLUG,
+				'avf_internal_check_ok' => '1',
+			),
+			admin_url( 'options-general.php' )
+		);
+
+		wp_safe_redirect( $redirect );
+		exit;
+	}
+
+	/**
+	 * Displays cache and endpoint notices.
 	 *
 	 * @return void
 	 */
 	public function render_admin_notices() {
-		if ( ! isset( $_GET['page'], $_GET['avf_events_cache_ok'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
+		if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
 			return;
 		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
+
+		if ( isset( $_GET['avf_events_cache_ok'] ) ) {
+			?>
+			<div class="notice notice-success is-dismissible">
+				<p><?php esc_html_e( 'Der Event-Cache wurde geleert.', 'avf-events-integration' ); ?></p>
+			</div>
+			<?php
+		}
+
+		if ( isset( $_GET['avf_internal_check_ok'] ) ) {
+			?>
+			<div class="notice notice-success is-dismissible">
+				<p><?php esc_html_e( 'Die Endpoint-Diagnose wurde aktualisiert.', 'avf-events-integration' ); ?></p>
+			</div>
+			<?php
+		}
+	}
+
+	/**
+	 * Renders the endpoint diagnostics block.
+	 *
+	 * @return void
+	 */
+	private function render_endpoint_diagnostics() {
+		$resolver    = AVF_Internal_Endpoint_Resolver::instance();
+		$diagnostics = $resolver->get_diagnostics();
+		$derived_legacy = trailingslashit( $diagnostics['primary_url'] ) . 'api/public/events/upcoming/';
+		$derived_v1     = trailingslashit( $diagnostics['primary_url'] ) . 'api/v1/public/';
 		?>
-		<div class="notice notice-success is-dismissible">
-			<p><?php esc_html_e( 'Der Event-Cache wurde geleert.', 'avf-events-integration' ); ?></p>
-		</div>
+		<table class="widefat striped" style="max-width: 980px">
+			<tbody>
+				<tr><td><strong><?php esc_html_e( 'Primary-URL', 'avf-events-integration' ); ?></strong></td><td><code><?php echo esc_html( $diagnostics['primary_url'] ); ?></code></td></tr>
+				<tr><td><strong><?php esc_html_e( 'Fallback-URL', 'avf-events-integration' ); ?></strong></td><td><code><?php echo esc_html( $diagnostics['fallback_url'] ); ?></code></td></tr>
+				<tr><td><strong><?php esc_html_e( 'Aktiver Endpoint', 'avf-events-integration' ); ?></strong></td><td><code><?php echo '' !== $diagnostics['active_url'] ? esc_html( $diagnostics['active_url'] ) : '&ndash;'; ?></code></td></tr>
+				<tr><td><strong><?php esc_html_e( 'Abgeleiteter Legacy-Endpunkt', 'avf-events-integration' ); ?></strong></td><td><code><?php echo esc_html( $derived_legacy ); ?></code></td></tr>
+				<tr><td><strong><?php esc_html_e( 'Abgeleitete v1-Basis', 'avf-events-integration' ); ?></strong></td><td><code><?php echo esc_html( $derived_v1 ); ?></code></td></tr>
+				<tr><td><strong><?php esc_html_e( 'Primary-Status', 'avf-events-integration' ); ?></strong></td><td><?php echo wp_kses_post( $this->format_status_cell( $diagnostics['primary_status'] ) ); ?></td></tr>
+				<tr><td><strong><?php esc_html_e( 'Fallback-Status', 'avf-events-integration' ); ?></strong></td><td><?php echo wp_kses_post( $this->format_status_cell( $diagnostics['fallback_status'] ) ); ?></td></tr>
+				<tr><td><strong><?php esc_html_e( 'Stabile Weiterleitungsroute', 'avf-events-integration' ); ?></strong></td><td><code><?php echo esc_html( AVF_Internal_Portal_Router::get_portal_url( '/accounts/login/' ) ); ?></code></td></tr>
+			</tbody>
+		</table>
+		<p class="description">
+			<?php esc_html_e( 'Die Host-Fallback-Logik schuetzt gegen Ausfaelle eines einzelnen Hostnamens oder Zertifikats, nicht gegen einen Ausfall des VPS, von Nginx, Django oder MariaDB. Beim Wechsel zwischen den zwei Domains kann eine erneute Anmeldung noetig sein.', 'avf-events-integration' ); ?>
+		</p>
+		<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+			<input type="hidden" name="action" value="<?php echo esc_attr( self::RECHECK_ACTION ); ?>" />
+			<?php wp_nonce_field( self::RECHECK_ACTION, self::RECHECK_ACTION . '_nonce' ); ?>
+			<?php submit_button( __( 'Status erneut pruefen', 'avf-events-integration' ), 'secondary', 'submit', false ); ?>
+		</form>
 		<?php
+	}
+
+	/**
+	 * Formats one endpoint status row.
+	 *
+	 * @param array $status Stored endpoint status.
+	 * @return string
+	 */
+	private function format_status_cell( array $status ) {
+		if ( empty( $status ) ) {
+			return '&ndash;';
+		}
+
+		$healthy = ! empty( $status['healthy'] );
+		$parts   = array(
+			$healthy ? __( 'gesund', 'avf-events-integration' ) : __( 'fehlerhaft', 'avf-events-integration' ),
+		);
+
+		if ( ! empty( $status['checked_at'] ) ) {
+			$parts[] = gmdate( 'Y-m-d H:i:s', (int) $status['checked_at'] ) . ' UTC';
+		}
+
+		if ( ! empty( $status['expires_at'] ) ) {
+			$parts[] = sprintf(
+				/* translators: %s: UTC timestamp */
+				__( 'Cache bis %s', 'avf-events-integration' ),
+				gmdate( 'Y-m-d H:i:s', (int) $status['expires_at'] ) . ' UTC'
+			);
+		}
+
+		if ( ! empty( $status['status'] ) ) {
+			$parts[] = 'HTTP ' . (int) $status['status'];
+		}
+
+		if ( ! empty( $status['reason'] ) ) {
+			$parts[] = sanitize_key( $status['reason'] );
+		}
+
+		return esc_html( implode( ' | ', $parts ) );
 	}
 }

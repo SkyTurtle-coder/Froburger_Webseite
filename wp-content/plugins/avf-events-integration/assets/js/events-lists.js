@@ -1,50 +1,28 @@
 /**
- * AV Froburger Events Integration - "Mehr anzeigen" progressive enhancement
- * for [avf_events_upcoming] and [avf_events_past].
- *
- * Without this script, the "Mehr anzeigen" link PHP already renders is a
- * plain <a href="...?avf_upcoming_shown=18">: a full page reload that shows
- * more items server-side. This script intercepts clicks on that same link,
- * fetches only the new cards via AJAX and appends them without a reload -
- * on any failure it falls back to the original link navigation, so the
- * feature never dead-ends.
- *
- * Handles any number of [avf_events_upcoming]/[avf_events_past] instances
- * on the same page independently (each button carries its own state via
- * data-attributes, none of it relies on a single global id).
+ * AV Froburger Events Integration enhancements:
+ * - "Mehr anzeigen" progressive enhancement
+ * - public calendar subscribe dialog
  */
 ( function () {
 	'use strict';
 
-	if ( typeof window.avfEventsAjax === 'undefined' ) {
-		return;
-	}
-
-	/**
-	 * Rebuilds a "Mehr anzeigen" href with an updated "shown" query value,
-	 * preserving the rest of the current URL (including any other
-	 * shortcode's own query var, e.g. avf_past_shown alongside
-	 * avf_upcoming_shown).
-	 *
-	 * @param {string} queryVar Query var name for this instance.
-	 * @param {number} value    New value.
-	 * @return {string}
-	 */
 	function buildHref( queryVar, value ) {
 		var url = new URL( window.location.href );
 		url.searchParams.set( queryVar, String( value ) );
 		return url.toString();
 	}
 
-	/**
-	 * Handles a single "Mehr anzeigen" click: fetches the next batch and
-	 * appends it, or falls back to a normal navigation on failure.
-	 *
-	 * @param {MouseEvent} event Click event.
-	 * @return {void}
-	 */
-	function handleClick( event ) {
+	function handleMoreClick( event ) {
 		var link = event.currentTarget;
+		var type;
+		var shown;
+		var step;
+		var nonce;
+		var queryVar;
+		var targetId;
+		var list;
+		var originalHref;
+		var body;
 
 		if ( 'true' === link.getAttribute( 'aria-busy' ) ) {
 			event.preventDefault();
@@ -53,23 +31,23 @@
 
 		event.preventDefault();
 
-		var type      = link.getAttribute( 'data-type' );
-		var shown     = link.getAttribute( 'data-shown' );
-		var step      = link.getAttribute( 'data-step' );
-		var nonce     = link.getAttribute( 'data-nonce' );
-		var queryVar  = link.getAttribute( 'data-query-var' );
-		var targetId  = link.getAttribute( 'data-list-target' );
-		var list      = targetId ? document.getElementById( targetId ) : null;
-		var originalHref = link.href;
+		type = link.getAttribute( 'data-type' );
+		shown = link.getAttribute( 'data-shown' );
+		step = link.getAttribute( 'data-step' );
+		nonce = link.getAttribute( 'data-nonce' );
+		queryVar = link.getAttribute( 'data-query-var' );
+		targetId = link.getAttribute( 'data-list-target' );
+		list = targetId ? document.getElementById( targetId ) : null;
+		originalHref = link.href;
 
-		if ( ! list || ! type || ! shown || ! step || ! nonce ) {
+		if ( ! window.avfEventsAjax || ! list || ! type || ! shown || ! step || ! nonce ) {
 			window.location.href = originalHref;
 			return;
 		}
 
 		link.setAttribute( 'aria-busy', 'true' );
 
-		var body = new URLSearchParams();
+		body = new URLSearchParams();
 		body.set( 'action', window.avfEventsAjax.action );
 		body.set( 'nonce', nonce );
 		body.set( 'type', type );
@@ -89,6 +67,9 @@
 				return response.json();
 			} )
 			.then( function ( json ) {
+				var newShown;
+				var wrap;
+
 				if ( ! json || ! json.success || ! json.data ) {
 					throw new Error( 'Unsuccessful response' );
 				}
@@ -97,14 +78,14 @@
 					list.insertAdjacentHTML( 'beforeend', json.data.html );
 				}
 
-				var newShown = json.data.shown ? parseInt( json.data.shown, 10 ) : ( parseInt( shown, 10 ) + parseInt( step, 10 ) );
+				newShown = json.data.shown ? parseInt( json.data.shown, 10 ) : ( parseInt( shown, 10 ) + parseInt( step, 10 ) );
 
 				if ( json.data.has_more ) {
 					link.setAttribute( 'data-shown', String( newShown ) );
 					link.href = buildHref( queryVar, newShown + parseInt( step, 10 ) );
 					link.removeAttribute( 'aria-busy' );
 				} else {
-					var wrap = link.closest( '.avf-events-more-wrap' );
+					wrap = link.closest( '.avf-events-more-wrap' );
 					if ( wrap && wrap.parentNode ) {
 						wrap.parentNode.removeChild( wrap );
 					} else {
@@ -114,17 +95,349 @@
 				}
 			} )
 			.catch( function () {
-				// Never dead-end: fall back to the plain link the server
-				// already rendered (full page reload, still shows more items).
 				window.location.href = originalHref;
 			} );
 	}
 
-	function init() {
+	function initMoreLinks() {
 		var links = document.querySelectorAll( '[data-avf-events-more]' );
-		for ( var i = 0; i < links.length; i++ ) {
-			links[ i ].addEventListener( 'click', handleClick );
+		var i;
+
+		for ( i = 0; i < links.length; i++ ) {
+			links[ i ].addEventListener( 'click', handleMoreClick );
 		}
+	}
+
+	function copyText( value ) {
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			return navigator.clipboard.writeText( value );
+		}
+
+		return new Promise( function ( resolve, reject ) {
+			var input = document.createElement( 'input' );
+			input.value = value;
+			document.body.appendChild( input );
+			input.select();
+			if ( document.execCommand( 'copy' ) ) {
+				document.body.removeChild( input );
+				resolve();
+				return;
+			}
+			document.body.removeChild( input );
+			reject( new Error( 'copy_failed' ) );
+		} );
+	}
+
+	function initCalendarActions() {
+		var roots = document.querySelectorAll( '[data-avf-calendar-actions]' );
+
+		roots.forEach( function ( root ) {
+			var openButton = root.querySelector( '[data-avf-calendar-dialog-open]' );
+			var dialog = root.querySelector( '.avf-events-calendar-actions__dialog' );
+			var closeButtons = root.querySelectorAll( '[data-avf-calendar-dialog-close]' );
+			var openCalendarButton = root.querySelector( '[data-avf-calendar-open]' );
+			var subscribeButton = root.querySelector( '[data-avf-calendar-subscribe]' );
+			var copyButton = root.querySelector( '[data-avf-calendar-copy]' );
+			var copyStatus = root.querySelector( '[data-avf-calendar-copy-status]' );
+			var lastTrigger = null;
+
+			function closeDialog() {
+				if ( ! dialog ) {
+					return;
+				}
+				if ( typeof dialog.close === 'function' && dialog.open ) {
+					dialog.close();
+				} else {
+					dialog.removeAttribute( 'open' );
+				}
+				if ( lastTrigger && typeof lastTrigger.focus === 'function' ) {
+					lastTrigger.focus();
+				}
+			}
+
+			if ( openButton && dialog ) {
+				openButton.addEventListener( 'click', function () {
+					lastTrigger = openButton;
+					if ( typeof dialog.showModal === 'function' ) {
+						dialog.showModal();
+					} else {
+						dialog.setAttribute( 'open', 'open' );
+					}
+				} );
+
+				dialog.addEventListener( 'click', function ( event ) {
+					if ( event.target === dialog ) {
+						closeDialog();
+					}
+				} );
+
+				dialog.addEventListener( 'cancel', function ( event ) {
+					event.preventDefault();
+					closeDialog();
+				} );
+			}
+
+			closeButtons.forEach( function ( button ) {
+				button.addEventListener( 'click', closeDialog );
+			} );
+
+			if ( openCalendarButton ) {
+				openCalendarButton.addEventListener( 'click', function () {
+					var url = openCalendarButton.getAttribute( 'data-open-url' ) || '';
+					var opened = null;
+
+					if ( ! url ) {
+						return;
+					}
+
+					try {
+						opened = window.open( url, '_blank', 'noopener,noreferrer' );
+					} catch ( error ) {
+						opened = null;
+					}
+
+					if ( ! opened ) {
+						window.location.href = url;
+					}
+				} );
+			}
+
+			if ( subscribeButton ) {
+				subscribeButton.addEventListener( 'click', function () {
+					var subscribeUrl = subscribeButton.getAttribute( 'data-subscribe-url' ) || '';
+					var fallbackUrl = subscribeButton.getAttribute( 'data-fallback-url' ) || '';
+
+					if ( ! subscribeUrl ) {
+						if ( fallbackUrl ) {
+							window.location.href = fallbackUrl;
+						}
+						return;
+					}
+
+					try {
+						window.location.href = subscribeUrl;
+					} catch ( error ) {
+						if ( fallbackUrl ) {
+							window.location.href = fallbackUrl;
+						}
+					}
+				} );
+			}
+
+			if ( copyButton ) {
+				copyButton.addEventListener( 'click', function () {
+					var value = copyButton.getAttribute( 'data-copy-value' ) || '';
+					copyText( value )
+						.then( function () {
+							if ( copyStatus ) {
+								copyStatus.textContent = 'Kalenderadresse kopiert.';
+							}
+						} )
+						.catch( function () {
+							if ( copyStatus ) {
+								copyStatus.textContent = 'Kopieren nicht möglich. Bitte Adresse manuell kopieren.';
+							}
+						} );
+				} );
+			}
+		} );
+	}
+
+	function focusNotice( root ) {
+		var notice = root.querySelector( '.avf-event-detail__notice' );
+
+		if ( notice && typeof notice.focus === 'function' ) {
+			window.requestAnimationFrame( function () {
+				notice.focus();
+			} );
+		}
+	}
+
+	function demoteHeroHeading( root ) {
+		var hero = document.querySelector( '.elementor-element-2eabd2b' );
+		var title = root.getAttribute( 'data-event-title' ) || '';
+		var heading;
+		var replacement;
+		var emptyHeadings;
+
+		if ( hero ) {
+			heading = hero.querySelector( 'h1' );
+
+			if ( heading ) {
+				replacement = document.createElement( 'p' );
+				replacement.className = heading.className ? heading.className + ' avf-event-detail__hero-label' : 'avf-event-detail__hero-label';
+				replacement.textContent = title ? 'Anlässe' : heading.textContent;
+				heading.parentNode.replaceChild( replacement, heading );
+			}
+		}
+
+		emptyHeadings = document.querySelectorAll( 'h1' );
+		emptyHeadings.forEach( function ( item ) {
+			if ( item.closest( '.avf-event-detail' ) ) {
+				return;
+			}
+
+			if ( ! item.textContent || ! item.textContent.trim() ) {
+				item.parentNode.removeChild( item );
+			}
+		} );
+	}
+
+	function toggleFieldError( field, message ) {
+		var describedBy = field.getAttribute( 'aria-describedby' ) || '';
+		var ids = describedBy.split( /\s+/ );
+		var errorId = null;
+		var errorNode = null;
+
+		ids.forEach( function ( id ) {
+			if ( ! errorId && /-error$/.test( id ) ) {
+				errorId = id;
+			}
+		} );
+
+		if ( errorId ) {
+			errorNode = document.getElementById( errorId );
+		}
+
+		if ( message ) {
+			field.setAttribute( 'aria-invalid', 'true' );
+			if ( errorNode ) {
+				errorNode.hidden = false;
+				errorNode.textContent = message;
+			}
+			return false;
+		}
+
+		field.removeAttribute( 'aria-invalid' );
+		if ( errorNode ) {
+			errorNode.hidden = true;
+			errorNode.textContent = '';
+		}
+		return true;
+	}
+
+	function validateField( field ) {
+		var type = ( field.getAttribute( 'type' ) || '' ).toLowerCase();
+		var tag = field.tagName.toLowerCase();
+		var message = '';
+
+		if ( field.disabled || ! field.hasAttribute( 'required' ) ) {
+			return toggleFieldError( field, '' );
+		}
+
+		if ( 'checkbox' === type ) {
+			if ( ! field.checked ) {
+				message = field.getAttribute( 'data-avf-required-message' ) || 'Dieses Feld ist erforderlich.';
+			}
+			return toggleFieldError( field, message );
+		}
+
+		if ( 'select' === tag && ! field.value ) {
+			message = field.getAttribute( 'data-avf-required-message' ) || 'Bitte wählen.';
+			return toggleFieldError( field, message );
+		}
+
+		if ( ! String( field.value || '' ).trim() ) {
+			message = field.getAttribute( 'data-avf-required-message' ) || 'Dieses Feld ist erforderlich.';
+		}
+
+		return toggleFieldError( field, message );
+	}
+
+	function initEventForm( root ) {
+		var form = root.querySelector( '[data-avf-event-form]' );
+		var fields;
+
+		if ( ! form ) {
+			return;
+		}
+
+		form.setAttribute( 'novalidate', 'novalidate' );
+		fields = form.querySelectorAll( 'input[required], select[required], textarea[required]' );
+
+		fields.forEach( function ( field ) {
+			var eventName = 'checkbox' === ( field.getAttribute( 'type' ) || '' ).toLowerCase() ? 'change' : 'input';
+			field.addEventListener( eventName, function () {
+				validateField( field );
+			} );
+			field.addEventListener( 'blur', function () {
+				validateField( field );
+			} );
+		} );
+
+		form.addEventListener( 'submit', function ( event ) {
+			var firstInvalid = null;
+
+			fields.forEach( function ( field ) {
+				if ( ! validateField( field ) && ! firstInvalid ) {
+					firstInvalid = field;
+				}
+			} );
+
+			if ( firstInvalid ) {
+				event.preventDefault();
+				firstInvalid.focus();
+			}
+		} );
+	}
+
+	function initStickyCta( root ) {
+		var sticky = root.querySelector( '.avf-event-detail__sticky-cta' );
+		var formBlock = root.querySelector( '.avf-event-detail__form-block' );
+		var mediaQuery = window.matchMedia( '(max-width: 767px)' );
+		var observer = null;
+
+		function updateByViewport() {
+			if ( ! sticky ) {
+				return;
+			}
+
+			if ( ! mediaQuery.matches ) {
+				root.classList.remove( 'avf-event-detail--show-sticky-cta' );
+			}
+		}
+
+		if ( ! sticky || ! formBlock || ! ( 'IntersectionObserver' in window ) ) {
+			return;
+		}
+
+		observer = new IntersectionObserver( function ( entries ) {
+			entries.forEach( function ( entry ) {
+				if ( ! mediaQuery.matches ) {
+					root.classList.remove( 'avf-event-detail--show-sticky-cta' );
+					return;
+				}
+
+				root.classList.toggle( 'avf-event-detail--show-sticky-cta', ! entry.isIntersecting );
+			} );
+		}, { threshold: 0.2 } );
+
+		observer.observe( formBlock );
+		updateByViewport();
+		if ( typeof mediaQuery.addEventListener === 'function' ) {
+			mediaQuery.addEventListener( 'change', updateByViewport );
+		} else if ( typeof mediaQuery.addListener === 'function' ) {
+			mediaQuery.addListener( updateByViewport );
+		}
+	}
+
+	function initEventDetail() {
+		var root = document.querySelector( '.avf-event-detail' );
+
+		if ( ! root ) {
+			return;
+		}
+
+		demoteHeroHeading( root );
+		focusNotice( root );
+		initEventForm( root );
+		initStickyCta( root );
+	}
+
+	function init() {
+		initMoreLinks();
+		initCalendarActions();
+		initEventDetail();
 	}
 
 	if ( 'loading' === document.readyState ) {
@@ -132,4 +445,4 @@
 	} else {
 		init();
 	}
-} )();
+}() );

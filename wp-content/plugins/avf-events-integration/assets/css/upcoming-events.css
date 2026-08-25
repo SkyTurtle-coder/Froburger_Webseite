@@ -4,11 +4,9 @@
  */
 
 .avf-home-events {
-	position: relative;
 	width: 100%;
 	box-sizing: border-box;
 	padding: 0 24px;
-	margin-top: -32px;
 	margin-bottom: 48px;
 	font-family: var(--avf-font-body, "Inter", sans-serif);
 	color: var(--avf-text, #202620);
@@ -165,7 +163,6 @@
 @media (max-width: 600px) {
 	.avf-home-events {
 		padding: 0 16px;
-		margin-top: -20px;
 	}
 
 	.avf-event-card {

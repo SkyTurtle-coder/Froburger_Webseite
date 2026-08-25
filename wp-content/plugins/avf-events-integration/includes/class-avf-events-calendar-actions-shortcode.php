@@ -1,12 +1,6 @@
 <?php
 /**
- * Registers and renders [avf_events_calendar_actions] - two links pointing
- * at Django's own calendar.ics endpoint ("Kalender abonnieren" via webcal:,
- * "ICS-Datei" via https:). WordPress never generates or parses calendar
- * data itself; both links reference the exact same Django-provided
- * resource, only the URI scheme differs (a standard convention: webcal:
- * asks the OS/calendar app to subscribe, https: prompts a one-time
- * download).
+ * Registers and renders [avf_events_calendar_actions].
  *
  * @package AVF_Events_Integration
  */
@@ -61,12 +55,11 @@ class AVF_Events_Calendar_Actions_Shortcode {
 
 		AVF_Events_Assets::enqueue();
 
-		return $this->render_html( $this->to_webcal( $ics_url ), $ics_url );
+		return $this->render_html( $ics_url, $this->to_webcal( $ics_url ) );
 	}
 
 	/**
-	 * Converts an https:// (or http://) URL to its webcal:// equivalent -
-	 * plain scheme substitution, not a new URL and not generated data.
+	 * Converts an https:// (or http://) URL to its webcal:// equivalent.
 	 *
 	 * @param string $url Django-provided ICS URL.
 	 * @return string
@@ -97,22 +90,75 @@ class AVF_Events_Calendar_Actions_Shortcode {
 	}
 
 	/**
-	 * Renders the two calendar action links.
+	 * Renders the public subscription action and dialog.
 	 *
+	 * @param string $ics_url    https:// copyable canonical URL.
 	 * @param string $webcal_url webcal:// subscribe URL.
-	 * @param string $ics_url    https:// download URL.
 	 * @return string
 	 */
-	private function render_html( $webcal_url, $ics_url ) {
+	private function render_html( $ics_url, $webcal_url ) {
+		$dialog_id = wp_unique_id( 'avf-calendar-dialog-' );
+		$label_id  = $dialog_id . '-label';
+
 		ob_start();
 		?>
-		<div class="avf-events-calendar-actions">
-			<a class="avf-events-calendar-actions__link avf-events-calendar-actions__link--subscribe" href="<?php echo esc_url( $webcal_url ); ?>">
+		<div class="avf-events-calendar-actions" data-avf-calendar-actions>
+			<button
+				type="button"
+				class="avf-events-calendar-actions__link avf-events-calendar-actions__link--subscribe"
+				data-avf-calendar-dialog-open
+				aria-haspopup="dialog"
+				aria-controls="<?php echo esc_attr( $dialog_id ); ?>"
+			>
 				<?php esc_html_e( 'Kalender abonnieren', 'avf-events-integration' ); ?>
-			</a>
-			<a class="avf-events-calendar-actions__link avf-events-calendar-actions__link--download" href="<?php echo esc_url( $ics_url ); ?>">
-				<?php esc_html_e( 'ICS-Datei', 'avf-events-integration' ); ?>
-			</a>
+			</button>
+
+			<dialog class="avf-events-calendar-actions__dialog" id="<?php echo esc_attr( $dialog_id ); ?>" aria-labelledby="<?php echo esc_attr( $label_id ); ?>">
+				<div class="avf-events-calendar-actions__dialog-inner">
+					<div class="avf-events-calendar-actions__dialog-header">
+						<h2 id="<?php echo esc_attr( $label_id ); ?>" class="avf-events-calendar-actions__dialog-title">
+							<?php esc_html_e( 'Kalender abonnieren', 'avf-events-integration' ); ?>
+						</h2>
+						<button type="button" class="avf-events-calendar-actions__dialog-close" data-avf-calendar-dialog-close aria-label="<?php esc_attr_e( 'Schließen', 'avf-events-integration' ); ?>">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<p class="avf-events-calendar-actions__dialog-text">
+						<?php esc_html_e( 'Änderungen werden automatisch übernommen. Die Aktualisierung kann je nach Kalender-App zeitversetzt erfolgen.', 'avf-events-integration' ); ?>
+					</p>
+					<p class="avf-events-calendar-actions__dialog-text">
+						<?php esc_html_e( 'Bei Problemen verwenden Sie den Link unter der Schaltfläche Link kopieren.', 'avf-events-integration' ); ?>
+					</p>
+					<div class="avf-events-calendar-actions__dialog-actions">
+						<button
+							type="button"
+							class="avf-events-calendar-actions__action avf-events-calendar-actions__action--primary"
+							data-avf-calendar-subscribe
+							data-subscribe-url="<?php echo esc_attr( $webcal_url ); ?>"
+							data-fallback-url="<?php echo esc_attr( $ics_url ); ?>"
+						>
+							<?php esc_html_e( 'Abonnieren', 'avf-events-integration' ); ?>
+						</button>
+						<button
+							type="button"
+							class="avf-events-calendar-actions__action avf-events-calendar-actions__action--secondary"
+							data-avf-calendar-copy
+							data-copy-value="<?php echo esc_attr( $ics_url ); ?>"
+						>
+							<?php esc_html_e( 'Link kopieren', 'avf-events-integration' ); ?>
+						</button>
+						<button
+							type="button"
+							class="avf-events-calendar-actions__action avf-events-calendar-actions__action--secondary"
+							data-avf-calendar-open
+							data-open-url="<?php echo esc_attr( $ics_url ); ?>"
+						>
+							<?php esc_html_e( 'ICS Download', 'avf-events-integration' ); ?>
+						</button>
+					</div>
+					<p class="avf-events-calendar-actions__copy-status" data-avf-calendar-copy-status aria-live="polite"></p>
+				</div>
+			</dialog>
 		</div>
 		<?php
 		return ob_get_clean();

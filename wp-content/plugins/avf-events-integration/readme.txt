@@ -192,8 +192,8 @@ eigene, nicht kollidierende Cache-Keys):
 
 === Übergangsstrategie v1 → Legacy (nur `[avf_events_upcoming]`) ===
 
-1. v1 wird zuerst versucht (`avf_events_api_base` + `events/upcoming/`).
-2. Ist keine v1-Basis konfiguriert **oder** antwortet der v1-Endpunkt mit HTTP 404, wird auf den
+1. v1 wird zuerst versucht (ab Version 2.3.0 ueber die zentrale interne Endpoint-Aufloesung).
+2. Ist kein aktiver interner Endpoint verfuegbar **oder** antwortet der v1-Endpunkt mit HTTP 404, wird auf den
    Legacy-Endpunkt zurückgegriffen (dessen eigene Cache-/Fallback-Logik unverändert wiederverwendet
    wird).
 3. **Kein** stiller Fallback bei anderen Fehlern (500, Timeout, ungültiges JSON, fehlendes
@@ -259,6 +259,18 @@ Button auf die normale Link-Navigation zurück.
   (verschiedene Fehlerszenarien) - siehe Commit-/Change-Historie für Details.
 
 == Changelog ==
+
+= 2.3.0 =
+* Zentrale Primary-/Fallback-Endpoint-Logik fuer die Django-Anbindung eingefuehrt
+  (`https://intern.avfroburger.ch` und `https://intern-avfroburger.ch`).
+* Neue Resolver-Klasse mit Health-Check auf `/healthz/`, kurzen Timeouts,
+  Transient-basiertem Circuit-Breaker und kontrolliertem GET-/HEAD-Failover.
+* Neue stabile WordPress-Weiterleitungsroute `/intern/` fuer Links in den internen Bereich.
+* Event-, Kalender- und Mitglieder-API-Anfragen laufen serverseitig ueber die zentrale
+  Request-Funktion; nicht idempotente Schreibzugriffe werden nicht automatisch erneut gesendet.
+* Bekannte interne Django-Medien- und API-URLs werden hostunabhaengig normalisiert und beim
+  Rendern wieder gegen den aktiven Host aufgebaut.
+* Admin-Diagnose fuer Primary, Fallback, aktiven Endpoint und Cache-Status ergaenzt.
 
 = 2.1.2 =
 * Rueckblick-Liste (`[avf_events_past]`) visuell verfeinert: breite,

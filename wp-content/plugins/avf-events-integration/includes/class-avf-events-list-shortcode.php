@@ -124,7 +124,7 @@ class AVF_Events_List_Shortcode {
 
 		$this->enqueue_assets();
 
-		$has_more  = ( null !== $total ) && ( count( $views ) < $total );
+		$has_more   = ( null !== $total ) && ( count( $views ) < $total );
 		$next_shown = min( self::MAX_COUNT, $shown + $step );
 
 		return $this->render_html( $type, $views, $shown, $step, $next_shown, $has_more, $query_var );
@@ -231,7 +231,7 @@ class AVF_Events_List_Shortcode {
 	 * @return string
 	 */
 	private function render_html( $type, array $views, $shown, $step, $next_shown, $has_more, $query_var ) {
-		$list_id     = wp_unique_id( 'avf-events-' . $type . '-list-' );
+		$list_id       = wp_unique_id( 'avf-events-' . $type . '-list-' );
 		$section_class = self::TYPE_UPCOMING === $type ? 'avf-events-upcoming' : 'avf-events-past';
 		$list_class    = self::TYPE_UPCOMING === $type ? 'avf-events-upcoming__list' : 'avf-events-past__list';
 
@@ -295,10 +295,10 @@ class AVF_Events_List_Shortcode {
 	 * @return string
 	 */
 	public static function render_upcoming_card( array $view ) {
-		$anchor      = 'event-' . $view['slug'];
-		$detail_url  = AVF_Events_View_Helpers::build_detail_url( $view );
-		$client      = new AVF_Events_API_Client();
-		$ics_url     = $client->get_calendar_ics_url();
+		$anchor     = 'event-' . $view['slug'];
+		$detail_url = AVF_Events_View_Helpers::build_detail_url( $view );
+		$client     = new AVF_Events_API_Client();
+		$ics_url    = $client->get_event_calendar_ics_url( $view['slug'] );
 
 		ob_start();
 		?>
@@ -306,7 +306,10 @@ class AVF_Events_List_Shortcode {
 
 			<time class="avf-events-tile__date" datetime="<?php echo esc_attr( $view['datetime_attr'] ); ?>">
 				<strong><?php echo esc_html( $view['day'] ); ?></strong>
-				<span><?php echo esc_html( $view['month_year'] ); ?></span>
+				<span class="avf-events-tile__month"><?php echo esc_html( $view['month_year'] ); ?></span>
+				<?php if ( '' !== $view['status_label'] ) : ?>
+					<span class="avf-events-tile__status avf-events-tile__status--<?php echo esc_attr( $view['status'] ); ?>"><?php echo esc_html( $view['status_label'] ); ?></span>
+				<?php endif; ?>
 			</time>
 
 			<div class="avf-events-tile__content">
@@ -350,9 +353,7 @@ class AVF_Events_List_Shortcode {
 	}
 
 	/**
-	 * Renders a single past-event entry: more restrained than the upcoming
-	 * card (no badge, no ICS link, smaller footprint) - date, title, short
-	 * description, location and a detail/recap link.
+	 * Renders a compact past-event recap tile: short date + title only.
 	 *
 	 * @param array $view Event view (from AVF_Events_View_Helpers::build_view()).
 	 * @return string
@@ -360,41 +361,20 @@ class AVF_Events_List_Shortcode {
 	public static function render_past_card( array $view ) {
 		$anchor     = 'event-' . $view['slug'];
 		$detail_url = AVF_Events_View_Helpers::build_detail_url( $view );
-		$meta_parts = array();
-
-		if ( '' !== $view['time_part'] ) {
-			$meta_parts[] = sprintf(
-				/* translators: %s: event start time. */
-				__( '%s Uhr', 'avf-events-integration' ),
-				$view['time_part']
-			);
-		}
-
-		if ( '' !== $view['location_name'] ) {
-			$meta_parts[] = $view['location_name'];
-		}
-
-		$meta_text = implode( ' · ', $meta_parts );
 
 		ob_start();
 		?>
 		<article class="avf-events-past-item" id="<?php echo esc_attr( $anchor ); ?>">
 			<time class="avf-events-past-item__date" datetime="<?php echo esc_attr( $view['datetime_attr'] ); ?>">
-				<?php echo esc_html( $view['date_part'] ); ?>
+				<?php echo esc_html( $view['short_date_part'] ); ?>
 			</time>
 			<div class="avf-events-past-item__body">
-				<h3 class="avf-events-past-item__title"><?php echo esc_html( $view['title'] ); ?></h3>
-				<?php if ( '' !== $view['short_description'] ) : ?>
-					<p class="avf-events-past-item__description"><?php echo esc_html( $view['short_description'] ); ?></p>
-				<?php endif; ?>
-				<?php if ( '' !== $meta_text ) : ?>
-					<p class="avf-events-past-item__meta"><?php echo esc_html( $meta_text ); ?></p>
-				<?php endif; ?>
+				<h3 class="avf-events-past-item__title">
+					<a class="avf-events-past-item__title-link" href="<?php echo esc_url( $detail_url ); ?>">
+						<?php echo esc_html( $view['title'] ); ?>
+					</a>
+				</h3>
 			</div>
-			<a class="avf-events-past-item__link" href="<?php echo esc_url( $detail_url ); ?>">
-				<?php esc_html_e( 'Rückblick', 'avf-events-integration' ); ?>
-				<span aria-hidden="true">→</span>
-			</a>
 		</article>
 		<?php
 		return ob_get_clean();

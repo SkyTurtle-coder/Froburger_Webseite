@@ -15,6 +15,53 @@ defined( 'ABSPATH' ) || exit;
 class AVF_Events_View_Helpers {
 
 	/**
+	 * Returns the configured public events page path.
+	 *
+	 * @return string
+	 */
+	public static function get_events_page_path() {
+		$page_path = get_option( 'avf_events_page_path', '/anlaesse/' );
+
+		if ( ! is_string( $page_path ) || '' === $page_path ) {
+			return '/anlaesse/';
+		}
+
+		return trailingslashit( $page_path );
+	}
+
+	/**
+	 * Returns the configured internal detail page path.
+	 *
+	 * @return string
+	 */
+	public static function get_detail_page_path() {
+		$page_path = get_option( 'avf_event_detail_page_path', '/anlassdetail/' );
+
+		if ( ! is_string( $page_path ) || '' === $page_path ) {
+			return '/anlassdetail/';
+		}
+
+		return trailingslashit( $page_path );
+	}
+
+	/**
+	 * Builds the public WordPress detail URL for one event slug.
+	 *
+	 * @param string $slug Event slug.
+	 * @return string
+	 */
+	public static function get_detail_url_from_slug( $slug ) {
+		$slug = sanitize_title( (string) $slug );
+		if ( '' === $slug ) {
+			return home_url( self::get_events_page_path() );
+		}
+
+		$base = untrailingslashit( self::get_events_page_path() );
+
+		return home_url( $base . '/' . rawurlencode( $slug ) . '/' );
+	}
+
+	/**
 	 * Builds a presentation-ready view from a normalized event array.
 	 * Returns null if start_at cannot be parsed - the same graceful-skip
 	 * behaviour as the legacy shortcode uses for unparsable dates, so a
@@ -33,14 +80,18 @@ class AVF_Events_View_Helpers {
 		$tz       = wp_timezone();
 		$start_ts = $start->getTimestamp();
 
-		$day        = wp_date( 'j', $start_ts, $tz );
-		$month_year = wp_date( 'F Y', $start_ts, $tz );
-		$date_part  = wp_date( 'd.m.Y', $start_ts, $tz );
-		$time_part  = wp_date( 'H:i', $start_ts, $tz );
+		$day         = wp_date( 'j', $start_ts, $tz );
+		$month_year  = wp_date( 'F Y', $start_ts, $tz );
+		$date_part   = wp_date( 'd.m.Y', $start_ts, $tz );
+		$short_day   = wp_date( 'd', $start_ts, $tz );
+		$short_month = wp_date( 'M', $start_ts, $tz );
+		$time_part   = wp_date( 'H:i', $start_ts, $tz );
 
-		if ( false === $day || false === $month_year || false === $date_part || false === $time_part ) {
+		if ( false === $day || false === $month_year || false === $date_part || false === $short_day || false === $short_month || false === $time_part ) {
 			return null;
 		}
+
+		$short_date = $short_day . '.' . rtrim( $short_month, '.' );
 
 		// A multi-day badge is derived from start/end dates rather than a
 		// dedicated API field - Django's v1 events currently expose no
@@ -71,12 +122,15 @@ class AVF_Events_View_Helpers {
 			'title'             => $event['title'],
 			'slug'              => $event['slug'],
 			'short_description' => $event['short_description'],
+			'status'            => $event['status'],
+			'status_label'      => $event['status_label'],
 			'location_name'     => $event['location_name'],
 			'detail_path'       => $event['detail_path'],
 			'source_url'        => $event['source_url'],
 			'day'               => $day,
 			'month_year'        => $month_year,
 			'date_part'         => $date_part,
+			'short_date_part'   => $short_date,
 			'time_part'         => $time_part,
 			'end_date_part'     => $end_date_part,
 			'is_multi_day'      => $is_multi_day,
@@ -116,19 +170,7 @@ class AVF_Events_View_Helpers {
 	 * @return string
 	 */
 	public static function build_detail_url( array $view ) {
-		if ( '' !== $view['source_url'] ) {
-			$validated = esc_url_raw( $view['source_url'] );
-			if ( '' !== $validated ) {
-				return apply_filters( 'avf_event_detail_url', $validated, $view );
-			}
-		}
-
-		$page_path = get_option( 'avf_events_page_path', '/anlaesse/' );
-		if ( ! is_string( $page_path ) || '' === $page_path ) {
-			$page_path = '/anlaesse/';
-		}
-
-		$url = home_url( $page_path . '#event-' . $view['slug'] );
+		$url = self::get_detail_url_from_slug( $view['slug'] );
 
 		return apply_filters( 'avf_event_detail_url', $url, $view );
 	}
