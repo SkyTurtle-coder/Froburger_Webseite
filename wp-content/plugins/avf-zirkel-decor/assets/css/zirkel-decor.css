@@ -129,8 +129,8 @@
 	position: relative;
 	isolation: isolate;
 	overflow: hidden;
-	--avf-ring-opacity-green: 0.22;
-	--avf-ring-opacity-orange: 0.2;
+	--avf-ring-opacity-green: 0.27;
+	--avf-ring-opacity-orange: 0.24;
 }
 
 /* Exactly one direct decoration layer per container. */
@@ -258,6 +258,7 @@
 	flex: 1;
 }
 
+
 .avf-has-zirkel-bg .avf-post-card__link {
 	margin-top: auto;
 }
@@ -327,29 +328,12 @@
 	opacity: 0.18;
 }
 
-/* Smaller accent ring, top-left, cropped by the header's own overflow:hidden. */
-.avf-page-head__ring--small {
-	width: 200px;
-	height: 200px;
-	left: -50px;
-	right: auto;
-	top: -40px;
-	transform: rotate(-16deg);
-	opacity: 0.16;
-}
-
 @media (max-width: 900px) {
 	.avf-page-head__ring--large {
 		width: 380px;
 		height: 380px;
 		right: -150px;
 		opacity: 0.16;
-	}
-
-	.avf-page-head__ring--small {
-		width: 150px;
-		height: 150px;
-		opacity: 0.14;
 	}
 }
 
@@ -362,10 +346,5 @@
 		right: -90px;
 		transform: rotate(10deg);
 		opacity: 0.14;
-	}
-
-	/* One ring only on small screens - keeps the header calm, not cluttered. */
-	.avf-page-head__ring--small {
-		display: none;
 	}
 }

@@ -15,10 +15,6 @@
    HAUPTINHALT-CONTAINER (avf-home-main)
    ========================================================= */
 
-:root {
-	--avf-home-event-overlap: 64px;
-}
-
 body.home .avf-home-main {
 	display: flex;
 	flex-direction: column;
@@ -47,6 +43,14 @@ body.home .avf-home-hero {
 	isolation: isolate;
 }
 
+/*
+ * Alle Hero-Karussell-spezifischen Regeln (Groessen-Kaskade auf die
+ * Swiper-Struktur, Fade/Crossfade, Zoom) wurden entfernt - das Karussell
+ * wird jetzt vollstaendig ueber Elementor selbst gesteuert (Widget-
+ * Einstellungen, Bewegungseffekte, Custom CSS im Editor), nicht mehr
+ * ueber dieses Plugin. avf-homepage-layout.php enqueued homepage.js
+ * dementsprechend auch nicht mehr.
+ */
 
 /* Page-wide decoration layer, injected as the first child by avf-zirkel-decor. */
 body.home .avf-home-main > .avf-page-zirkel-decor-layer {
@@ -75,9 +79,6 @@ body.home .avf-home-main > :where(:not(.avf-page-zirkel-decor-layer)) {
    ========================================================= */
 
 body.home .avf-home-events-slot {
-	position: relative;
-	z-index: 10;
-
 	width: 100%;
 	max-width: none;
 
@@ -89,7 +90,7 @@ body.home .avf-home-events-slot {
 	background: transparent;
 }
 
-/* Elementor- und Shortcode-Wrapper dürfen die Überlappung nicht abschneiden. */
+/* Elementor- und Shortcode-Wrapper dürfen Kartenschatten nicht abschneiden. */
 body.home .avf-home-events-slot > *,
 body.home .avf-home-events-slot .elementor-widget-shortcode,
 body.home .avf-home-events-slot .elementor-widget-container,
@@ -97,15 +98,7 @@ body.home .avf-home-events-slot .avf-home-events {
 	overflow: visible;
 }
 
-/*
- * Die vom Event-Plugin früher gesetzte eigene Verschiebung wird
- * neutralisiert. Die Startseite besitzt genau eine zentrale
- * Überlappungslogik.
- */
 body.home .avf-home-events-slot .avf-home-events {
-	position: relative;
-	z-index: 10;
-
 	display: flow-root;
 
 	width: 100%;
@@ -115,23 +108,8 @@ body.home .avf-home-events-slot .avf-home-events {
 	background: transparent;
 }
 
-/*
- * Nur der innere Kartenbereich ragt in den Hero. Der warmweisse
- * Hauptinhalt bleibt an der tatsächlichen Hero-Unterkante.
- */
 body.home .avf-home-events-slot .avf-home-events__inner {
-	position: relative;
-	z-index: 12;
-
-	margin-top: calc(-1 * var(--avf-home-event-overlap));
-
 	overflow: visible;
-}
-
-body.home .avf-home-events-slot .avf-home-events__list,
-body.home .avf-home-events-slot .avf-event-card {
-	position: relative;
-	z-index: 13;
 }
 
 
@@ -345,10 +323,6 @@ body.home .avf-home-quote__translation p {
    ========================================================= */
 
 @media (max-width: 1024px) {
-	:root {
-		--avf-home-event-overlap: 44px;
-	}
-
 	body.home .avf-home-values {
 		padding: 72px 20px;
 	}
@@ -365,10 +339,6 @@ body.home .avf-home-quote__translation p {
 }
 
 @media (max-width: 767px) {
-	:root {
-		--avf-home-event-overlap: 24px;
-	}
-
 	body.home .avf-home-events-slot {
 		padding: 0 16px;
 	}
@@ -415,23 +385,18 @@ body.home .avf-home-quote__translation p {
 }
 
 /* =========================================================
-   FINALER FIX – EVENTKARTE RAGT IN DEN HERO
+   EVENTKARTE – KEINE ÜBERLAPPUNG MIT DEM HERO
    Funktioniert im Frontend und Elementor-Canvas
    ========================================================= */
 
-:root {
-    --avf-home-event-overlap: 120px;
-}
-
-/* Hero bleibt hinter der Anlasskarte */
+/* Hero bleibt hinter dem Hauptinhalt */
 .avf-home-hero {
     position: relative !important;
     z-index: 1 !important;
 }
 
 /*
- * Hauptinhalt nicht verschieben und den Überstand
- * der Anlasskarte nicht abschneiden.
+ * Hauptinhalt nicht verschieben und nicht abschneiden.
  */
 .avf-home-main {
     position: relative !important;
@@ -454,25 +419,11 @@ body.home .avf-home-quote__translation p {
     overflow: visible !important;
 }
 
-/*
- * Der bekannte Elementor-Container selbst wird nach oben gezogen.
- * Da sein Hintergrund transparent ist, ragt optisch nur die Karte
- * in das Hero-Karussell hinein.
- */
 .avf-home-events-slot {
-    position: relative !important;
-    z-index: 20 !important;
-
     width: 100% !important;
     max-width: none !important;
 
-    margin-top:
-        calc(-1 * var(--avf-home-event-overlap))
-        !important;
-
-    margin-right: 0 !important;
-    margin-bottom: 0 !important;
-    margin-left: 0 !important;
+    margin: 0 !important;
 
     padding-right: 24px !important;
     padding-left: 24px !important;
@@ -481,7 +432,7 @@ body.home .avf-home-quote__translation p {
     background: transparent !important;
 }
 
-/* Alle Elementor- und Shortcode-Wrapper offen halten */
+/* Alle Elementor- und Shortcode-Wrapper offen halten, damit Kartenschatten nicht abgeschnitten werden. */
 .avf-home-events-slot > *,
 .avf-home-events-slot .elementor-widget-shortcode,
 .avf-home-events-slot .elementor-widget-container,
@@ -491,40 +442,14 @@ body.home .avf-home-quote__translation p {
     overflow: visible !important;
 }
 
-/*
- * Frühere negative Verschiebung des Event-Plugins neutralisieren,
- * damit nur die zentrale 64-px-Überlappung verwendet wird.
- */
-.avf-home-events-slot .avf-home-events,
-.avf-home-events-slot .avf-home-events__inner {
-    margin-top: 0 !important;
-}
-
-/* Karte garantiert oberhalb des Hero-Bildes */
-.avf-home-events-slot .avf-event-card {
-    position: relative !important;
-    z-index: 30 !important;
-}
-
 /* Zirkel bleiben hinter den Inhalten */
 .avf-home-main > .avf-page-zirkel-decor-layer {
     z-index: 0 !important;
     pointer-events: none !important;
 }
 
-/* Tablet */
-@media (max-width: 1024px) {
-    :root {
-        --avf-home-event-overlap: 44px;
-    }
-}
-
 /* Smartphone */
 @media (max-width: 767px) {
-    :root {
-        --avf-home-event-overlap: 24px;
-    }
-
     .avf-home-events-slot {
         padding-right: 16px !important;
         padding-left: 16px !important;
@@ -537,4 +462,3 @@ body.home
     --avf-ring-opacity: 0.12 !important;
     opacity: var(--avf-ring-opacity) !important;
 }
-

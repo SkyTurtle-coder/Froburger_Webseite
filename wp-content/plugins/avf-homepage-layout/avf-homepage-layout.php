@@ -49,6 +49,11 @@ function avf_homepage_layout_enqueue_assets() {
 		array(),
 		$version
 	);
+
+	// homepage.js (hero carousel zoom/crossfade control) is intentionally
+	// no longer enqueued - the carousel is now controlled entirely through
+	// Elementor itself (widget settings, motion effects, Custom CSS in the
+	// editor), not through this plugin.
 }
 // Priority 100: enqueued after Elementor/theme (default priority 10) and after avf-site-styles (priority 100 too,
 // but registered later in the request since this plugin loads after avf-site-styles alphabetically/by activation

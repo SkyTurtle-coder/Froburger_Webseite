@@ -495,9 +495,9 @@
 	};
 
 	var PAGE_SIZE_RANGES = {
-		desktop: [ 360, 680 ],
-		tablet: [ 280, 500 ],
-		mobile: [ 190, 330 ],
+		desktop: [ 430, 820 ],
+		tablet: [ 340, 620 ],
+		mobile: [ 230, 410 ],
 	};
 
 	var PAGE_GAP_RANGES = {
@@ -1224,14 +1224,13 @@
 	 * A third, independent, deliberately non-random mode: the global
 	 * page-header template ("AVF - Seitenvorlage") wraps its title/intro
 	 * block in an element carrying this class. Unlike the ".avf-decor"
-	 * and page-wide modes above, this is a fixed, art-directed two-ring
-	 * composition (one large ring bleeding off the right edge, one small
-	 * accent ring top-left) - not seeded/randomised, since a hero banner
-	 * benefits from a deliberate composition rather than per-page
-	 * variation. Position/size come entirely from CSS
-	 * (".avf-page-head__ring--large/--small" in zirkel-decor.css); this
-	 * pipeline only handles idempotent injection, exactly like the other
-	 * two modes.
+	 * and page-wide modes above, this is a fixed, art-directed single-ring
+	 * composition (one large ring bleeding off the right edge) - not
+	 * seeded/randomised, since a hero banner benefits from a deliberate
+	 * composition rather than per-page variation. Position/size come
+	 * entirely from CSS (".avf-page-head__ring--large" in
+	 * zirkel-decor.css); this pipeline only handles idempotent injection,
+	 * exactly like the other two modes.
 	 * ----------------------------------------------------------- */
 
 	var PAGE_HEAD_CLASS = 'avf-page-head';
@@ -1246,15 +1245,10 @@
 	 * @return {void}
 	 */
 	function buildPageHeadRings( el ) {
-		var small = document.createElement( 'span' );
-		small.className = 'avf-zirkel avf-zirkel--orange ' + PAGE_HEAD_RING_CLASS + ' ' + PAGE_HEAD_RING_CLASS + '--small';
-		small.setAttribute( 'aria-hidden', 'true' );
-
 		var large = document.createElement( 'span' );
 		large.className = 'avf-zirkel avf-zirkel--green ' + PAGE_HEAD_RING_CLASS + ' ' + PAGE_HEAD_RING_CLASS + '--large';
 		large.setAttribute( 'aria-hidden', 'true' );
 
-		el.insertBefore( small, el.firstChild );
 		el.insertBefore( large, el.firstChild );
 		el.setAttribute( PAGE_HEAD_READY_ATTR, 'true' );
 	}

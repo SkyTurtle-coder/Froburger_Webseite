@@ -4,7 +4,7 @@ Tags: elementor, layout, bugfix
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.4
+Stable tag: 1.2.9
 License: GPLv2 or later
 
 Enthaelt gezielte projektspezifische Layoutkorrekturen.
@@ -114,6 +114,17 @@ wiederverwendbaren Klassen und das responsive Kartenlayout.
   automatisch mittig ueber beide Spalten gezogen.
 
 == Changelog ==
+
+= 1.2.9 =
+* Abschnitt "Geschichte" auf der Seite "Ueber uns" lokal auf stabile
+  `avf-history`-/`avf-timeline`-Hook-Klassen umgebaut: Grid statt
+  flexbasierter Prozentspalten, ein durchgehender Zeitstrahl ohne feste
+  100px-Segmente, korrigierter 14px-Markerpunkt ohne Rest-Padding und
+  mobile Umsortierung Jahr ueber Text statt Kollision in einer 10%-Spalte.
+* Semantische Zielvariante fuer denselben Zeitstrahl als getrennte
+  Refactor-Dokumentation unter `docs/about-history-timeline-refactor.md`
+  abgelegt, damit die CSS-only-Reparatur und der spaetere Markup-Umbau
+  getrennt bleiben.
 
 = 1.2.4 =
 * Die drei Hauptbereiche der Seite "Anlaesse" - kommender Event-Heading,

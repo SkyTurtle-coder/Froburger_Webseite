@@ -98,6 +98,10 @@
 	font-weight: 500;
 	line-height: 1.08;
 	color: var(--avf-green-dark, #183f1e);
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	word-break: normal;
+	hyphens: auto;
 }
 
 .avf-featured-post__title a {
@@ -183,7 +187,8 @@
 	}
 
 	.avf-featured-post__title {
-		font-size: clamp(2rem, 8vw, 2.5rem);
+		font-size: clamp(1.8rem, 7.6vw, 2.35rem);
+		line-height: 1.12;
 	}
 
 	.avf-featured-post__link {
