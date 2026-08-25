@@ -469,19 +469,12 @@ body.home .avf-home-events-slot .avf-event-card__link {
 }
 
 /*
- * The event card previously used a large negative margin at every desktop
- * width. At common laptop and small-desktop sizes that places it over the
- * hero CTAs. Keep the normal document flow up to wide desktop screens and
- * reserve the decorative overlap for layouts with sufficient vertical room.
+ * The event card previously used a large negative margin that covered hero
+ * copy and CTAs at real desktop viewport heights. Keep it in normal document
+ * flow at every breakpoint; the card must begin below the hero image.
  */
 body.home .avf-home-main {
     margin-top: 0 !important;
-}
-
-@media (min-width: 1720px) {
-    body.home .avf-home-main {
-        margin-top: -112px !important;
-    }
 }
 
 /* Zirkel bleiben hinter den Inhalten */
