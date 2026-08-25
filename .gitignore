@@ -4,6 +4,8 @@
 # Repository-Dateien
 !.gitignore
 !README.md
+!docs/
+!docs/**
 
 # Eigener WordPress-Code
 !wp-content/
@@ -44,6 +46,9 @@ wp-config.php
 *.sqlite
 *.sqlite3
 *.log
+*.tmp
+*.bak
+*.old
 *.zip
 *.tar
 *.gz
@@ -53,3 +58,12 @@ node_modules/
 vendor/
 .DS_Store
 Thumbs.db
+
+# Lokale QA- und Screenshot-Artefakte
+tmp-avf-browser/
+tools/
+wp-content/mu-plugins/local-by-flywheel-live-link-helper.php
+*-screenshot*.png
+*headless*.png
+qa-*.png
+tmp-*.json
