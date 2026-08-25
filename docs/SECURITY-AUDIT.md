@@ -38,7 +38,7 @@ The WordPress delivery path itself uses opaque 32-hex tokens and serves files th
 **Recommendation**  
 Move private member media fully outside the shared project tree on developer machines as well, or create a dedicated top-level ignore boundary plus explicit archival exclusions for that directory. Treat it like secrets-bearing state, not like source-adjacent content.
 
-**Status:** Partially remediated - `avf-member-privacy-ops.md` now contains a prominent exclusion requirement and a manual, configuration-based move procedure. Existing member data was deliberately not moved; the current workspace path remains until an operator completes that procedure.
+**Status:** Partially remediated - Branch `fix/sec-audit-p0-p1`, Commit `d1dd8db`, 2026-08-25. `avf-member-privacy-ops.md` now contains a prominent exclusion requirement and a manual, configuration-based move procedure. Existing member data was deliberately not moved; the current workspace path remains until an operator completes that procedure.
 
 ## Medium Findings
 ### SEC-002 (EVT/PLG) - Legacy bare secret still bypasses signed event-signup authentication
@@ -59,7 +59,7 @@ The endpoint is limited to `POST`, validates payload shape, rate-limits by clien
 **Recommendation**  
 Remove legacy-secret acceptance on the Django side once rollout is complete, and stop sending the plain secret header from WordPress. Keep only the signed request path.
 
-**Status:** Remediated - signed timestamp plus HMAC is now required by Django, and WordPress no longer sends the legacy bare-secret header.
+**Status:** Partially remediated - Intern branch `fix/sec-audit-p0-p1`, Commit `e4485e5`, 2026-08-25. Django now requires signed timestamp plus HMAC. WordPress no longer sends the legacy bare-secret header in the working tree, but that client file has unrelated pre-existing changes and was intentionally not included in a security commit.
 
 ### SEC-003 (OPS) - Destructive deploy fallback wipes remote app directory without a hard path guard
 **Severity:** Medium  
@@ -79,7 +79,7 @@ The script creates a dated backup directory before synchronization.
 **Recommendation**  
 Add an explicit remote path assertion before any destructive command and fail closed unless the target equals the expected application directory. Prefer `rsync --delay-updates`-style replacement paths over wipe-and-extract fallback.
 
-**Status:** Partially remediated - the deployment script now rejects every target except `/srv/avf-intern/app` locally and reasserts that value on the remote host before the fallback wipe. The fallback remains destructive; an atomic replacement strategy is deferred.
+**Status:** Partially remediated - Intern branch `fix/sec-audit-p0-p1`, Commit `2d0f0e8`, 2026-08-25. The deployment script now rejects every target except `/srv/avf-intern/app` locally and reasserts that value on the remote host before the fallback wipe. The fallback remains destructive; an atomic replacement strategy is deferred.
 
 ### SEC-004 (OPS) - Test deploy script still uses broad mirror + remote delete flow
 **Severity:** Medium  
