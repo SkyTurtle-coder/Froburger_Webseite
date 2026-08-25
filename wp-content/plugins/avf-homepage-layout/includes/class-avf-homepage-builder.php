@@ -530,12 +530,8 @@ class AVF_Homepage_Builder {
 		// global-class system confirmed to also drive the editor iframe/preview.
 		// The hero/events overlap is applied as a negative margin-top on
 		// avf-home-main ITSELF, not on the events-slot child. avf-home-main
-		// has overflow:hidden (needed to contain the decor layer), and CSS
-		// unconditionally clips any descendant that visually pokes above its
-		// own parent's border box via a negative margin - regardless of
-		// z-index. Putting the negative margin on main's own box sidesteps
-		// that entirely, since an element is never clipped by its own
-		// overflow rule.
+		// Keep the content in normal flow at common viewport widths. The
+		// stylesheet may add a decorative overlap only on wide desktops.
 		$map['avf-home-main']              = $this->ensure_global_class( 'avf-home-main', array(
 			'display'        => 'flex',
 			'flex-direction' => 'column',
@@ -543,10 +539,10 @@ class AVF_Homepage_Builder {
 			'background-color' => '#F7F5EF',
 			'position'        => 'relative',
 			'z-index'         => '2',
-			'margin-top'      => '-112px',
+			'margin-top'      => '0px',
 		), array(
-			'tablet' => array( 'margin-top' => '-76px' ),
-			'mobile' => array( 'margin-top' => '-40px' ),
+			'tablet' => array( 'margin-top' => '0px' ),
+			'mobile' => array( 'margin-top' => '0px' ),
 		) );
 		$map['avf-home-events-slot']       = $this->ensure_global_class( 'avf-home-events-slot', array(
 			'display'         => 'flex',
