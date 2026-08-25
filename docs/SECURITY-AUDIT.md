@@ -38,7 +38,7 @@ The WordPress delivery path itself uses opaque 32-hex tokens and serves files th
 **Recommendation**  
 Move private member media fully outside the shared project tree on developer machines as well, or create a dedicated top-level ignore boundary plus explicit archival exclusions for that directory. Treat it like secrets-bearing state, not like source-adjacent content.
 
-**Status:** Partially remediated - Branch `fix/sec-audit-p0-p1`, Commit `d1dd8db`, 2026-08-25. `avf-member-privacy-ops.md` now contains a prominent exclusion requirement and a manual, configuration-based move procedure. Existing member data was deliberately not moved; the current workspace path remains until an operator completes that procedure.
+**Status:** Code and documentation are ready in the working tree, but the ops document is not committed - `avf-member-privacy-ops.md` is an untracked whole file in a larger untracked MU-plugin set, so its SEC-001 additions cannot be committed separately without taking unrelated content. Commit `d1dd8db` records this status only. Existing member data was deliberately not moved; the current workspace path remains until an operator completes the documented procedure.
 
 ## Medium Findings
 ### SEC-002 (EVT/PLG) - Legacy bare secret still bypasses signed event-signup authentication
@@ -59,7 +59,7 @@ The endpoint is limited to `POST`, validates payload shape, rate-limits by clien
 **Recommendation**  
 Remove legacy-secret acceptance on the Django side once rollout is complete, and stop sending the plain secret header from WordPress. Keep only the signed request path.
 
-**Status:** Partially remediated - Intern branch `fix/sec-audit-p0-p1`, Commit `e4485e5`, 2026-08-25. Django now requires signed timestamp plus HMAC. WordPress no longer sends the legacy bare-secret header in the working tree, but that client file has unrelated pre-existing changes and was intentionally not included in a security commit.
+**Status:** Partially remediated - Intern branch `fix/sec-audit-p0-p1`, Commit `e4485e5`, 2026-08-25. Django now requires signed timestamp plus HMAC. WordPress no longer sends the legacy bare-secret header in the working tree, but the removal is embedded in the uncommitted replacement of `class-avf-events-api-client.php`; a standalone SEC-002 commit would include unrelated client changes.
 
 ### SEC-003 (OPS) - Destructive deploy fallback wipes remote app directory without a hard path guard
 **Severity:** Medium  
@@ -99,7 +99,7 @@ The script excludes uploads, cache, upgrade data, and `wp-config.php`, and it pe
 **Recommendation**  
 Replace the default script path with a minimal changed-files deploy flow, or gate the full mirror behind an explicit high-risk flag and a preflight environment verification step.
 
-**Status:** Partially remediated - Intern branch `fix/sec-audit-p0-p1`, 2026-08-25. `deploy-test.ps1` now requires explicit `-ChangedFiles` for its default minimal-copy path, gates the existing `rsync --delete` path behind `-FullMirror`, and rejects non-test targets before a sync. The script is an existing untracked worktree file, so it was intentionally not committed with unrelated content.
+**Status:** Partially remediated - Intern branch `fix/sec-audit-p0-p1`, Commit `647ec7d`, 2026-08-25. `deploy-test.ps1` now requires explicit `-ChangedFiles` for its default minimal-copy path, gates the existing `rsync --delete` path behind `-FullMirror`, and rejects non-test targets before a sync.
 
 ## Low Findings
 ### SEC-005 (INV/OPS) - Operational documentation exposes detailed live-environment topology
@@ -117,7 +117,7 @@ This is not a secret leak by itself, but it materially increases the value of re
 **Recommendation**  
 Trim environment-specific operational history from the source repo, or move sensitive runbooks to a narrower-access operational store.
 
-**Status:** Partially remediated - Intern branch `fix/sec-audit-p0-p1`, Commit `4b93ab8`, 2026-08-25. Detailed topology and incident history were moved to ignored local file `OPERATIONS-HISTORY.local.md`; the versioned status document retains only forward-looking operating rules and a local-history reference. Existing Git history was not rewritten.
+**Status:** Partially remediated - Intern branch `fix/sec-audit-p0-p1`, Commits `4b93ab8` and `647ec7d`, 2026-08-25. Detailed topology and incident history were moved to ignored local file `OPERATIONS-HISTORY.local.md`; the versioned status document retains only forward-looking operating rules and a local-history reference. Existing Git history was not rewritten.
 
 ## Privacy Findings
 - Private member-media handling is architecturally stronger than direct upload URLs, but the local storage location inside the shared project workspace remains a privacy risk.
