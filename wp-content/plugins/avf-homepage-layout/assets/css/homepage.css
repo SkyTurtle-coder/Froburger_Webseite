@@ -44,6 +44,40 @@ body.home .avf-home-hero {
 }
 
 /*
+ * A wide screen can still have little vertical room (for example a laptop
+ * with browser chrome visible). The crest's 4:3 asset otherwise consumes
+ * enough hero height to push its CTA row behind the following event card.
+ */
+@media (min-width: 768px) and (max-height: 920px) {
+	body.home .avf-home-hero .avf-hero-logo {
+		width: min(30vw, 460px) !important;
+		margin-bottom: 4px !important;
+	}
+
+	body.home .avf-home-hero .avf-hero-title,
+	body.home .avf-home-hero .avf-hero-title .elementor-heading-title {
+		font-size: clamp(2.6rem, 3.7vw, 3.8rem) !important;
+		line-height: 0.98 !important;
+	}
+
+	body.home .avf-home-hero .avf-hero-lead,
+	body.home .avf-home-hero .avf-hero-lead p {
+		font-size: 1rem !important;
+	}
+}
+
+@media (min-width: 768px) and (max-height: 760px) {
+	body.home .avf-home-hero .avf-hero-logo {
+		width: min(26vw, 380px) !important;
+	}
+
+	body.home .avf-home-hero .avf-hero-title,
+	body.home .avf-home-hero .avf-hero-title .elementor-heading-title {
+		font-size: clamp(2.3rem, 3.2vw, 3.2rem) !important;
+	}
+}
+
+/*
  * Alle Hero-Karussell-spezifischen Regeln (Groessen-Kaskade auf die
  * Swiper-Struktur, Fade/Crossfade, Zoom) wurden entfernt - das Karussell
  * wird jetzt vollstaendig ueber Elementor selbst gesteuert (Widget-
