@@ -656,12 +656,16 @@
 
 .avf-event-detail__title {
 	margin: 0;
+	min-width: 0;
+	max-inline-size: 100%;
 	font-family: var(--avf-font-display, "Cormorant Garamond", serif);
 	font-size: var(--fs-2xl);
 	line-height: 1.05;
 	font-weight: 600;
 	color: var(--avf-night, #0e1711);
 	text-wrap: balance;
+	hyphens: auto;
+	overflow-wrap: anywhere;
 }
 
 .avf-event-detail__lead {
