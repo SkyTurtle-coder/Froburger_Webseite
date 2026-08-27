@@ -117,9 +117,7 @@ class AVF_Events_Calendar_Actions_Shortcode {
 		$label_id   = $dialog_id . '-label';
 		$is_android = $this->is_android_user_agent();
 
-		$subscribe_label = $is_android
-			? __( 'Termine importieren', 'avf-events-integration' )
-			: __( 'Abonnieren', 'avf-events-integration' );
+		$subscribe_label = __( 'Abonnieren', 'avf-events-integration' );
 
 		$dialog_intro = $is_android
 			? __( 'Auf Android öffnet dieser Button den Import in Google Kalender. Die Termine werden dabei einmalig übernommen, spätere Änderungen erscheinen nicht automatisch.', 'avf-events-integration' )

@@ -133,8 +133,6 @@
 	}
 
 	function openCalendarSubscription( button, subscribeUrl, fallbackUrl, googleUrl ) {
-		var googleRedirectTimer = null;
-
 		if ( button && 'true' === button.getAttribute( 'aria-busy' ) ) {
 			return;
 		}
@@ -150,23 +148,7 @@
 			window.location.assign( fallbackUrl );
 		}
 
-		function clearGoogleRedirect() {
-			if ( googleRedirectTimer ) {
-				window.clearTimeout( googleRedirectTimer );
-				googleRedirectTimer = null;
-			}
-			document.removeEventListener( 'visibilitychange', handleVisibilityChange );
-			window.removeEventListener( 'pagehide', clearGoogleRedirect );
-		}
-
-		function handleVisibilityChange() {
-			if ( 'hidden' === document.visibilityState ) {
-				clearGoogleRedirect();
-			}
-		}
-
 		function openGoogleCalendar() {
-			clearGoogleRedirect();
 			clearBusy();
 			window.location.assign( googleUrl );
 		}
@@ -188,17 +170,7 @@
 		if ( isAndroidDevice() && googleUrl ) {
 			/* Google requires the feed URL to be pasted manually on its add-by-URL page. */
 			copyText( fallbackUrl ).catch( function () {} );
-			document.addEventListener( 'visibilitychange', handleVisibilityChange );
-			window.addEventListener( 'pagehide', clearGoogleRedirect );
-
-			try {
-				window.location.assign( subscribeUrl );
-			} catch ( error ) {
-				openGoogleCalendar();
-				return;
-			}
-
-			googleRedirectTimer = window.setTimeout( openGoogleCalendar, 1500 );
+			openGoogleCalendar();
 			return;
 		}
 
