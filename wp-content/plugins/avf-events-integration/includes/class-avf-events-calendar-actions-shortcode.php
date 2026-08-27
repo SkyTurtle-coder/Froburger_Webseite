@@ -90,6 +90,22 @@ class AVF_Events_Calendar_Actions_Shortcode {
 	}
 
 	/**
+	 * Detects whether the current request comes from an Android device.
+	 *
+	 * Android's Google Calendar app has no in-app "subscribe to feed" flow;
+	 * opening an .ics link only imports the events once. The dialog copy
+	 * is adjusted accordingly so the button doesn't promise a live sync
+	 * it can't deliver on this platform.
+	 *
+	 * @return bool
+	 */
+	private function is_android_user_agent() {
+		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+
+		return false !== stripos( $user_agent, 'Android' );
+	}
+
+	/**
 	 * Renders the public subscription action and dialog.
 	 *
 	 * @param string $ics_url    https:// copyable canonical URL.
@@ -97,8 +113,21 @@ class AVF_Events_Calendar_Actions_Shortcode {
 	 * @return string
 	 */
 	private function render_html( $ics_url, $webcal_url ) {
-		$dialog_id = wp_unique_id( 'avf-calendar-dialog-' );
-		$label_id  = $dialog_id . '-label';
+		$dialog_id  = wp_unique_id( 'avf-calendar-dialog-' );
+		$label_id   = $dialog_id . '-label';
+		$is_android = $this->is_android_user_agent();
+
+		$subscribe_label = $is_android
+			? __( 'Termine importieren', 'avf-events-integration' )
+			: __( 'Abonnieren', 'avf-events-integration' );
+
+		$dialog_intro = $is_android
+			? __( 'Auf Android öffnet dieser Button den Import in Google Kalender. Die Termine werden dabei einmalig übernommen, spätere Änderungen erscheinen nicht automatisch.', 'avf-events-integration' )
+			: __( 'Änderungen werden automatisch übernommen. Die Aktualisierung kann je nach Kalender-App zeitversetzt erfolgen.', 'avf-events-integration' );
+
+		$dialog_secondary = $is_android
+			? __( 'Für eine laufend aktualisierte Ansicht fügen Sie den kopierten Link am Computer in Google Kalender unter „Weitere Kalender hinzufügen → Per URL“ hinzu.', 'avf-events-integration' )
+			: __( 'Bei Problemen verwenden Sie den Link unter der Schaltfläche Link kopieren.', 'avf-events-integration' );
 
 		ob_start();
 		?>
@@ -124,10 +153,10 @@ class AVF_Events_Calendar_Actions_Shortcode {
 						</button>
 					</div>
 					<p class="avf-events-calendar-actions__dialog-text">
-						<?php esc_html_e( 'Änderungen werden automatisch übernommen. Die Aktualisierung kann je nach Kalender-App zeitversetzt erfolgen.', 'avf-events-integration' ); ?>
+						<?php echo esc_html( $dialog_intro ); ?>
 					</p>
 					<p class="avf-events-calendar-actions__dialog-text">
-						<?php esc_html_e( 'Bei Problemen verwenden Sie den Link unter der Schaltfläche Link kopieren.', 'avf-events-integration' ); ?>
+						<?php echo esc_html( $dialog_secondary ); ?>
 					</p>
 					<div class="avf-events-calendar-actions__dialog-actions">
 						<button
@@ -137,7 +166,7 @@ class AVF_Events_Calendar_Actions_Shortcode {
 							data-subscribe-url="<?php echo esc_attr( $webcal_url ); ?>"
 							data-fallback-url="<?php echo esc_attr( $ics_url ); ?>"
 						>
-							<?php esc_html_e( 'Abonnieren', 'avf-events-integration' ); ?>
+							<?php echo esc_html( $subscribe_label ); ?>
 						</button>
 						<button
 							type="button"

@@ -128,6 +128,81 @@
 		} );
 	}
 
+	function isAndroidDevice() {
+		return /Android/i.test( navigator.userAgent || '' );
+	}
+
+	function openCalendarSubscription( button, subscribeUrl, fallbackUrl, status ) {
+		var fallbackTimer = null;
+		var externalHandlerOpened = false;
+
+		if ( button && 'true' === button.getAttribute( 'aria-busy' ) ) {
+			return;
+		}
+
+		function clearFallback() {
+			externalHandlerOpened = true;
+			if ( fallbackTimer ) {
+				window.clearTimeout( fallbackTimer );
+				fallbackTimer = null;
+			}
+			document.removeEventListener( 'visibilitychange', handleVisibilityChange );
+			window.removeEventListener( 'pagehide', clearFallback );
+			if ( button ) {
+				button.removeAttribute( 'aria-busy' );
+			}
+		}
+
+		function handleVisibilityChange() {
+			if ( 'hidden' === document.visibilityState ) {
+				clearFallback();
+			}
+		}
+
+		function openFallback() {
+			clearFallback();
+			if ( status ) {
+				status.textContent = 'Der Kalender-Download wird geöffnet.';
+			}
+			window.location.assign( fallbackUrl );
+		}
+
+		if ( ! subscribeUrl || ! fallbackUrl || isAndroidDevice() ) {
+			if ( fallbackUrl ) {
+				if ( button ) {
+					button.setAttribute( 'aria-busy', 'true' );
+				}
+				openFallback();
+			}
+			return;
+		}
+
+		if ( button ) {
+			button.setAttribute( 'aria-busy', 'true' );
+		}
+
+		if ( status ) {
+			status.textContent = 'Kalender-App wird geöffnet.';
+		}
+
+		document.addEventListener( 'visibilitychange', handleVisibilityChange );
+		window.addEventListener( 'pagehide', clearFallback );
+
+		try {
+			window.location.assign( subscribeUrl );
+		} catch ( error ) {
+			openFallback();
+			return;
+		}
+
+		/* webcal failures do not throw, so fall back when the page stays active. */
+		fallbackTimer = window.setTimeout( function () {
+			if ( ! externalHandlerOpened && 'hidden' !== document.visibilityState ) {
+				openFallback();
+			}
+		}, 1500 );
+	}
+
 	function initCalendarActions() {
 		var roots = document.querySelectorAll( '[data-avf-calendar-actions]' );
 
@@ -207,20 +282,7 @@
 					var subscribeUrl = subscribeButton.getAttribute( 'data-subscribe-url' ) || '';
 					var fallbackUrl = subscribeButton.getAttribute( 'data-fallback-url' ) || '';
 
-					if ( ! subscribeUrl ) {
-						if ( fallbackUrl ) {
-							window.location.href = fallbackUrl;
-						}
-						return;
-					}
-
-					try {
-						window.location.href = subscribeUrl;
-					} catch ( error ) {
-						if ( fallbackUrl ) {
-							window.location.href = fallbackUrl;
-						}
-					}
+					openCalendarSubscription( subscribeButton, subscribeUrl, fallbackUrl, copyStatus );
 				} );
 			}
 
