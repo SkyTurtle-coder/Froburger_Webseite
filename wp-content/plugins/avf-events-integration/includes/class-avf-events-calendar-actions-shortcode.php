@@ -165,6 +165,7 @@ class AVF_Events_Calendar_Actions_Shortcode {
 							data-avf-calendar-subscribe
 							data-subscribe-url="<?php echo esc_attr( $webcal_url ); ?>"
 							data-fallback-url="<?php echo esc_attr( $ics_url ); ?>"
+							data-google-url="https://calendar.google.com/calendar/u/0/r/settings/addbyurl"
 						>
 							<?php echo esc_html( $subscribe_label ); ?>
 						</button>

@@ -132,7 +132,8 @@
 		return /Android/i.test( navigator.userAgent || '' );
 	}
 
-	function openCalendarSubscription( button, subscribeUrl, fallbackUrl ) {
+	function openCalendarSubscription( button, subscribeUrl, fallbackUrl, googleUrl ) {
+		var googleRedirectTimer = null;
 
 		if ( button && 'true' === button.getAttribute( 'aria-busy' ) ) {
 			return;
@@ -149,7 +150,28 @@
 			window.location.assign( fallbackUrl );
 		}
 
-		if ( ! subscribeUrl || ! fallbackUrl || isAndroidDevice() ) {
+		function clearGoogleRedirect() {
+			if ( googleRedirectTimer ) {
+				window.clearTimeout( googleRedirectTimer );
+				googleRedirectTimer = null;
+			}
+			document.removeEventListener( 'visibilitychange', handleVisibilityChange );
+			window.removeEventListener( 'pagehide', clearGoogleRedirect );
+		}
+
+		function handleVisibilityChange() {
+			if ( 'hidden' === document.visibilityState ) {
+				clearGoogleRedirect();
+			}
+		}
+
+		function openGoogleCalendar() {
+			clearGoogleRedirect();
+			clearBusy();
+			window.location.assign( googleUrl );
+		}
+
+		if ( ! subscribeUrl || ! fallbackUrl ) {
 			if ( fallbackUrl ) {
 				if ( button ) {
 					button.setAttribute( 'aria-busy', 'true' );
@@ -161,6 +183,23 @@
 
 		if ( button ) {
 			button.setAttribute( 'aria-busy', 'true' );
+		}
+
+		if ( isAndroidDevice() && googleUrl ) {
+			/* Google requires the feed URL to be pasted manually on its add-by-URL page. */
+			copyText( fallbackUrl ).catch( function () {} );
+			document.addEventListener( 'visibilitychange', handleVisibilityChange );
+			window.addEventListener( 'pagehide', clearGoogleRedirect );
+
+			try {
+				window.location.assign( subscribeUrl );
+			} catch ( error ) {
+				openGoogleCalendar();
+				return;
+			}
+
+			googleRedirectTimer = window.setTimeout( openGoogleCalendar, 1500 );
+			return;
 		}
 
 		try {
@@ -248,11 +287,12 @@
 			}
 
 			if ( subscribeButton ) {
-				subscribeButton.addEventListener( 'click', function () {
+					subscribeButton.addEventListener( 'click', function () {
 					var subscribeUrl = subscribeButton.getAttribute( 'data-subscribe-url' ) || '';
 					var fallbackUrl = subscribeButton.getAttribute( 'data-fallback-url' ) || '';
+					var googleUrl = subscribeButton.getAttribute( 'data-google-url' ) || '';
 
-					openCalendarSubscription( subscribeButton, subscribeUrl, fallbackUrl );
+					openCalendarSubscription( subscribeButton, subscribeUrl, fallbackUrl, googleUrl );
 				} );
 			}
 
