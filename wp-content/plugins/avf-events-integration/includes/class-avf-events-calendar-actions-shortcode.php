@@ -120,11 +120,11 @@ class AVF_Events_Calendar_Actions_Shortcode {
 		$subscribe_label = __( 'Abonnieren', 'avf-events-integration' );
 
 		$dialog_intro = $is_android
-			? __( 'Auf Android öffnet dieser Button den Import in Google Kalender. Die Termine werden dabei einmalig übernommen, spätere Änderungen erscheinen nicht automatisch.', 'avf-events-integration' )
+			? __( 'Unter Android öffnet die Schaltfläche <strong>„Abonnieren“</strong> direkt den Google Kalender und leitet Sie zur Funktion <strong>„Kalender per URL hinzufügen“</strong> weiter. Dort müssen Sie lediglich die URL einfügen. Diese befindet sich bereits in Ihrer Zwischenablage.', 'avf-events-integration' )
 			: __( 'Änderungen werden automatisch übernommen. Die Aktualisierung kann je nach Kalender-App zeitversetzt erfolgen.', 'avf-events-integration' );
 
 		$dialog_secondary = $is_android
-			? __( 'Für eine laufend aktualisierte Ansicht fügen Sie den kopierten Link am Computer in Google Kalender unter „Weitere Kalender hinzufügen → Per URL“ hinzu.', 'avf-events-integration' )
+			? __( 'Falls Sie eine andere Kalender-App verwenden möchten, wählen Sie <strong>„Link kopieren“</strong> und folgen Sie anschliessend der Anleitung Ihres jeweiligen Kalenderanbieters. Alternativ können Sie den <strong>universellen ICS-Download</strong> verwenden. Bitte beachten Sie, dass bei dieser Variante spätere Änderungen am Kalender <strong>nicht automatisch übernommen</strong> werden.', 'avf-events-integration' )
 			: __( 'Bei Problemen verwenden Sie den Link unter der Schaltfläche Link kopieren.', 'avf-events-integration' );
 
 		ob_start();
@@ -151,10 +151,10 @@ class AVF_Events_Calendar_Actions_Shortcode {
 						</button>
 					</div>
 					<p class="avf-events-calendar-actions__dialog-text">
-						<?php echo esc_html( $dialog_intro ); ?>
+						<?php echo wp_kses( $dialog_intro, array( 'strong' => array() ) ); ?>
 					</p>
 					<p class="avf-events-calendar-actions__dialog-text">
-						<?php echo esc_html( $dialog_secondary ); ?>
+						<?php echo wp_kses( $dialog_secondary, array( 'strong' => array() ) ); ?>
 					</p>
 					<div class="avf-events-calendar-actions__dialog-actions">
 						<button
