@@ -132,38 +132,20 @@
 		return /Android/i.test( navigator.userAgent || '' );
 	}
 
-	function openCalendarSubscription( button, subscribeUrl, fallbackUrl, status ) {
-		var fallbackTimer = null;
-		var externalHandlerOpened = false;
+	function openCalendarSubscription( button, subscribeUrl, fallbackUrl ) {
 
 		if ( button && 'true' === button.getAttribute( 'aria-busy' ) ) {
 			return;
 		}
 
-		function clearFallback() {
-			externalHandlerOpened = true;
-			if ( fallbackTimer ) {
-				window.clearTimeout( fallbackTimer );
-				fallbackTimer = null;
-			}
-			document.removeEventListener( 'visibilitychange', handleVisibilityChange );
-			window.removeEventListener( 'pagehide', clearFallback );
+		function clearBusy() {
 			if ( button ) {
 				button.removeAttribute( 'aria-busy' );
 			}
 		}
 
-		function handleVisibilityChange() {
-			if ( 'hidden' === document.visibilityState ) {
-				clearFallback();
-			}
-		}
-
 		function openFallback() {
-			clearFallback();
-			if ( status ) {
-				status.textContent = 'Der Kalender-Download wird geöffnet.';
-			}
+			clearBusy();
 			window.location.assign( fallbackUrl );
 		}
 
@@ -181,13 +163,6 @@
 			button.setAttribute( 'aria-busy', 'true' );
 		}
 
-		if ( status ) {
-			status.textContent = 'Kalender-App wird geöffnet.';
-		}
-
-		document.addEventListener( 'visibilitychange', handleVisibilityChange );
-		window.addEventListener( 'pagehide', clearFallback );
-
 		try {
 			window.location.assign( subscribeUrl );
 		} catch ( error ) {
@@ -195,12 +170,8 @@
 			return;
 		}
 
-		/* webcal failures do not throw, so fall back when the page stays active. */
-		fallbackTimer = window.setTimeout( function () {
-			if ( ! externalHandlerOpened && 'hidden' !== document.visibilityState ) {
-				openFallback();
-			}
-		}, 1500 );
+		/* A browser without a webcal handler stays on this page. */
+		window.setTimeout( clearBusy, 1500 );
 	}
 
 	function initCalendarActions() {
@@ -213,7 +184,6 @@
 			var openCalendarButton = root.querySelector( '[data-avf-calendar-open]' );
 			var subscribeButton = root.querySelector( '[data-avf-calendar-subscribe]' );
 			var copyButton = root.querySelector( '[data-avf-calendar-copy]' );
-			var copyStatus = root.querySelector( '[data-avf-calendar-copy-status]' );
 			var lastTrigger = null;
 
 			function closeDialog() {
@@ -282,24 +252,14 @@
 					var subscribeUrl = subscribeButton.getAttribute( 'data-subscribe-url' ) || '';
 					var fallbackUrl = subscribeButton.getAttribute( 'data-fallback-url' ) || '';
 
-					openCalendarSubscription( subscribeButton, subscribeUrl, fallbackUrl, copyStatus );
+					openCalendarSubscription( subscribeButton, subscribeUrl, fallbackUrl );
 				} );
 			}
 
 			if ( copyButton ) {
 				copyButton.addEventListener( 'click', function () {
 					var value = copyButton.getAttribute( 'data-copy-value' ) || '';
-					copyText( value )
-						.then( function () {
-							if ( copyStatus ) {
-								copyStatus.textContent = 'Kalenderadresse kopiert.';
-							}
-						} )
-						.catch( function () {
-							if ( copyStatus ) {
-								copyStatus.textContent = 'Kopieren nicht möglich. Bitte Adresse manuell kopieren.';
-							}
-						} );
+					copyText( value ).catch( function () {} );
 				} );
 			}
 		} );

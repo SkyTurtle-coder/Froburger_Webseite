@@ -185,7 +185,6 @@ class AVF_Events_Calendar_Actions_Shortcode {
 							<?php esc_html_e( 'ICS Download', 'avf-events-integration' ); ?>
 						</button>
 					</div>
-					<p class="avf-events-calendar-actions__copy-status" data-avf-calendar-copy-status aria-live="polite"></p>
 				</div>
 			</dialog>
 		</div>

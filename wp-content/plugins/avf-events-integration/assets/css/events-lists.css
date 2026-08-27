@@ -551,15 +551,6 @@
 	box-shadow: 0 12px 22px rgba(24, 63, 30, 0.12);
 }
 
-.avf-events-calendar-actions__copy-status {
-	margin: 0;
-	padding: 0 1.6rem 1.45rem;
-	min-height: 1.5rem;
-	font-size: 0.9rem;
-	line-height: 1.5;
-	color: var(--avf-text-muted, #657067);
-}
-
 /* =========================================================
    EVENT DETAIL (optional [avf_event_detail])
    ========================================================= */
@@ -1333,10 +1324,6 @@ body:has(.avf-event-detail) .elementor-element-2eabd2b .avf-event-detail__hero-l
 
 	.avf-events-calendar-actions__action--primary {
 		grid-column: auto;
-	}
-
-	.avf-events-calendar-actions__copy-status {
-		padding: 0 1.2rem 1.2rem;
 	}
 
 	.avf-event-detail__header {
